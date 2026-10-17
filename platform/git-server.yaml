@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: git-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: git-server
+  namespace: git-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: git-server
+  template:
+    metadata:
+      labels:
+        app: git-server
+    spec:
+      containers:
+        - name: git-server
+          image: localhost:5001/platform-lab/git-server:local
+          command: ["git", "daemon", "--reuseaddr", "--verbose", "--export-all", "--enable=receive-pack", "--base-path=/srv/git", "/srv/git"]
+          ports:
+            - name: git
+              containerPort: 9418
+          volumeMounts:
+            - name: repos
+              mountPath: /srv/git
+      volumes:
+        - name: repos
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: git-server
+  namespace: git-system
+spec:
+  selector:
+    app: git-server
+  ports:
+    - name: git
+      port: 9418
+      targetPort: git

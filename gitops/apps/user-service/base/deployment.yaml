@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+  namespace: user-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+    spec:
+      containers:
+        - name: user-service
+          image: user-service
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: NACOS_SERVER_ADDR
+              value: nacos.nacos.svc.cluster.local:8848
+            - name: ETCD_ENDPOINTS
+              value: etcd-client.etcd.svc.cluster.local:2379
+          ports:
+            - name: grpc
+              containerPort: 9001
+          readinessProbe:
+            grpc:
+              port: 9001
+            initialDelaySeconds: 2
+            periodSeconds: 3
+          livenessProbe:
+            grpc:
+              port: 9001
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 30m
+              memory: 32Mi
+            limits:
+              cpu: 300m
+              memory: 192Mi

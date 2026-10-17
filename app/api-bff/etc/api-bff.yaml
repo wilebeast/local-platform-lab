@@ -1,0 +1,11 @@
+Name: api-bff
+Host: 0.0.0.0
+Port: 8888
+Timeout: 3000
+Mode: dev
+UserRpc:
+  Target: dns:///user-service.user-service.svc.cluster.local:9001
+  Provider: nacos
+  ServiceName: user-service
+  NacosAddress: nacos.nacos.svc.cluster.local:8848
+  EtcdEndpoints: etcd-client.etcd.svc.cluster.local:2379

@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-demo
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: git://git-server.git-system.svc.cluster.local/platform.git
+    targetRevision: main
+    path: apps/platform-demo/overlays/local
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: platform-demo
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

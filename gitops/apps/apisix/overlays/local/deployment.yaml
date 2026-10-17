@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apisix
+  namespace: apisix
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apisix
+  template:
+    metadata:
+      annotations:
+        platform.local/config-version: "2"
+      labels:
+        app: apisix
+    spec:
+      initContainers:
+        - name: prepare-config
+          image: apache/apisix:3.13.0-debian
+          command:
+            - sh
+            - -c
+            - >-
+              cp -R /usr/local/apisix/conf/. /work/ &&
+              cp /config-source/config.yaml /work/config.yaml &&
+              cp /config-source/apisix.yaml /work/apisix.yaml
+          volumeMounts:
+            - name: config-runtime
+              mountPath: /work
+            - name: config-source
+              mountPath: /config-source
+      containers:
+        - name: apisix
+          image: apache/apisix:3.13.0-debian
+          env:
+            - name: APISIX_STAND_ALONE
+              value: "true"
+          ports:
+            - name: http
+              containerPort: 9080
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: config-runtime
+              mountPath: /usr/local/apisix/conf
+      volumes:
+        - name: config-source
+          configMap:
+            name: apisix-config
+        - name: config-runtime
+          emptyDir: {}

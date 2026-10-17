@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package user.v1;
+
+option go_package = "github.com/wilebeast/local-platform-lab/api/user/v1;userv1";
+
+service UserService {
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+}
+
+message GetProfileRequest {
+  string user_id = 1;
+}
+
+message GetProfileResponse {
+  string user_id = 1;
+  string verification_status = 2;
+}

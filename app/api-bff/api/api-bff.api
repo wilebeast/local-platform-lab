@@ -1,0 +1,31 @@
+syntax = "v1"
+
+info (
+  title: "API BFF"
+  desc: "HTTP aggregation layer for local API exercises"
+  author: "Platform Team"
+)
+
+type HealthResponse {
+  Status string `json:"status"`
+  Service string `json:"service"`
+}
+
+type ProfileResponse {
+  UserId string `json:"userId"`
+  VerificationStatus string `json:"verificationStatus"`
+  Source string `json:"source"`
+}
+
+service api-bff {
+  @handler HealthHandler
+  get /healthz returns (HealthResponse)
+}
+
+@server (
+  prefix: /api/v3
+)
+service api-bff {
+  @handler ProfileHandler
+  get /profile returns (ProfileResponse)
+}

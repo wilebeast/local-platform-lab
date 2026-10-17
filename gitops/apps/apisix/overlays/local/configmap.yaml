@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apisix-config
+  namespace: apisix
+data:
+  config.yaml: |
+    apisix:
+      node_listen: 9080
+    deployment:
+      role: data_plane
+      role_data_plane:
+        config_provider: yaml
+  apisix.yaml: |
+    routes:
+      - id: api-bff
+        name: api-bff
+        uri: /*
+        upstream:
+          type: roundrobin
+          nodes:
+            "api-bff.api-bff.svc.cluster.local:80": 1
+    #END
