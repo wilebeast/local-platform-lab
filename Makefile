@@ -49,3 +49,10 @@ argocd-ui:
 
 destroy:
 	@./scripts/destroy.sh
+
+.PHONY: deploy-matching-service verify-matching-service
+deploy-matching-service:
+	@./scripts/deploy-matching-service.sh
+
+verify-matching-service:
+	@./scripts/verify-matching-service.sh

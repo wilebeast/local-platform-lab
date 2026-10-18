@@ -1,0 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - resources.yaml
+images:
+  - name: matching-service
+    newName: localhost:5001/platform-lab/matching-service
+    newTag: "20261018134136"

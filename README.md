@@ -168,3 +168,7 @@ make bootstrap
 - `/healthz`：返回 `{"status":"ok"}`
 - v2 发布：成功
 - Git revert 回滚到上一镜像：成功，页面内容已恢复
+
+### 通用匹配服务（实验版）
+
+新增 CEL + Roaring Bitmap 单分片匹配服务，支持 Schema、策略选择、候选检索、准入校验和 PVC 快照恢复。`make deploy-matching-service` 发布，`make verify-matching-service` 验证。服务代码已迁至独立仓库 `../matching-service`。部署脚本默认从该相邻目录构建，也可通过 `MATCHING_SERVICE_DIR` 指定位置。接口、示例及规模边界见独立项目 README.md。
