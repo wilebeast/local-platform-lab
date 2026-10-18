@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: doctor bootstrap deploy verify deploy-api-bff verify-api-bff deploy-user-service verify-user-service deploy-local-gateway verify-local-gateway deploy-service-discovery verify-service-discovery verify-service-registration rollback argocd-ui destroy
+.PHONY: doctor bootstrap deploy verify deploy-api-bff verify-api-bff deploy-user-service verify-user-service deploy-local-gateway verify-local-gateway deploy-service-discovery verify-service-discovery verify-service-registration deploy-auth verify-auth auth-ui rollback argocd-ui destroy
 
 doctor:
 	@./scripts/doctor.sh
@@ -40,6 +40,15 @@ verify-service-discovery:
 
 verify-service-registration:
 	@./scripts/verify-service-registration.sh
+
+deploy-auth:
+	@./scripts/deploy-auth.sh
+
+verify-auth:
+	@./scripts/verify-auth.sh
+
+auth-ui:
+	@./scripts/auth-ui.sh
 
 rollback:
 	@./scripts/rollback.sh

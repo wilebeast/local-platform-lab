@@ -3,6 +3,8 @@ module github.com/wilebeast/local-platform-lab/app/user-service
 go 1.26
 
 require (
+	github.com/golang-jwt/jwt/v4 v4.5.2
+	github.com/redis/go-redis/v9 v9.21.0
 	github.com/wilebeast/local-platform-lab/api/user v0.0.0
 	github.com/wilebeast/local-platform-lab/pkg/serviceregistry v0.0.0
 	github.com/zeromicro/go-zero v1.10.3
@@ -77,7 +79,6 @@ require (
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.66.1 // indirect
 	github.com/prometheus/procfs v0.16.1 // indirect
-	github.com/redis/go-redis/v9 v9.21.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/titanous/json5 v1.0.0 // indirect
 	github.com/tjfoc/gmsm v1.4.1 // indirect

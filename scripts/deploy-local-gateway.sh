@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+"$ROOT_DIR/scripts/ensure-auth-secrets.sh"
 KUBE_CONTEXT="kind-local-platform"
 
 git -C "$ROOT_DIR/gitops" add \
@@ -14,11 +15,24 @@ if ! git -C "$ROOT_DIR/gitops" diff --cached --quiet; then
 fi
 
 "$ROOT_DIR/scripts/push-gitops.sh"
+desired_revision="$(git -C "$ROOT_DIR/gitops" rev-parse HEAD)"
 kubectl --context "$KUBE_CONTEXT" apply -f "$ROOT_DIR/gitops/argocd/apisix.yaml"
 kubectl --context "$KUBE_CONTEXT" apply -f "$ROOT_DIR/gitops/argocd/local-alb.yaml"
 kubectl --context "$KUBE_CONTEXT" -n argocd annotate application apisix argocd.argoproj.io/refresh=hard --overwrite
 kubectl --context "$KUBE_CONTEXT" -n argocd annotate application local-alb argocd.argoproj.io/refresh=hard --overwrite
 kubectl --context "$KUBE_CONTEXT" -n argocd annotate application platform-demo argocd.argoproj.io/refresh=hard --overwrite
+
+for attempt in $(seq 1 60); do
+  synced_revision="$(kubectl --context "$KUBE_CONTEXT" -n argocd get application apisix -o jsonpath='{.status.sync.revision}' 2>/dev/null || true)"
+  if [ "$synced_revision" = "$desired_revision" ]; then
+    break
+  fi
+  if [ "$attempt" -eq 60 ]; then
+    echo "Timed out waiting for Argo CD to sync APISIX revision $desired_revision" >&2
+    exit 1
+  fi
+  sleep 2
+done
 
 for namespace in apisix local-alb; do
   for attempt in $(seq 1 60); do
@@ -48,7 +62,8 @@ for workload in apisix/apisix local-alb/local-alb; do
   done
 done
 
+kubectl --context "$KUBE_CONTEXT" -n apisix rollout restart deployment/apisix
 kubectl --context "$KUBE_CONTEXT" -n apisix rollout status deployment/apisix --timeout=300s
 kubectl --context "$KUBE_CONTEXT" -n local-alb rollout status deployment/local-alb --timeout=300s
 
-echo "Local gateway ready: http://localhost:18080"
+echo "Local gateway ready: HTTP health at http://localhost:18080/healthz; run 'make auth-ui' for https://localhost:18443"

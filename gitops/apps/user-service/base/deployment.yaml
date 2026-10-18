@@ -25,6 +25,13 @@ spec:
               value: nacos.nacos.svc.cluster.local:8848
             - name: ETCD_ENDPOINTS
               value: etcd-client.etcd.svc.cluster.local:2379
+            - name: REDIS_ADDR
+              value: redis.redis.svc.cluster.local:6379
+            - name: JWT_SIGNING_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: platform-auth
+                  key: jwt-signing-key
           ports:
             - name: grpc
               containerPort: 9001

@@ -5,7 +5,7 @@ resources:
 images:
   - name: api-bff
     newName: localhost:5001/platform-lab/api-bff
-    newTag: "20261017173708"
+    newTag: "20261018213026"
 replicas:
   - name: api-bff
     count: 1

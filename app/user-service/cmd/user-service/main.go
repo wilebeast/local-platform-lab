@@ -9,8 +9,10 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	userv1 "github.com/wilebeast/local-platform-lab/api/user/v1"
+	"github.com/wilebeast/local-platform-lab/app/user-service/internal/auth"
 	userserver "github.com/wilebeast/local-platform-lab/app/user-service/internal/server"
 	"github.com/wilebeast/local-platform-lab/pkg/serviceregistry"
 	"github.com/zeromicro/go-zero/core/conf"
@@ -26,8 +28,28 @@ func main() {
 	var c zrpc.RpcServerConf
 	conf.MustLoad(*configFile, &c)
 
+	redisAddress := envOr("REDIS_ADDR", "redis.redis.svc.cluster.local:6379")
+	refreshStore := auth.NewRedisStore(redisAddress)
+	defer refreshStore.Close()
+	pingCtx, cancelPing := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelPing()
+	if err := refreshStore.Ping(pingCtx); err != nil {
+		log.Fatalf("connect to Redis at %s: %v", redisAddress, err)
+	}
+	authService, err := auth.NewService(auth.Config{
+		JWTSigningKey: mustEnv("JWT_SIGNING_KEY"),
+		Issuer:        "local-platform-lab", Audience: "api-bff",
+		AccessTTL: 30 * time.Minute, RefreshTTL: 7 * 24 * time.Hour,
+		DemoEmail:    envOr("DEMO_USER_EMAIL", "demo@local.test"),
+		DemoPassword: envOr("DEMO_USER_PASSWORD", "local-demo-password"),
+		DemoUserID:   envOr("DEMO_USER_ID", "local-user"),
+	}, refreshStore)
+	if err != nil {
+		log.Fatalf("configure auth: %v", err)
+	}
+
 	server := zrpc.MustNewServer(c, func(grpcServer *grpc.Server) {
-		userv1.RegisterUserServiceServer(grpcServer, userserver.NewUserServer())
+		userv1.RegisterUserServiceServer(grpcServer, userserver.NewUserServer(authService))
 	})
 	defer server.Stop()
 
@@ -53,4 +75,19 @@ func main() {
 
 	fmt.Printf("Starting %s at %s; registered %s:%s in Nacos and Etcd\n", c.Name, c.ListenOn, podIP, port)
 	server.Start()
+}
+
+func envOr(name, fallback string) string {
+	if value := os.Getenv(name); value != "" {
+		return value
+	}
+	return fallback
+}
+
+func mustEnv(name string) string {
+	value := os.Getenv(name)
+	if value == "" {
+		log.Fatalf("%s is required", name)
+	}
+	return value
 }

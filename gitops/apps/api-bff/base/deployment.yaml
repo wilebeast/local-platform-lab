@@ -19,6 +19,13 @@ spec:
           env:
             - name: DISCOVERY_PROVIDER
               value: nacos
+            - name: GATEWAY_SIGNATURE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: platform-auth
+                  key: gateway-signature-key
+            - name: AUTH_ALLOWED_ORIGIN
+              value: https://localhost:18443
           ports:
             - name: http
               containerPort: 8888

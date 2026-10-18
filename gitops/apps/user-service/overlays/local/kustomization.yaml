@@ -5,7 +5,7 @@ resources:
 images:
   - name: user-service
     newName: localhost:5001/platform-lab/user-service
-    newTag: "20261017173133"
+    newTag: "20261018202128"
 replicas:
   - name: user-service
     count: 1

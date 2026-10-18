@@ -19,6 +19,8 @@ spec:
           ports:
             - name: http
               containerPort: 8080
+            - name: https
+              containerPort: 8443
           readinessProbe:
             httpGet:
               path: /healthz
@@ -36,7 +38,13 @@ spec:
             - name: config
               mountPath: /etc/nginx/conf.d/default.conf
               subPath: default.conf
+            - name: tls
+              mountPath: /etc/nginx/tls
+              readOnly: true
       volumes:
         - name: config
           configMap:
             name: local-alb-config
+        - name: tls
+          secret:
+            secretName: local-platform-tls

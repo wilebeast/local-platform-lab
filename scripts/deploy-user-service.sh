@@ -7,6 +7,8 @@ IMAGE="localhost:5001/platform-lab/user-service:$TAG"
 LOCAL_KUSTOMIZATION="$ROOT_DIR/gitops/apps/user-service/overlays/local/kustomization.yaml"
 KUBE_CONTEXT="kind-local-platform"
 
+"$ROOT_DIR/scripts/ensure-auth-secrets.sh"
+
 docker build -f "$ROOT_DIR/app/user-service/Dockerfile" -t "$IMAGE" "$ROOT_DIR"
 docker push "$IMAGE"
 

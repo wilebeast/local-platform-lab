@@ -11,7 +11,7 @@ spec:
   template:
     metadata:
       annotations:
-        platform.local/config-version: "2"
+        platform.local/config-version: "3"
       labels:
         app: apisix
     spec:
@@ -36,6 +36,16 @@ spec:
           env:
             - name: APISIX_STAND_ALONE
               value: "true"
+            - name: JWT_SIGNING_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: platform-auth
+                  key: jwt-signing-key
+            - name: GATEWAY_SIGNATURE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: platform-auth
+                  key: gateway-signature-key
           ports:
             - name: http
               containerPort: 9080

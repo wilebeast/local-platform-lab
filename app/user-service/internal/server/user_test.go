@@ -8,7 +8,7 @@ import (
 )
 
 func TestGetProfile(t *testing.T) {
-	response, err := NewUserServer().GetProfile(context.Background(), &userv1.GetProfileRequest{UserId: "user-123"})
+	response, err := NewUserServer(nil).GetProfile(context.Background(), &userv1.GetProfileRequest{UserId: "user-123"})
 	if err != nil {
 		t.Fatalf("GetProfile returned error: %v", err)
 	}

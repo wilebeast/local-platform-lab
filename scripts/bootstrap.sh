@@ -81,6 +81,7 @@ if ! kubectl --context "$KUBE_CONTEXT" -n git-system exec "$git_pod" -- test -d 
 fi
 
 "$ROOT_DIR/scripts/push-gitops.sh" --seed
+"$ROOT_DIR/scripts/ensure-auth-secrets.sh"
 kubectl --context "$KUBE_CONTEXT" apply -f "$ROOT_DIR/gitops/argocd"
 
 echo "Bootstrap complete. Run: make deploy && make verify"

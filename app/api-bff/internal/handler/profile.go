@@ -13,10 +13,12 @@ import (
 
 func ProfileHandler(serviceContext *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID := r.Header.Get("X-User-ID")
-		if userID == "" {
-			userID = "local-user"
+		actor, ok := actorFromContext(r.Context())
+		if !ok {
+			writeError(w, http.StatusUnauthorized, "authentication required")
+			return
 		}
+		userID := actor.UserID
 
 		if serviceContext == nil || serviceContext.UserClient == nil {
 			httpx.WriteJsonCtx(r.Context(), w, http.StatusServiceUnavailable, map[string]string{"error": "user service is unavailable"})

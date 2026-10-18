@@ -13,13 +13,31 @@ import (
 	"google.golang.org/grpc"
 )
 
-type fakeUserClient struct{}
+type fakeUserClient struct{ tokenPair *userv1.TokenPair }
 
 func (fakeUserClient) GetProfile(_ context.Context, request *userv1.GetProfileRequest, _ ...grpc.CallOption) (*userv1.GetProfileResponse, error) {
 	return &userv1.GetProfileResponse{
 		UserId:             request.GetUserId(),
 		VerificationStatus: "verified",
 	}, nil
+}
+func (f fakeUserClient) Login(_ context.Context, _ *userv1.LoginRequest, _ ...grpc.CallOption) (*userv1.TokenPair, error) {
+	if f.tokenPair != nil {
+		return f.tokenPair, nil
+	}
+	return &userv1.TokenPair{}, nil
+}
+
+func testServiceContextWithTokens() *svc.ServiceContext {
+	return &svc.ServiceContext{UserClient: fakeUserClient{tokenPair: &userv1.TokenPair{
+		AccessToken: "access-value", RefreshToken: "refresh-value", ExpiresIn: 1800, TokenType: "Bearer",
+	}}}
+}
+func (fakeUserClient) Refresh(_ context.Context, _ *userv1.RefreshRequest, _ ...grpc.CallOption) (*userv1.TokenPair, error) {
+	return &userv1.TokenPair{}, nil
+}
+func (fakeUserClient) Logout(_ context.Context, _ *userv1.LogoutRequest, _ ...grpc.CallOption) (*userv1.LogoutResponse, error) {
+	return &userv1.LogoutResponse{}, nil
 }
 
 func TestHealthHandler(t *testing.T) {
@@ -42,10 +60,10 @@ func TestHealthHandler(t *testing.T) {
 	}
 }
 
-func TestProfileHandlerUsesUserHeader(t *testing.T) {
+func TestProfileHandlerUsesAuthenticatedActor(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodGet, "/api/v3/profile", nil)
-	request.Header.Set("X-User-ID", "user-123")
+	request = request.WithContext(context.WithValue(request.Context(), actorContextKey{}, Actor{UserID: "user-123"}))
 
 	ProfileHandler(&svc.ServiceContext{UserClient: fakeUserClient{}}).ServeHTTP(recorder, request)
 
@@ -55,5 +73,15 @@ func TestProfileHandlerUsesUserHeader(t *testing.T) {
 	}
 	if body["userId"] != "user-123" || body["verificationStatus"] != "verified" || body["source"] != "user-service-grpc" {
 		t.Fatalf("unexpected response: %#v", body)
+	}
+}
+
+func TestProfileHandlerRejectsRawUserHeader(t *testing.T) {
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/api/v3/profile", nil)
+	request.Header.Set("X-User-ID", "forged-user")
+	ProfileHandler(&svc.ServiceContext{UserClient: fakeUserClient{}}).ServeHTTP(recorder, request)
+	if recorder.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", recorder.Code)
 	}
 }

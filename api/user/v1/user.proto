@@ -6,6 +6,9 @@ option go_package = "github.com/wilebeast/local-platform-lab/api/user/v1;userv1"
 
 service UserService {
   rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+  rpc Login(LoginRequest) returns (TokenPair);
+  rpc Refresh(RefreshRequest) returns (TokenPair);
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
 }
 
 message GetProfileRequest {
@@ -15,4 +18,28 @@ message GetProfileRequest {
 message GetProfileResponse {
   string user_id = 1;
   string verification_status = 2;
+}
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message RefreshRequest {
+  string refresh_token = 1;
+}
+
+message LogoutRequest {
+  string refresh_token = 1;
+}
+
+message TokenPair {
+  string access_token = 1;
+  string refresh_token = 2;
+  int64 expires_in = 3;
+  string token_type = 4;
+}
+
+message LogoutResponse {
+  bool revoked = 1;
 }

@@ -7,15 +7,119 @@ data:
   config.yaml: |
     apisix:
       node_listen: 9080
+    nginx_config:
+      envs:
+        - JWT_SIGNING_KEY
+        - GATEWAY_SIGNATURE_KEY
     deployment:
       role: data_plane
       role_data_plane:
         config_provider: yaml
   apisix.yaml: |
     routes:
-      - id: api-bff
-        name: api-bff
-        uri: /*
+      - id: api-bff-health
+        name: api-bff-health
+        uri: /healthz
+        priority: 30
+        upstream:
+          type: roundrobin
+          nodes:
+            "api-bff.api-bff.svc.cluster.local:80": 1
+      - id: api-bff-auth-login
+        name: api-bff-auth-login
+        uri: /api/v3/auth/login
+        priority: 25
+        plugins:
+          limit-count:
+            count: 5
+            time_window: 10
+            rejected_code: 429
+            rejected_msg: '{"error":"too many authentication requests"}'
+            key_type: var
+            key: remote_addr
+            policy: local
+          serverless-pre-function:
+            phase: rewrite
+            functions:
+              - |
+                return function(conf, ctx)
+                  local core = require("apisix.core")
+                  local hmac = require("resty.hmac")
+                  local timestamp = tostring(ngx.time())
+                  core.request.set_header(ctx, "X-User-ID", "")
+                  core.request.set_header(ctx, "X-Authenticated", "false")
+                  core.request.set_header(ctx, "X-Gateway", "apisix")
+                  core.request.set_header(ctx, "X-Gateway-Timestamp", timestamp)
+                  local payload = ngx.req.get_method() .. "\n" .. ngx.var.request_uri .. "\n" .. timestamp .. "\n"
+                  local signer = hmac:new(os.getenv("GATEWAY_SIGNATURE_KEY"), hmac.ALGOS.SHA256)
+                  local signature = ngx.encode_base64(signer:final(payload))
+                  core.request.set_header(ctx, "X-Gateway-Signature", signature)
+                end
+        upstream:
+          type: roundrobin
+          nodes:
+            "api-bff.api-bff.svc.cluster.local:80": 1
+      - id: api-bff-auth-session
+        name: api-bff-auth-session
+        uri: /api/v3/auth/*
+        priority: 20
+        plugins:
+          serverless-pre-function:
+            phase: rewrite
+            functions:
+              - |
+                return function(conf, ctx)
+                  local core = require("apisix.core")
+                  local hmac = require("resty.hmac")
+                  local timestamp = tostring(ngx.time())
+                  core.request.set_header(ctx, "X-User-ID", "")
+                  core.request.set_header(ctx, "X-Authenticated", "false")
+                  core.request.set_header(ctx, "X-Gateway", "apisix")
+                  core.request.set_header(ctx, "X-Gateway-Timestamp", timestamp)
+                  local payload = ngx.req.get_method() .. "\n" .. ngx.var.request_uri .. "\n" .. timestamp .. "\n"
+                  local signer = hmac:new(os.getenv("GATEWAY_SIGNATURE_KEY"), hmac.ALGOS.SHA256)
+                  local signature = ngx.encode_base64(signer:final(payload))
+                  core.request.set_header(ctx, "X-Gateway-Signature", signature)
+                end
+        upstream:
+          type: roundrobin
+          nodes:
+            "api-bff.api-bff.svc.cluster.local:80": 1
+      - id: api-bff-protected
+        name: api-bff-protected
+        uri: /api/v3/*
+        priority: 10
+        plugins:
+          serverless-pre-function:
+            phase: rewrite
+            functions:
+              - |
+                return function(conf, ctx)
+                  local core = require("apisix.core")
+                  local jwt = require("resty.jwt")
+                  local hmac = require("resty.hmac")
+                  local authorization = core.request.header(ctx, "Authorization") or ""
+                  local token = authorization:match("^[Bb]earer%s+(.+)$") or ngx.var.cookie_access_token
+                  core.request.set_header(ctx, "X-User-ID", "")
+                  core.request.set_header(ctx, "X-Authenticated", "false")
+                  if not token then return 401, {error = "authentication required"} end
+                  local result = jwt:verify(os.getenv("JWT_SIGNING_KEY"), token)
+                  local claims = result and result.payload or {}
+                  if not result.verified or result.header.alg ~= "HS256" or claims.iss ~= "local-platform-lab" or claims.aud ~= "api-bff" or not claims.id or not claims.exp or claims.exp <= ngx.time() then
+                    return 401, {error = "invalid access token"}
+                  end
+                  local timestamp = tostring(ngx.time())
+                  local user_id = tostring(claims.id)
+                  core.request.set_header(ctx, "X-User-ID", user_id)
+                  core.request.set_header(ctx, "X-Authenticated", "true")
+                  core.request.set_header(ctx, "X-Auth-Method", "jwt")
+                  core.request.set_header(ctx, "X-Gateway", "apisix")
+                  core.request.set_header(ctx, "X-Gateway-Timestamp", timestamp)
+                  local payload = ngx.req.get_method() .. "\n" .. ngx.var.request_uri .. "\n" .. timestamp .. "\n" .. user_id
+                  local signer = hmac:new(os.getenv("GATEWAY_SIGNATURE_KEY"), hmac.ALGOS.SHA256)
+                  local signature = ngx.encode_base64(signer:final(payload))
+                  core.request.set_header(ctx, "X-Gateway-Signature", signature)
+                end
         upstream:
           type: roundrobin
           nodes:

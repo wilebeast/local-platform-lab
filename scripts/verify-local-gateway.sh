@@ -2,10 +2,10 @@
 set -euo pipefail
 
 health="$(curl --fail --silent --show-error http://localhost:18080/healthz)"
-profile="$(curl --fail --silent --show-error -H 'X-User-ID: local-alb-test' http://localhost:18080/api/v3/profile)"
+redirect_status="$(curl --silent --output /dev/null --write-out '%{http_code}' http://localhost:18080/api/v3/profile)"
 
 grep -q '"status":"ok"' <<<"$health"
-grep -q 'local-alb-test' <<<"$profile"
+test "$redirect_status" = "308"
 
 echo "GET /healthz -> $health"
-echo "GET /api/v3/profile -> $profile"
+echo "HTTP /api/v3/profile -> $redirect_status HTTPS redirect"

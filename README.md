@@ -77,10 +77,63 @@ make deploy-local-gateway
 make verify-local-gateway
 ```
 
+部署并演练分层用户鉴权链路：
+
+```bash
+make deploy-auth
+make verify-auth
+```
+
+保持本地 HTTPS 入口运行：
+
+```bash
+make auth-ui
+```
+
+入口地址为 <https://localhost:18443>。当前集群使用本地自签名证书，命令行请求需加
+`--insecure`；若重新创建 Kind 集群，`kind/cluster.yaml` 也已预留 18443 端口。
+
+演练账号仅用于本地环境：
+
+- 邮箱：`demo@local.test`
+- 密码：`local-demo-password`
+
+`user-service` 签发 30 分钟有效的 HS256 Access Token，并将 7 天有效的
+Refresh Token 哈希存入 Redis。刷新采用一次性轮换，旧 Refresh Token 再次使用会
+返回 401。JWT 签名密钥和 APISIX 到 BFF 的网关签名密钥在首次部署时随机生成，
+只存入 Kubernetes Secret，不写入 Git。
+
+浏览器登录采用 Cookie-only 模式：Access Token 和 Refresh Token 只写入
+`Secure + HttpOnly + SameSite=Strict` Cookie，不出现在 JSON 响应中。刷新和退出
+还必须通过 Origin 与 CSRF 双重校验；APISIX 对登录路由按来源 IP 限流。
+
+鉴权链路为：
+
+```text
+HTTP client
+  -> local-alb
+  -> APISIX（校验 JWT、清除伪造身份头、签名网关请求）
+  -> api-bff（验证网关签名、构造用户上下文）
+  -> gRPC user-service
+  -> Redis（仅管理 Refresh Token）
+```
+
+登录示例：
+
+```bash
+curl --insecure -c cookies.txt -X POST https://localhost:18443/api/v3/auth/login \
+  -H 'Origin: https://localhost:18443' \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"demo@local.test","password":"local-demo-password"}'
+```
+
+浏览器会自动携带 Cookie；命令行可以使用 `curl --insecure -b cookies.txt` 请求
+`GET /api/v3/profile`。
+
 部署后的请求链路为：
 
 ```text
-http://localhost:18080 -> local-alb (Nginx) -> APISIX -> api-bff
+https://localhost:18443 -> local-alb (Nginx TLS) -> APISIX -> api-bff
 ```
 
 `local-alb` 只模拟云上 ALB 的统一公网入口和反向代理位置，不模拟 AWS
@@ -90,7 +143,10 @@ http://localhost:18080 -> local-alb (Nginx) -> APISIX -> api-bff
 提供两个首轮演练接口：
 
 - `GET /healthz`
-- `GET /api/v3/profile`，可通过 `X-User-ID` 传入本地测试用户
+- `POST /api/v3/auth/login`
+- `POST /api/v3/auth/refresh`
+- `POST /api/v3/auth/logout`
+- `GET /api/v3/profile`，必须携带有效 Access Token；客户端传入的 `X-User-ID` 会被 APISIX 清除
 
 > 安全约束：所有集群命令都显式使用 `kind-local-platform`，不会依赖当前 kubectl context，也不会操作远端 EKS。
 

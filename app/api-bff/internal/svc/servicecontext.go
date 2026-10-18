@@ -12,11 +12,13 @@ import (
 )
 
 type ServiceContext struct {
-	Config     config.Config
-	UserClient userv1.UserServiceClient
-	userConn   *grpc.ClientConn
-	resolver   *serviceregistry.Builder
-	Provider   string
+	Config              config.Config
+	UserClient          userv1.UserServiceClient
+	userConn            *grpc.ClientConn
+	resolver            *serviceregistry.Builder
+	Provider            string
+	GatewaySignatureKey string
+	AuthAllowedOrigin   string
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -24,7 +26,11 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	if value := os.Getenv("DISCOVERY_PROVIDER"); value != "" {
 		provider = value
 	}
-	ctx := &ServiceContext{Config: c, Provider: provider}
+	allowedOrigin := os.Getenv("AUTH_ALLOWED_ORIGIN")
+	if allowedOrigin == "" {
+		allowedOrigin = "https://localhost:18443"
+	}
+	ctx := &ServiceContext{Config: c, Provider: provider, GatewaySignatureKey: os.Getenv("GATEWAY_SIGNATURE_KEY"), AuthAllowedOrigin: allowedOrigin}
 	if c.UserRpc.Target == "" {
 		return ctx
 	}

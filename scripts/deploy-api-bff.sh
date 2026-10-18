@@ -7,6 +7,8 @@ IMAGE="localhost:5001/platform-lab/api-bff:$TAG"
 LOCAL_KUSTOMIZATION="$ROOT_DIR/gitops/apps/api-bff/overlays/local/kustomization.yaml"
 KUBE_CONTEXT="kind-local-platform"
 
+"$ROOT_DIR/scripts/ensure-auth-secrets.sh"
+
 docker build -f "$ROOT_DIR/app/api-bff/Dockerfile" -t "$IMAGE" "$ROOT_DIR"
 docker push "$IMAGE"
 
