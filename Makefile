@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: doctor bootstrap deploy verify deploy-api-bff verify-api-bff deploy-user-service verify-user-service deploy-local-gateway verify-local-gateway deploy-service-discovery verify-service-discovery verify-service-registration deploy-auth verify-auth auth-ui rollback argocd-ui destroy generate-user-descriptor
+.PHONY: doctor bootstrap deploy verify deploy-api-bff verify-api-bff deploy-user-service verify-user-service deploy-account-service verify-account-service deploy-local-gateway verify-local-gateway deploy-service-discovery verify-service-discovery verify-service-registration deploy-auth verify-auth auth-ui rollback argocd-ui destroy generate-user-descriptor generate-account-descriptor
 
 doctor:
 	@./scripts/doctor.sh
@@ -61,6 +61,15 @@ destroy:
 
 generate-user-descriptor:
 	@./scripts/generate-user-descriptor.sh
+
+generate-account-descriptor:
+	@./scripts/generate-account-descriptor.sh
+
+deploy-account-service:
+	@./scripts/deploy-account-service.sh
+
+verify-account-service:
+	@./scripts/verify-account-service.sh
 
 .PHONY: deploy-matching-service verify-matching-service
 deploy-matching-service:

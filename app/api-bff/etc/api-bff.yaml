@@ -10,6 +10,64 @@ UserRpc:
   NacosAddress: nacos.nacos.svc.cluster.local:8848
   EtcdEndpoints: etcd-client.etcd.svc.cluster.local:2379
 GenericRPC:
-  DescriptorPath: /etc/api-bff/schemas/user-service-v1.pb
-  DescriptorSHA256: 840c36f1aa90e30f718e62bc0443bcc27acc030562d73b33bb319afcda3c186d
-  ProfileMethod: /user.v1.UserService/GetProfile
+  ReloadInterval: 10s
+  Schemas:
+    - Name: user-v1
+      Service: user-service
+      Schema: user.v1.UserService
+      Version: 1.0.0
+      DescriptorPath: /etc/api-bff/schemas/user-service-v1.pb
+      MetadataPath: /etc/api-bff/schemas/user-service-v1.yaml
+      DescriptorSHA256: 840c36f1aa90e30f718e62bc0443bcc27acc030562d73b33bb319afcda3c186d
+      Target: dns:///user-service.user-service.svc.cluster.local:9001
+      Provider: nacos
+      NacosAddress: nacos.nacos.svc.cluster.local:8848
+      EtcdEndpoints: etcd-client.etcd.svc.cluster.local:2379
+    - Name: account-v1
+      Service: account-service
+      Schema: account.v1.AccountService
+      Version: 1.0.0
+      DescriptorPath: /etc/api-bff/schemas/account-service-v1.pb
+      MetadataPath: /etc/api-bff/schemas/account-service-v1.yaml
+      DescriptorSHA256: cb4db4967febb44c0d7217183e9d54fbbc70e2c3786c5a6fbffbd1cb54950623
+      Target: dns:///account-service.account-service.svc.cluster.local:9002
+      Provider: nacos
+      NacosAddress: nacos.nacos.svc.cluster.local:8848
+      EtcdEndpoints: etcd-client.etcd.svc.cluster.local:2379
+  Routes:
+    - Name: get-profile
+      SchemaRef: user-v1
+      Method: /user.v1.UserService/GetProfile
+      Timeout: 2s
+      InputFields:
+        - ProtoName: user_id
+          JSONName: userId
+          Kind: string
+          Repeated: false
+      OutputFields:
+        - ProtoName: user_id
+          JSONName: userId
+          Kind: string
+          Repeated: false
+        - ProtoName: verification_status
+          JSONName: verificationStatus
+          Kind: string
+          Repeated: false
+    - Name: get-account-summary
+      SchemaRef: account-v1
+      Method: /account.v1.AccountService/GetSummary
+      Timeout: 2s
+      InputFields:
+        - {ProtoName: user_id, JSONName: userId, Kind: string, Repeated: false}
+      OutputFields:
+        - {ProtoName: account_id, JSONName: accountId, Kind: string, Repeated: false}
+        - {ProtoName: status, JSONName: status, Kind: string, Repeated: false}
+    - Name: get-account-limits
+      SchemaRef: account-v1
+      Method: /account.v1.AccountService/GetLimits
+      Timeout: 2s
+      InputFields:
+        - {ProtoName: user_id, JSONName: userId, Kind: string, Repeated: false}
+      OutputFields:
+        - {ProtoName: daily_limit_cents, JSONName: dailyLimitCents, Kind: int64, Repeated: false}
+        - {ProtoName: currency, JSONName: currency, Kind: string, Repeated: false}

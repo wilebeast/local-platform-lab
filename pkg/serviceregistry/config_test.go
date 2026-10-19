@@ -5,6 +5,17 @@ import (
 	"testing"
 )
 
+func TestBuilderSchemeIsUniquePerService(t *testing.T) {
+	users := resolverScheme(ProviderNacos, "user-service")
+	accounts := resolverScheme(ProviderNacos, "account-service")
+	if users == accounts {
+		t.Fatal("different services must not share a resolver scheme")
+	}
+	if users != "local-nacos-user-service" {
+		t.Fatalf("unexpected resolver scheme %q", users)
+	}
+}
+
 func TestConfigDefaults(t *testing.T) {
 	cfg := (Config{}).normalized()
 	if cfg.Provider != ProviderNacos {

@@ -11,3 +11,15 @@ type ProfileResponse struct {
 	VerificationStatus string `json:"verificationStatus"`
 	Source             string `json:"source"`
 }
+
+type AccountSummaryResponse struct {
+	AccountID string `json:"accountId"`
+	Status    string `json:"status"`
+	Source    string `json:"source"`
+}
+
+type AccountLimitsResponse struct {
+	DailyLimitCents int64  `json:"dailyLimitCents"`
+	Currency        string `json:"currency"`
+	Source          string `json:"source"`
+}

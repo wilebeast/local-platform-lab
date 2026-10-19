@@ -18,14 +18,17 @@ type fakeUserClient struct{ tokenPair *userv1.TokenPair }
 
 type fakeGenericCaller struct{}
 
-func (fakeGenericCaller) Call(_ context.Context, method string, request map[string]any) (map[string]any, error) {
-	if method != "/user.v1.UserService/GetProfile" {
-		return nil, fmt.Errorf("unexpected method: %s", method)
+func (fakeGenericCaller) CallRoute(_ context.Context, route string, request map[string]any) (map[string]any, error) {
+	switch route {
+	case "get-profile":
+		return map[string]any{"userId": request["userId"], "verificationStatus": "verified"}, nil
+	case "get-account-summary":
+		return map[string]any{"accountId": "account-" + request["userId"].(string), "status": "active"}, nil
+	case "get-account-limits":
+		return map[string]any{"dailyLimitCents": "100000", "currency": "USD"}, nil
+	default:
+		return nil, fmt.Errorf("unexpected route: %s", route)
 	}
-	return map[string]any{
-		"userId":             request["userId"],
-		"verificationStatus": "verified",
-	}, nil
 }
 
 func (fakeUserClient) GetProfile(_ context.Context, request *userv1.GetProfileRequest, _ ...grpc.CallOption) (*userv1.GetProfileResponse, error) {
@@ -79,8 +82,7 @@ func TestProfileHandlerUsesAuthenticatedActor(t *testing.T) {
 	request = request.WithContext(context.WithValue(request.Context(), actorContextKey{}, Actor{UserID: "user-123"}))
 
 	ProfileHandler(&svc.ServiceContext{
-		GenericRPC:    fakeGenericCaller{},
-		ProfileMethod: "/user.v1.UserService/GetProfile",
+		GenericRPC: fakeGenericCaller{},
 	}).ServeHTTP(recorder, request)
 
 	var body map[string]string
@@ -96,8 +98,38 @@ func TestProfileHandlerRejectsRawUserHeader(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodGet, "/api/v3/profile", nil)
 	request.Header.Set("X-User-ID", "forged-user")
-	ProfileHandler(&svc.ServiceContext{GenericRPC: fakeGenericCaller{}, ProfileMethod: "/user.v1.UserService/GetProfile"}).ServeHTTP(recorder, request)
+	ProfileHandler(&svc.ServiceContext{GenericRPC: fakeGenericCaller{}}).ServeHTTP(recorder, request)
 	if recorder.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401, got %d", recorder.Code)
+	}
+}
+
+func TestAccountHandlersUseAuthenticatedActor(t *testing.T) {
+	tests := []struct {
+		name    string
+		handler http.Handler
+		assert  func(map[string]any) bool
+	}{
+		{"summary", AccountSummaryHandler(&svc.ServiceContext{GenericRPC: fakeGenericCaller{}}), func(body map[string]any) bool {
+			return body["accountId"] == "account-user-123" && body["status"] == "active"
+		}},
+		{"limits", AccountLimitsHandler(&svc.ServiceContext{GenericRPC: fakeGenericCaller{}}), func(body map[string]any) bool {
+			return body["dailyLimitCents"] == float64(100000) && body["currency"] == "USD"
+		}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request := httptest.NewRequest(http.MethodGet, "/api/v3/account/"+test.name, nil)
+			request = request.WithContext(context.WithValue(request.Context(), actorContextKey{}, Actor{UserID: "user-123"}))
+			test.handler.ServeHTTP(recorder, request)
+			var body map[string]any
+			if err := json.Unmarshal(recorder.Body.Bytes(), &body); err != nil {
+				t.Fatal(err)
+			}
+			if recorder.Code != http.StatusOK || !test.assert(body) || body["source"] != "account-service-generic-grpc" {
+				t.Fatalf("unexpected response: status=%d body=%#v", recorder.Code, body)
+			}
+		})
 	}
 }

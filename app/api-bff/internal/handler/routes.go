@@ -30,5 +30,11 @@ func RegisterHandlers(server *rest.Server, ctx *svc.ServiceContext) {
 			Method:  http.MethodGet,
 			Path:    "/profile",
 			Handler: GatewayAuth(gatewaySecret, true, ProfileHandler(ctx)),
+		}, {
+			Method: http.MethodGet, Path: "/account/summary",
+			Handler: GatewayAuth(gatewaySecret, true, AccountSummaryHandler(ctx)),
+		}, {
+			Method: http.MethodGet, Path: "/account/limits",
+			Handler: GatewayAuth(gatewaySecret, true, AccountLimitsHandler(ctx)),
 		}}, rest.WithPrefix("/api/v3"))
 }

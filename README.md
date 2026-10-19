@@ -46,6 +46,15 @@ make deploy-api-bff
 make verify-user-service
 ```
 
+部署第二个 gRPC 服务，演练多 Schema 和多 Unary RPC：
+
+```bash
+make generate-account-descriptor
+make deploy-account-service
+make deploy-api-bff
+make verify-account-service
+```
+
 部署服务注册中心：
 
 ```bash
@@ -145,10 +154,26 @@ curl --insecure -c cookies.txt -X POST https://localhost:18443/api/v3/auth/login
 `grpc.ClientConn.Invoke` 调用 `/user.v1.UserService/GetProfile`。Descriptor 由独立
 GitOps 仓库中的 ConfigMap 挂载，登录、刷新和退出仍使用生成的强类型 gRPC Client。
 
+API BFF 每 10 秒读取各 Schema 对应的 metadata 文件。当 digest 变化时，它会校验并解析
+新的 Descriptor，然后原子切换内存快照；已经开始的请求继续使用旧快照。校验或解析
+失败时保留上一份有效快照并记录错误。ConfigMap 使用稳定名称，因此 Argo CD 更新
+Descriptor 后不需要重启 API BFF Pod。
+
+`GenericRPC.Schemas[]` 定义服务发现、Descriptor、metadata 和允许的版本，
+`GenericRPC.Routes[]` 使用 `SchemaRef` 把稳定路由名绑定到具体 gRPC 方法。每个 Schema
+拥有独立连接和热更新快照；新增简单 unary 调用时不需要扩展泛化调用模块的接口。
+
+当前 user-v1 Schema 只接受 metadata 中 `service=user-service`、
+`schema=user.v1.UserService`、`version=1.0.0` 的 Descriptor。切换前还会验证
+`GetProfile` 是 unary RPC，并检查
+BFF 使用的请求及响应字段名称、JSON 名称和 Protobuf 类型；不兼容版本不会替换当前
+有效快照。
+
 修改 `api/user/v1/user.proto` 后重新生成 Descriptor：
 
 ```bash
 make generate-user-descriptor
+make generate-account-descriptor
 ```
 
 部署后的请求链路为：
@@ -168,6 +193,8 @@ https://localhost:18443 -> local-alb (Nginx TLS) -> APISIX -> api-bff
 - `POST /api/v3/auth/refresh`
 - `POST /api/v3/auth/logout`
 - `GET /api/v3/profile`，必须携带有效 Access Token；客户端传入的 `X-User-ID` 会被 APISIX 清除
+- `GET /api/v3/account/summary`，通过 account-v1 Descriptor 调用 `AccountService.GetSummary`
+- `GET /api/v3/account/limits`，通过同一个 Descriptor 调用 `AccountService.GetLimits`
 
 > 安全约束：所有集群命令都显式使用 `kind-local-platform`，不会依赖当前 kubectl context，也不会操作远端 EKS。
 

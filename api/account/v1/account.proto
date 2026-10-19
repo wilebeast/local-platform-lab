@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package account.v1;
+
+option go_package = "github.com/wilebeast/local-platform-lab/api/account/v1;accountv1";
+
+service AccountService {
+  rpc GetSummary(GetSummaryRequest) returns (GetSummaryResponse);
+  rpc GetLimits(GetLimitsRequest) returns (GetLimitsResponse);
+}
+
+message GetSummaryRequest {
+  string user_id = 1;
+}
+
+message GetSummaryResponse {
+  string account_id = 1;
+  string status = 2;
+  string display_name = 3;
+}
+
+message GetLimitsRequest {
+  string user_id = 1;
+}
+
+message GetLimitsResponse {
+  int64 daily_limit_cents = 1;
+  string currency = 2;
+}

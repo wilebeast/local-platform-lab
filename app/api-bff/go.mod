@@ -8,6 +8,8 @@ require (
 	github.com/wilebeast/local-platform-lab/api/user v0.0.0
 	github.com/wilebeast/local-platform-lab/pkg/serviceregistry v0.0.0
 	google.golang.org/grpc v1.80.0
+	google.golang.org/protobuf v1.36.11
+	gopkg.in/yaml.v2 v2.4.0
 )
 
 replace github.com/wilebeast/local-platform-lab/api/user => ../../api/user
@@ -102,8 +104,6 @@ require (
 	golang.org/x/time v0.14.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260128011058-8636f8732409 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260128011058-8636f8732409 // indirect
-	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

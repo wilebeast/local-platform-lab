@@ -1,2 +1,5 @@
 .DS_Store
 *.bak
+__pycache__/
+app/api-bff/api-bff
+app/account-service/account-service

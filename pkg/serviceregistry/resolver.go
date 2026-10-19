@@ -3,6 +3,7 @@ package serviceregistry
 import (
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 	"time"
 
@@ -36,7 +37,12 @@ func NewBuilder(cfg Config) (*Builder, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Builder{cfg: cfg, discoverer: source, scheme: "local-" + cfg.Provider}, nil
+	return &Builder{cfg: cfg, discoverer: source, scheme: resolverScheme(cfg.Provider, cfg.ServiceName)}, nil
+}
+
+func resolverScheme(provider, serviceName string) string {
+	schemeService := strings.NewReplacer("_", "-", ".", "-").Replace(strings.ToLower(serviceName))
+	return "local-" + provider + "-" + schemeService
 }
 
 func (b *Builder) Scheme() string { return b.scheme }
