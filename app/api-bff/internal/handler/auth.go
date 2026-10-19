@@ -28,9 +28,124 @@ func LoginHandler(serviceContext *svc.ServiceContext) http.HandlerFunc {
 			writeError(w, http.StatusBadRequest, "email and password are required")
 			return
 		}
-		pair, err := serviceContext.UserClient.Login(r.Context(), &userv1.LoginRequest{Email: request.Email, Password: request.Password})
+		result, err := serviceContext.UserClient.PrepareLogin(r.Context(), &userv1.PrepareLoginRequest{Email: request.Email, Password: request.Password})
+		if err != nil {
+			writeRPCError(w, err)
+			return
+		}
+		if result.GetSecondFactorRequired() {
+			httpx.OkJson(w, map[string]any{"secondFactorRequired": true, "authSessionToken": result.GetAuthSessionToken()})
+			return
+		}
+		writeTokenResult(w, r, result.GetTokenPair(), nil)
+	}
+}
+
+type verifyLogin2FARequest struct {
+	AuthSessionToken string `json:"authSessionToken"`
+	Code             string `json:"code"`
+}
+type confirmTOTPRequest struct {
+	SetupToken string `json:"setupToken"`
+	Code       string `json:"code"`
+}
+type unbindTOTPRequest struct {
+	Password string `json:"password"`
+	Code     string `json:"code"`
+}
+type codeRequest struct {
+	Code string `json:"code"`
+}
+
+func VerifyLogin2FAHandler(serviceContext *svc.ServiceContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var request verifyLogin2FARequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil || request.AuthSessionToken == "" || request.Code == "" {
+			writeError(w, http.StatusBadRequest, "authSessionToken and code are required")
+			return
+		}
+		pair, err := serviceContext.UserClient.VerifyLogin2FA(r.Context(), &userv1.VerifyLogin2FARequest{AuthSessionToken: request.AuthSessionToken, Code: request.Code})
 		writeTokenResult(w, r, pair, err)
 	}
+}
+
+func TOTPOptionsHandler(serviceContext *svc.ServiceContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		actor, ok := actorFromContext(r.Context())
+		if !ok {
+			writeError(w, http.StatusUnauthorized, "authentication required")
+			return
+		}
+		result, err := serviceContext.UserClient.TOTPOptions(r.Context(), &userv1.TOTPOptionsRequest{UserId: actor.UserID})
+		if err != nil {
+			writeRPCError(w, err)
+			return
+		}
+		httpx.OkJson(w, map[string]any{"setupToken": result.GetSetupToken(), "otpauthUri": result.GetOtpauthUri()})
+	}
+}
+
+func ConfirmTOTPHandler(serviceContext *svc.ServiceContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		actor, ok := actorFromContext(r.Context())
+		if !ok {
+			writeError(w, http.StatusUnauthorized, "authentication required")
+			return
+		}
+		var request confirmTOTPRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil || request.SetupToken == "" || request.Code == "" {
+			writeError(w, http.StatusBadRequest, "setupToken and code are required")
+			return
+		}
+		result, err := serviceContext.UserClient.ConfirmTOTP(r.Context(), &userv1.ConfirmTOTPRequest{UserId: actor.UserID, SetupToken: request.SetupToken, Code: request.Code})
+		writeRecoveryCodes(w, result, err)
+	}
+}
+
+func UnbindTOTPHandler(serviceContext *svc.ServiceContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		actor, ok := actorFromContext(r.Context())
+		if !ok {
+			writeError(w, http.StatusUnauthorized, "authentication required")
+			return
+		}
+		var request unbindTOTPRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil || request.Password == "" || request.Code == "" {
+			writeError(w, http.StatusBadRequest, "password and code are required")
+			return
+		}
+		result, err := serviceContext.UserClient.UnbindTOTP(r.Context(), &userv1.UnbindTOTPRequest{UserId: actor.UserID, Password: request.Password, Code: request.Code})
+		if err != nil {
+			writeRPCError(w, err)
+			return
+		}
+		httpx.OkJson(w, map[string]any{"unbound": result.GetUnbound()})
+	}
+}
+
+func RegenerateRecoveryCodesHandler(serviceContext *svc.ServiceContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		actor, ok := actorFromContext(r.Context())
+		if !ok {
+			writeError(w, http.StatusUnauthorized, "authentication required")
+			return
+		}
+		var request codeRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil || request.Code == "" {
+			writeError(w, http.StatusBadRequest, "code is required")
+			return
+		}
+		result, err := serviceContext.UserClient.RegenerateRecoveryCodes(r.Context(), &userv1.RegenerateRecoveryCodesRequest{UserId: actor.UserID, Code: request.Code})
+		writeRecoveryCodes(w, result, err)
+	}
+}
+
+func writeRecoveryCodes(w http.ResponseWriter, result *userv1.RecoveryCodesResponse, err error) {
+	if err != nil {
+		writeRPCError(w, err)
+		return
+	}
+	httpx.OkJson(w, map[string]any{"recoveryCodes": result.GetRecoveryCodes()})
 }
 
 func RefreshHandler(serviceContext *svc.ServiceContext) http.HandlerFunc {
@@ -64,6 +179,10 @@ func refreshTokenFromRequest(r *http.Request) string {
 func writeTokenResult(w http.ResponseWriter, r *http.Request, pair *userv1.TokenPair, err error) {
 	if err != nil {
 		writeRPCError(w, err)
+		return
+	}
+	if pair == nil || pair.GetAccessToken() == "" || pair.GetRefreshToken() == "" {
+		writeError(w, http.StatusBadGateway, "user service returned incomplete tokens")
 		return
 	}
 	setAuthCookies(w, pair)
@@ -126,6 +245,10 @@ func normalizeOrigin(value string) string { return strings.TrimRight(value, "/")
 func writeRPCError(w http.ResponseWriter, err error) {
 	if status.Code(err) == codes.Unauthenticated {
 		writeError(w, http.StatusUnauthorized, status.Convert(err).Message())
+		return
+	}
+	if status.Code(err) == codes.FailedPrecondition {
+		writeError(w, http.StatusConflict, status.Convert(err).Message())
 		return
 	}
 	writeError(w, http.StatusBadGateway, "user service request failed")

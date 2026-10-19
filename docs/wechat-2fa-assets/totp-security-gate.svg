@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f7f9fc"/><stop offset="1" stop-color="#e7edf6"/></linearGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#cbd5e1"/></linearGradient>
+    <linearGradient id="dark" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#263244"/><stop offset="1" stop-color="#101827"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#172033" flood-opacity=".22"/></filter>
+  </defs>
+  <rect width="1200" height="675" fill="url(#bg)"/>
+  <g font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+    <text x="72" y="78" font-size="22" fill="#536176" letter-spacing="3">WILDBEAST LOCAL LAB</text>
+    <text x="72" y="126" font-size="38" font-weight="700" fill="#172033">两道锁，才打开身份闸门</text>
+    <text x="72" y="163" font-size="20" fill="#66758a">Password + TOTP · Recovery code as the emergency key</text>
+  </g>
+  <g filter="url(#shadow)" transform="translate(80 205)">
+    <path d="M75 300L510 410 1025 268 590 160Z" fill="#bcc7d7"/>
+    <path d="M75 300v34l435 110v-34z" fill="#8290a4"/>
+    <path d="M510 410v34l515-142v-34z" fill="#69778c"/>
+    <path d="M96 296L590 169 1003 272 510 398Z" fill="url(#metal)" stroke="#7c8ba0" stroke-width="2"/>
+    <path d="M124 292L589 181 973 275 510 386Z" fill="none" stroke="#a4afbf" stroke-width="2"/>
+    <g fill="#536176">
+      <circle cx="132" cy="293" r="6"/><circle cx="510" cy="385" r="6"/><circle cx="588" cy="183" r="6"/><circle cx="967" cy="275" r="6"/>
+    </g>
+    <g transform="translate(255 88)">
+      <path d="M0 62L238 0l246 62-238 62z" fill="#e6ebf2" stroke="#66758a" stroke-width="2"/>
+      <path d="M0 62v188l246 64V124z" fill="#c3cddb" stroke="#66758a" stroke-width="2"/>
+      <path d="M246 124v190l238-64V62z" fill="#aab6c7" stroke="#66758a" stroke-width="2"/>
+      <path d="M25 83l196 51v146L25 229z" fill="#172033" stroke="#738198" stroke-width="3"/>
+      <path d="M269 134l190-51v146l-190 51z" fill="#202c3d" stroke="#738198" stroke-width="3"/>
+      <g fill="#8b99ad">
+        <circle cx="18" cy="73" r="4"/><circle cx="231" cy="18" r="4"/><circle cx="468" cy="73" r="4"/>
+        <circle cx="18" cy="235" r="4"/><circle cx="231" cy="297" r="4"/><circle cx="468" cy="235" r="4"/>
+      </g>
+      <g transform="translate(65 112)">
+        <rect width="112" height="82" rx="10" fill="#edf2f7" stroke="#8492a6" stroke-width="3"/>
+        <path d="M34 37v-9c0-28 44-28 44 0v9" fill="none" stroke="#334155" stroke-width="8" stroke-linecap="round"/>
+        <rect x="23" y="34" width="66" height="38" rx="7" fill="#4f7cff"/>
+        <circle cx="56" cy="51" r="6" fill="#fff"/><path d="M56 56v9" stroke="#fff" stroke-width="5"/>
+      </g>
+      <g transform="translate(304 113)">
+        <circle cx="58" cy="49" r="48" fill="#f5f7fa" stroke="#8290a4" stroke-width="5"/>
+        <circle cx="58" cy="49" r="35" fill="#172033"/>
+        <g stroke="#dbe4f0" stroke-width="3">
+          <path d="M58 7v9M58 82v9M16 49h9M91 49h9M28 19l7 7M81 72l7 7M88 19l-7 7M35 72l-7 7"/>
+        </g>
+        <path d="M58 49l22-18" stroke="#4f7cff" stroke-width="6" stroke-linecap="round"/>
+        <circle cx="58" cy="49" r="6" fill="#4f7cff"/>
+      </g>
+      <g transform="translate(165 216)">
+        <path d="M0 0l80 21 82-22 79 20-81 23-80-21z" fill="#eff3f8" stroke="#8492a6" stroke-width="2"/>
+        <path d="M0 0v30l80 21V21z" fill="#bbc6d5" stroke="#8492a6" stroke-width="2"/>
+        <path d="M80 21v30l81-22V-1z" fill="#9eabbd" stroke="#8492a6" stroke-width="2"/>
+        <path d="M162-1v30l79 20V19z" fill="#b8c3d2" stroke="#8492a6" stroke-width="2"/>
+        <path d="M92 29l38-10v12l-38 10z" fill="#4f7cff"/>
+      </g>
+      <g stroke="#708096" stroke-width="4" fill="none">
+        <path d="M220 155h28"/><path d="M238 143l14 12-14 12"/>
+        <path d="M264 155h27"/><path d="M278 143l14 12-14 12"/>
+      </g>
+      <g fill="#4f7cff">
+        <circle cx="243" cy="93" r="5"/><circle cx="258" cy="89" r="4"/><circle cx="273" cy="85" r="3"/>
+      </g>
+    </g>
+    <g transform="translate(828 296)">
+      <path d="M0 24l92-24 80 20-92 25z" fill="#eef2f7" stroke="#7f8da2" stroke-width="2"/>
+      <path d="M0 24v70l80 21V45z" fill="#bec8d6" stroke="#7f8da2" stroke-width="2"/>
+      <path d="M80 45v70l92-25V20z" fill="#a2aec0" stroke="#7f8da2" stroke-width="2"/>
+      <rect x="103" y="47" width="45" height="27" rx="4" transform="skewY(-15)" fill="#172033"/>
+      <g fill="#4f7cff"><circle cx="20" cy="49" r="4"/><circle cx="34" cy="53" r="4"/><circle cx="48" cy="57" r="4"/></g>
+    </g>
+  </g>
+  <g font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="17" fill="#46556b">
+    <text x="128" y="632">第一把锁：账号密码</text>
+    <text x="487" y="632">第二把锁：30 秒动态码</text>
+    <text x="874" y="632">应急钥匙：一次性恢复码</text>
+  </g>
+</svg>

@@ -19,10 +19,16 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserService_GetProfile_FullMethodName = "/user.v1.UserService/GetProfile"
-	UserService_Login_FullMethodName      = "/user.v1.UserService/Login"
-	UserService_Refresh_FullMethodName    = "/user.v1.UserService/Refresh"
-	UserService_Logout_FullMethodName     = "/user.v1.UserService/Logout"
+	UserService_GetProfile_FullMethodName              = "/user.v1.UserService/GetProfile"
+	UserService_Login_FullMethodName                   = "/user.v1.UserService/Login"
+	UserService_PrepareLogin_FullMethodName            = "/user.v1.UserService/PrepareLogin"
+	UserService_VerifyLogin2FA_FullMethodName          = "/user.v1.UserService/VerifyLogin2FA"
+	UserService_TOTPOptions_FullMethodName             = "/user.v1.UserService/TOTPOptions"
+	UserService_ConfirmTOTP_FullMethodName             = "/user.v1.UserService/ConfirmTOTP"
+	UserService_UnbindTOTP_FullMethodName              = "/user.v1.UserService/UnbindTOTP"
+	UserService_RegenerateRecoveryCodes_FullMethodName = "/user.v1.UserService/RegenerateRecoveryCodes"
+	UserService_Refresh_FullMethodName                 = "/user.v1.UserService/Refresh"
+	UserService_Logout_FullMethodName                  = "/user.v1.UserService/Logout"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -31,6 +37,12 @@ const (
 type UserServiceClient interface {
 	GetProfile(ctx context.Context, in *GetProfileRequest, opts ...grpc.CallOption) (*GetProfileResponse, error)
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*TokenPair, error)
+	PrepareLogin(ctx context.Context, in *PrepareLoginRequest, opts ...grpc.CallOption) (*PrepareLoginResponse, error)
+	VerifyLogin2FA(ctx context.Context, in *VerifyLogin2FARequest, opts ...grpc.CallOption) (*TokenPair, error)
+	TOTPOptions(ctx context.Context, in *TOTPOptionsRequest, opts ...grpc.CallOption) (*TOTPOptionsResponse, error)
+	ConfirmTOTP(ctx context.Context, in *ConfirmTOTPRequest, opts ...grpc.CallOption) (*RecoveryCodesResponse, error)
+	UnbindTOTP(ctx context.Context, in *UnbindTOTPRequest, opts ...grpc.CallOption) (*UnbindTOTPResponse, error)
+	RegenerateRecoveryCodes(ctx context.Context, in *RegenerateRecoveryCodesRequest, opts ...grpc.CallOption) (*RecoveryCodesResponse, error)
 	Refresh(ctx context.Context, in *RefreshRequest, opts ...grpc.CallOption) (*TokenPair, error)
 	Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*LogoutResponse, error)
 }
@@ -63,6 +75,66 @@ func (c *userServiceClient) Login(ctx context.Context, in *LoginRequest, opts ..
 	return out, nil
 }
 
+func (c *userServiceClient) PrepareLogin(ctx context.Context, in *PrepareLoginRequest, opts ...grpc.CallOption) (*PrepareLoginResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PrepareLoginResponse)
+	err := c.cc.Invoke(ctx, UserService_PrepareLogin_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) VerifyLogin2FA(ctx context.Context, in *VerifyLogin2FARequest, opts ...grpc.CallOption) (*TokenPair, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TokenPair)
+	err := c.cc.Invoke(ctx, UserService_VerifyLogin2FA_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) TOTPOptions(ctx context.Context, in *TOTPOptionsRequest, opts ...grpc.CallOption) (*TOTPOptionsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TOTPOptionsResponse)
+	err := c.cc.Invoke(ctx, UserService_TOTPOptions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) ConfirmTOTP(ctx context.Context, in *ConfirmTOTPRequest, opts ...grpc.CallOption) (*RecoveryCodesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RecoveryCodesResponse)
+	err := c.cc.Invoke(ctx, UserService_ConfirmTOTP_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) UnbindTOTP(ctx context.Context, in *UnbindTOTPRequest, opts ...grpc.CallOption) (*UnbindTOTPResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UnbindTOTPResponse)
+	err := c.cc.Invoke(ctx, UserService_UnbindTOTP_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) RegenerateRecoveryCodes(ctx context.Context, in *RegenerateRecoveryCodesRequest, opts ...grpc.CallOption) (*RecoveryCodesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RecoveryCodesResponse)
+	err := c.cc.Invoke(ctx, UserService_RegenerateRecoveryCodes_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *userServiceClient) Refresh(ctx context.Context, in *RefreshRequest, opts ...grpc.CallOption) (*TokenPair, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(TokenPair)
@@ -89,6 +161,12 @@ func (c *userServiceClient) Logout(ctx context.Context, in *LogoutRequest, opts 
 type UserServiceServer interface {
 	GetProfile(context.Context, *GetProfileRequest) (*GetProfileResponse, error)
 	Login(context.Context, *LoginRequest) (*TokenPair, error)
+	PrepareLogin(context.Context, *PrepareLoginRequest) (*PrepareLoginResponse, error)
+	VerifyLogin2FA(context.Context, *VerifyLogin2FARequest) (*TokenPair, error)
+	TOTPOptions(context.Context, *TOTPOptionsRequest) (*TOTPOptionsResponse, error)
+	ConfirmTOTP(context.Context, *ConfirmTOTPRequest) (*RecoveryCodesResponse, error)
+	UnbindTOTP(context.Context, *UnbindTOTPRequest) (*UnbindTOTPResponse, error)
+	RegenerateRecoveryCodes(context.Context, *RegenerateRecoveryCodesRequest) (*RecoveryCodesResponse, error)
 	Refresh(context.Context, *RefreshRequest) (*TokenPair, error)
 	Logout(context.Context, *LogoutRequest) (*LogoutResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
@@ -106,6 +184,24 @@ func (UnimplementedUserServiceServer) GetProfile(context.Context, *GetProfileReq
 }
 func (UnimplementedUserServiceServer) Login(context.Context, *LoginRequest) (*TokenPair, error) {
 	return nil, status.Error(codes.Unimplemented, "method Login not implemented")
+}
+func (UnimplementedUserServiceServer) PrepareLogin(context.Context, *PrepareLoginRequest) (*PrepareLoginResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method PrepareLogin not implemented")
+}
+func (UnimplementedUserServiceServer) VerifyLogin2FA(context.Context, *VerifyLogin2FARequest) (*TokenPair, error) {
+	return nil, status.Error(codes.Unimplemented, "method VerifyLogin2FA not implemented")
+}
+func (UnimplementedUserServiceServer) TOTPOptions(context.Context, *TOTPOptionsRequest) (*TOTPOptionsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method TOTPOptions not implemented")
+}
+func (UnimplementedUserServiceServer) ConfirmTOTP(context.Context, *ConfirmTOTPRequest) (*RecoveryCodesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ConfirmTOTP not implemented")
+}
+func (UnimplementedUserServiceServer) UnbindTOTP(context.Context, *UnbindTOTPRequest) (*UnbindTOTPResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UnbindTOTP not implemented")
+}
+func (UnimplementedUserServiceServer) RegenerateRecoveryCodes(context.Context, *RegenerateRecoveryCodesRequest) (*RecoveryCodesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RegenerateRecoveryCodes not implemented")
 }
 func (UnimplementedUserServiceServer) Refresh(context.Context, *RefreshRequest) (*TokenPair, error) {
 	return nil, status.Error(codes.Unimplemented, "method Refresh not implemented")
@@ -170,6 +266,114 @@ func _UserService_Login_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_PrepareLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PrepareLoginRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).PrepareLogin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_PrepareLogin_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).PrepareLogin(ctx, req.(*PrepareLoginRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_VerifyLogin2FA_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VerifyLogin2FARequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).VerifyLogin2FA(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_VerifyLogin2FA_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).VerifyLogin2FA(ctx, req.(*VerifyLogin2FARequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_TOTPOptions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TOTPOptionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).TOTPOptions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_TOTPOptions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).TOTPOptions(ctx, req.(*TOTPOptionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_ConfirmTOTP_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfirmTOTPRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).ConfirmTOTP(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_ConfirmTOTP_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).ConfirmTOTP(ctx, req.(*ConfirmTOTPRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_UnbindTOTP_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnbindTOTPRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).UnbindTOTP(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_UnbindTOTP_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).UnbindTOTP(ctx, req.(*UnbindTOTPRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_RegenerateRecoveryCodes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegenerateRecoveryCodesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).RegenerateRecoveryCodes(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_RegenerateRecoveryCodes_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).RegenerateRecoveryCodes(ctx, req.(*RegenerateRecoveryCodesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _UserService_Refresh_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RefreshRequest)
 	if err := dec(in); err != nil {
@@ -220,6 +424,30 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Login",
 			Handler:    _UserService_Login_Handler,
+		},
+		{
+			MethodName: "PrepareLogin",
+			Handler:    _UserService_PrepareLogin_Handler,
+		},
+		{
+			MethodName: "VerifyLogin2FA",
+			Handler:    _UserService_VerifyLogin2FA_Handler,
+		},
+		{
+			MethodName: "TOTPOptions",
+			Handler:    _UserService_TOTPOptions_Handler,
+		},
+		{
+			MethodName: "ConfirmTOTP",
+			Handler:    _UserService_ConfirmTOTP_Handler,
+		},
+		{
+			MethodName: "UnbindTOTP",
+			Handler:    _UserService_UnbindTOTP_Handler,
+		},
+		{
+			MethodName: "RegenerateRecoveryCodes",
+			Handler:    _UserService_RegenerateRecoveryCodes_Handler,
 		},
 		{
 			MethodName: "Refresh",

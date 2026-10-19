@@ -14,7 +14,12 @@ import (
 	"google.golang.org/grpc"
 )
 
-type fakeUserClient struct{ tokenPair *userv1.TokenPair }
+type fakeUserClient struct {
+	tokenPair     *userv1.TokenPair
+	prepare       *userv1.PrepareLoginResponse
+	setup         *userv1.TOTPOptionsResponse
+	recoveryCodes []string
+}
 
 type fakeGenericCaller struct{}
 
@@ -42,6 +47,27 @@ func (f fakeUserClient) Login(_ context.Context, _ *userv1.LoginRequest, _ ...gr
 		return f.tokenPair, nil
 	}
 	return &userv1.TokenPair{}, nil
+}
+func (f fakeUserClient) PrepareLogin(_ context.Context, _ *userv1.PrepareLoginRequest, _ ...grpc.CallOption) (*userv1.PrepareLoginResponse, error) {
+	if f.prepare != nil {
+		return f.prepare, nil
+	}
+	return &userv1.PrepareLoginResponse{TokenPair: f.tokenPair}, nil
+}
+func (f fakeUserClient) VerifyLogin2FA(_ context.Context, _ *userv1.VerifyLogin2FARequest, _ ...grpc.CallOption) (*userv1.TokenPair, error) {
+	return f.tokenPair, nil
+}
+func (f fakeUserClient) TOTPOptions(_ context.Context, _ *userv1.TOTPOptionsRequest, _ ...grpc.CallOption) (*userv1.TOTPOptionsResponse, error) {
+	return f.setup, nil
+}
+func (f fakeUserClient) ConfirmTOTP(_ context.Context, _ *userv1.ConfirmTOTPRequest, _ ...grpc.CallOption) (*userv1.RecoveryCodesResponse, error) {
+	return &userv1.RecoveryCodesResponse{RecoveryCodes: f.recoveryCodes}, nil
+}
+func (f fakeUserClient) UnbindTOTP(_ context.Context, _ *userv1.UnbindTOTPRequest, _ ...grpc.CallOption) (*userv1.UnbindTOTPResponse, error) {
+	return &userv1.UnbindTOTPResponse{Unbound: true}, nil
+}
+func (f fakeUserClient) RegenerateRecoveryCodes(_ context.Context, _ *userv1.RegenerateRecoveryCodesRequest, _ ...grpc.CallOption) (*userv1.RecoveryCodesResponse, error) {
+	return &userv1.RecoveryCodesResponse{RecoveryCodes: f.recoveryCodes}, nil
 }
 
 func testServiceContextWithTokens() *svc.ServiceContext {

@@ -1,10 +1,14 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	userv1 "github.com/wilebeast/local-platform-lab/api/user/v1"
+	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/svc"
 )
 
 func TestBrowserOriginRejectsMissingAndWrongOrigin(t *testing.T) {
@@ -68,5 +72,41 @@ func TestLoginResponseUsesSecureHttpOnlyCookiesWithoutTokensInJSON(t *testing.T)
 		if cookie.Name != "csrf_token" && !cookie.HttpOnly {
 			t.Fatalf("cookie %s must be HttpOnly", cookie.Name)
 		}
+	}
+}
+
+func TestLoginReturnsSecondFactorChallengeWithoutCookies(t *testing.T) {
+	serviceContext := &svc.ServiceContext{UserClient: fakeUserClient{prepare: &userv1.PrepareLoginResponse{
+		SecondFactorRequired: true, AuthSessionToken: "auth-session",
+	}}}
+	request := httptest.NewRequest(http.MethodPost, "/api/v3/auth/login", strings.NewReader(`{"email":"demo@local.test","password":"local-demo-password"}`))
+	recorder := httptest.NewRecorder()
+	LoginHandler(serviceContext)(recorder, request)
+	if recorder.Code != http.StatusOK || !strings.Contains(recorder.Body.String(), `"secondFactorRequired":true`) || !strings.Contains(recorder.Body.String(), `"authSessionToken":"auth-session"`) {
+		t.Fatalf("unexpected challenge response: status=%d body=%s", recorder.Code, recorder.Body.String())
+	}
+	if len(recorder.Result().Cookies()) != 0 {
+		t.Fatal("2FA challenge must not issue cookies")
+	}
+}
+
+func TestVerifyLogin2FASetsTokensInSecureCookies(t *testing.T) {
+	serviceContext := testServiceContextWithTokens()
+	request := httptest.NewRequest(http.MethodPost, "/api/v3/auth/login/verify-2fa", strings.NewReader(`{"authSessionToken":"session","code":"123456"}`))
+	recorder := httptest.NewRecorder()
+	VerifyLogin2FAHandler(serviceContext)(recorder, request)
+	if recorder.Code != http.StatusOK || len(recorder.Result().Cookies()) != 3 {
+		t.Fatalf("expected token cookies after second factor: status=%d cookies=%d", recorder.Code, len(recorder.Result().Cookies()))
+	}
+}
+
+func TestTOTPOptionsUsesAuthenticatedActor(t *testing.T) {
+	serviceContext := &svc.ServiceContext{UserClient: fakeUserClient{setup: &userv1.TOTPOptionsResponse{SetupToken: "setup", OtpauthUri: "otpauth://totp/Wildbeast"}}}
+	request := httptest.NewRequest(http.MethodPost, "/api/v3/auth/2fa/totp/options", nil)
+	request = request.WithContext(context.WithValue(request.Context(), actorContextKey{}, Actor{UserID: "local-user"}))
+	recorder := httptest.NewRecorder()
+	TOTPOptionsHandler(serviceContext)(recorder, request)
+	if recorder.Code != http.StatusOK || !strings.Contains(recorder.Body.String(), "otpauth://") {
+		t.Fatalf("unexpected options response: status=%d body=%s", recorder.Code, recorder.Body.String())
 	}
 }

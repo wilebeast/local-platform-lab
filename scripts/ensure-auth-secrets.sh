@@ -25,10 +25,21 @@ else
   gateway_key="$(openssl rand -hex 32)"
 fi
 
+totp_key="$(kubectl --context "$KUBE_CONTEXT" -n user-service get secret platform-auth -o jsonpath='{.data.totp-encryption-key}' 2>/dev/null | base64 --decode || true)"
+recovery_pepper="$(kubectl --context "$KUBE_CONTEXT" -n user-service get secret platform-auth -o jsonpath='{.data.recovery-code-pepper}' 2>/dev/null | base64 --decode || true)"
+if [ -z "$totp_key" ]; then
+  totp_key="$(openssl rand -hex 32)"
+fi
+if [ -z "$recovery_pepper" ]; then
+  recovery_pepper="$(openssl rand -hex 32)"
+fi
+
 for namespace in api-bff user-service apisix; do
   kubectl --context "$KUBE_CONTEXT" -n "$namespace" create secret generic platform-auth \
     --from-literal="jwt-signing-key=$jwt_key" \
     --from-literal="gateway-signature-key=$gateway_key" \
+    --from-literal="totp-encryption-key=$totp_key" \
+    --from-literal="recovery-code-pepper=$recovery_pepper" \
     --dry-run=client -o yaml | kubectl --context "$KUBE_CONTEXT" apply -f - >/dev/null
 done
 

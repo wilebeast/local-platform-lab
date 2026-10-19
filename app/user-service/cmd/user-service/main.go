@@ -40,9 +40,11 @@ func main() {
 		JWTSigningKey: mustEnv("JWT_SIGNING_KEY"),
 		Issuer:        "local-platform-lab", Audience: "api-bff",
 		AccessTTL: 30 * time.Minute, RefreshTTL: 7 * 24 * time.Hour,
-		DemoEmail:    envOr("DEMO_USER_EMAIL", "demo@local.test"),
-		DemoPassword: envOr("DEMO_USER_PASSWORD", "local-demo-password"),
-		DemoUserID:   envOr("DEMO_USER_ID", "local-user"),
+		DemoEmail:          envOr("DEMO_USER_EMAIL", "demo@local.test"),
+		DemoPassword:       envOr("DEMO_USER_PASSWORD", "local-demo-password"),
+		DemoUserID:         envOr("DEMO_USER_ID", "local-user"),
+		TOTPEncryptionKey:  mustEnv("TOTP_ENCRYPTION_KEY"),
+		RecoveryCodePepper: mustEnv("RECOVERY_CODE_PEPPER"),
 	}, refreshStore)
 	if err != nil {
 		log.Fatalf("configure auth: %v", err)

@@ -11,11 +11,20 @@ import (
 )
 
 type memoryStore struct {
-	mu     sync.Mutex
-	values map[string]string
+	mu            sync.Mutex
+	values        map[string]string
+	totpSecrets   map[string]string
+	totpSetups    map[string]string
+	loginSessions map[string]string
+	recovery      map[string]map[string]struct{}
 }
 
-func newMemoryStore() *memoryStore { return &memoryStore{values: map[string]string{}} }
+func newMemoryStore() *memoryStore {
+	return &memoryStore{
+		values: map[string]string{}, totpSecrets: map[string]string{}, totpSetups: map[string]string{},
+		loginSessions: map[string]string{}, recovery: map[string]map[string]struct{}{},
+	}
+}
 func (s *memoryStore) Put(_ context.Context, key, value string, _ time.Duration) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -39,6 +48,67 @@ func (s *memoryStore) Delete(_ context.Context, key string) (bool, error) {
 	delete(s.values, key)
 	return ok, nil
 }
+func (s *memoryStore) PutTOTPSecret(_ context.Context, userID, secret string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.totpSecrets[userID] = secret
+	return nil
+}
+func (s *memoryStore) GetTOTPSecret(_ context.Context, userID string) (string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.totpSecrets[userID], nil
+}
+func (s *memoryStore) DeleteTOTP(_ context.Context, userID string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.totpSecrets, userID)
+	delete(s.recovery, userID)
+	return nil
+}
+func (s *memoryStore) PutTOTPSetup(_ context.Context, token, secret string, _ time.Duration) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.totpSetups[token] = secret
+	return nil
+}
+func (s *memoryStore) ConsumeTOTPSetup(_ context.Context, token string) (string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	value := s.totpSetups[token]
+	delete(s.totpSetups, token)
+	return value, nil
+}
+func (s *memoryStore) PutLoginSession(_ context.Context, token, userID string, _ time.Duration) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.loginSessions[token] = userID
+	return nil
+}
+func (s *memoryStore) ConsumeLoginSession(_ context.Context, token string) (string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	value := s.loginSessions[token]
+	delete(s.loginSessions, token)
+	return value, nil
+}
+func (s *memoryStore) ReplaceRecoveryDigests(_ context.Context, userID string, digests []string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	values := map[string]struct{}{}
+	for _, digest := range digests {
+		values[digest] = struct{}{}
+	}
+	s.recovery[userID] = values
+	return nil
+}
+func (s *memoryStore) ConsumeRecoveryDigest(_ context.Context, userID, digest string) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, ok := s.recovery[userID][digest]
+	delete(s.recovery[userID], digest)
+	return ok, nil
+}
 
 func testService(t *testing.T) *Service {
 	t.Helper()
@@ -46,6 +116,8 @@ func testService(t *testing.T) *Service {
 		JWTSigningKey: "01234567890123456789012345678901", Issuer: "local-platform-lab",
 		Audience: "api-bff", AccessTTL: 30 * time.Minute, RefreshTTL: 7 * 24 * time.Hour,
 		DemoEmail: "demo@local.test", DemoPassword: "local-demo-password", DemoUserID: "local-user",
+		TOTPEncryptionKey:  "01234567890123456789012345678901",
+		RecoveryCodePepper: "abcdefghijklmnopqrstuvwxyz123456",
 	}, newMemoryStore())
 	if err != nil {
 		t.Fatal(err)

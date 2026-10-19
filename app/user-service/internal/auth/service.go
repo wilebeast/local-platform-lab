@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
-	"crypto/subtle"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
@@ -24,15 +23,29 @@ type RefreshStore interface {
 	Delete(context.Context, string) (bool, error)
 }
 
+type FactorStore interface {
+	PutTOTPSecret(context.Context, string, string) error
+	GetTOTPSecret(context.Context, string) (string, error)
+	DeleteTOTP(context.Context, string) error
+	PutTOTPSetup(context.Context, string, string, time.Duration) error
+	ConsumeTOTPSetup(context.Context, string) (string, error)
+	PutLoginSession(context.Context, string, string, time.Duration) error
+	ConsumeLoginSession(context.Context, string) (string, error)
+	ReplaceRecoveryDigests(context.Context, string, []string) error
+	ConsumeRecoveryDigest(context.Context, string, string) (bool, error)
+}
+
 type Config struct {
-	JWTSigningKey string
-	Issuer        string
-	Audience      string
-	AccessTTL     time.Duration
-	RefreshTTL    time.Duration
-	DemoEmail     string
-	DemoPassword  string
-	DemoUserID    string
+	JWTSigningKey      string
+	Issuer             string
+	Audience           string
+	AccessTTL          time.Duration
+	RefreshTTL         time.Duration
+	DemoEmail          string
+	DemoPassword       string
+	DemoUserID         string
+	TOTPEncryptionKey  string
+	RecoveryCodePepper string
 }
 
 type TokenPair struct {
@@ -42,9 +55,10 @@ type TokenPair struct {
 }
 
 type Service struct {
-	config Config
-	store  RefreshStore
-	now    func() time.Time
+	config  Config
+	store   RefreshStore
+	factors FactorStore
+	now     func() time.Time
 }
 
 func NewService(config Config, store RefreshStore) (*Service, error) {
@@ -54,16 +68,22 @@ func NewService(config Config, store RefreshStore) (*Service, error) {
 	if config.AccessTTL <= 0 || config.RefreshTTL <= 0 || store == nil {
 		return nil, errors.New("invalid auth configuration")
 	}
-	return &Service{config: config, store: store, now: time.Now}, nil
+	factors, ok := store.(FactorStore)
+	if !ok || len(config.TOTPEncryptionKey) < 32 || len(config.RecoveryCodePepper) < 32 {
+		return nil, errors.New("invalid second-factor configuration")
+	}
+	return &Service{config: config, store: store, factors: factors, now: time.Now}, nil
 }
 
 func (s *Service) Login(ctx context.Context, email, password string) (TokenPair, error) {
-	emailOK := subtle.ConstantTimeCompare([]byte(email), []byte(s.config.DemoEmail))
-	passwordOK := subtle.ConstantTimeCompare([]byte(password), []byte(s.config.DemoPassword))
-	if emailOK != 1 || passwordOK != 1 {
-		return TokenPair{}, ErrInvalidCredentials
+	preparation, err := s.PrepareLogin(ctx, email, password)
+	if err != nil {
+		return TokenPair{}, err
 	}
-	return s.issue(ctx, s.config.DemoUserID)
+	if preparation.SecondFactorRequired {
+		return TokenPair{}, ErrSecondFactorRequired
+	}
+	return preparation.TokenPair, nil
 }
 
 func (s *Service) Refresh(ctx context.Context, refreshToken string) (TokenPair, error) {

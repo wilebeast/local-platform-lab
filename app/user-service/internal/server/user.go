@@ -21,13 +21,74 @@ func NewUserServer(authService *auth.Service) *UserServer {
 
 func (s *UserServer) Login(ctx context.Context, request *userv1.LoginRequest) (*userv1.TokenPair, error) {
 	pair, err := s.auth.Login(ctx, request.GetEmail(), request.GetPassword())
-	if errors.Is(err, auth.ErrInvalidCredentials) {
-		return nil, status.Error(codes.Unauthenticated, "invalid credentials")
-	}
 	if err != nil {
-		return nil, status.Error(codes.Internal, "login failed")
+		return nil, authStatus(err, "login failed")
 	}
 	return toProto(pair), nil
+}
+
+func (s *UserServer) PrepareLogin(ctx context.Context, request *userv1.PrepareLoginRequest) (*userv1.PrepareLoginResponse, error) {
+	result, err := s.auth.PrepareLogin(ctx, request.GetEmail(), request.GetPassword())
+	if err != nil {
+		return nil, authStatus(err, "prepare login failed")
+	}
+	response := &userv1.PrepareLoginResponse{SecondFactorRequired: result.SecondFactorRequired, AuthSessionToken: result.AuthSessionToken}
+	if result.TokenPair.AccessToken != "" {
+		response.TokenPair = toProto(result.TokenPair)
+	}
+	return response, nil
+}
+
+func (s *UserServer) VerifyLogin2FA(ctx context.Context, request *userv1.VerifyLogin2FARequest) (*userv1.TokenPair, error) {
+	pair, err := s.auth.VerifyLogin2FA(ctx, request.GetAuthSessionToken(), request.GetCode())
+	if err != nil {
+		return nil, authStatus(err, "second-factor verification failed")
+	}
+	return toProto(pair), nil
+}
+
+func (s *UserServer) TOTPOptions(ctx context.Context, request *userv1.TOTPOptionsRequest) (*userv1.TOTPOptionsResponse, error) {
+	setup, err := s.auth.TOTPOptions(ctx, request.GetUserId())
+	if err != nil {
+		return nil, authStatus(err, "create TOTP options failed")
+	}
+	return &userv1.TOTPOptionsResponse{SetupToken: setup.SetupToken, OtpauthUri: setup.OTPAuthURI}, nil
+}
+
+func (s *UserServer) ConfirmTOTP(ctx context.Context, request *userv1.ConfirmTOTPRequest) (*userv1.RecoveryCodesResponse, error) {
+	codes, err := s.auth.ConfirmTOTP(ctx, request.GetUserId(), request.GetSetupToken(), request.GetCode())
+	if err != nil {
+		return nil, authStatus(err, "confirm TOTP failed")
+	}
+	return &userv1.RecoveryCodesResponse{RecoveryCodes: codes}, nil
+}
+
+func (s *UserServer) UnbindTOTP(ctx context.Context, request *userv1.UnbindTOTPRequest) (*userv1.UnbindTOTPResponse, error) {
+	if err := s.auth.UnbindTOTP(ctx, request.GetUserId(), request.GetPassword(), request.GetCode()); err != nil {
+		return nil, authStatus(err, "unbind TOTP failed")
+	}
+	return &userv1.UnbindTOTPResponse{Unbound: true}, nil
+}
+
+func (s *UserServer) RegenerateRecoveryCodes(ctx context.Context, request *userv1.RegenerateRecoveryCodesRequest) (*userv1.RecoveryCodesResponse, error) {
+	codes, err := s.auth.RegenerateRecoveryCodes(ctx, request.GetUserId(), request.GetCode())
+	if err != nil {
+		return nil, authStatus(err, "regenerate recovery codes failed")
+	}
+	return &userv1.RecoveryCodesResponse{RecoveryCodes: codes}, nil
+}
+
+func authStatus(err error, internalMessage string) error {
+	switch {
+	case errors.Is(err, auth.ErrInvalidCredentials), errors.Is(err, auth.ErrInvalidSecondFactor):
+		return status.Error(codes.Unauthenticated, err.Error())
+	case errors.Is(err, auth.ErrTOTPAlreadyBound), errors.Is(err, auth.ErrTOTPNotBound):
+		return status.Error(codes.FailedPrecondition, err.Error())
+	case errors.Is(err, auth.ErrSecondFactorRequired):
+		return status.Error(codes.FailedPrecondition, err.Error())
+	default:
+		return status.Error(codes.Internal, internalMessage)
+	}
 }
 
 func (s *UserServer) Refresh(ctx context.Context, request *userv1.RefreshRequest) (*userv1.TokenPair, error) {
