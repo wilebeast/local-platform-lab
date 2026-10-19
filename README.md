@@ -14,6 +14,16 @@
 
 ## 快速开始
 
+先将代码仓库和 GitOps 仓库克隆到同一父目录：
+
+```text
+wildbeast/
+├── local-platform-lab/
+└── local-platform-gitops/
+```
+
+默认脚本读取 `../local-platform-gitops`；如目录不同，可设置 `GITOPS_DIR`。
+
 ```bash
 make doctor
 make bootstrap
@@ -184,7 +194,7 @@ make destroy
 |---|---|
 | GitHub Actions | `scripts/deploy.sh` |
 | AWS ECR | `localhost:5001` Registry |
-| 部署配置仓库 | 集群内临时 `git-server` |
+| 部署配置仓库 | 独立仓库 `../local-platform-gitops`，并同步到集群内临时 `git-server` |
 | Argo CD | `argocd` namespace |
 | EKS | Kind 集群 `local-platform` |
 
@@ -193,13 +203,15 @@ make destroy
 ## Kustomize 目录
 
 ```text
-gitops/apps/platform-demo/
+../local-platform-gitops/apps/platform-demo/
 ├── base/                  # 各环境共享的 Deployment、Service、Namespace
 └── overlays/
     └── local/             # 仅本地使用的镜像、tag、副本数和 NodePort
 ```
 
 Argo CD 指向 `apps/platform-demo/overlays/local`。`scripts/deploy.sh` 也只更新 local overlay 的镜像 tag，公共 base 不携带本机 Registry 地址。
+
+GitOps 清单位于独立同级仓库 `../local-platform-gitops`。如需使用其他位置，可通过 `GITOPS_DIR` 指定绝对路径。业务代码仓库不再跟踪 Kubernetes 发布清单。
 
 ## 本机网络说明
 

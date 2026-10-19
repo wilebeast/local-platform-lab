@@ -2,22 +2,23 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+GITOPS_DIR="${GITOPS_DIR:-$ROOT_DIR/../local-platform-gitops}"
 "$ROOT_DIR/scripts/ensure-auth-secrets.sh"
 KUBE_CONTEXT="kind-local-platform"
 
-git -C "$ROOT_DIR/gitops" add \
+git -C "$GITOPS_DIR" add \
   apps/apisix \
   apps/local-alb \
   apps/platform-demo/overlays/local/kustomization.yaml
 
-if ! git -C "$ROOT_DIR/gitops" diff --cached --quiet; then
-  git -C "$ROOT_DIR/gitops" commit -m "deploy local ALB and APISIX gateway"
+if ! git -C "$GITOPS_DIR" diff --cached --quiet; then
+  git -C "$GITOPS_DIR" commit -m "deploy local ALB and APISIX gateway"
 fi
 
 "$ROOT_DIR/scripts/push-gitops.sh"
-desired_revision="$(git -C "$ROOT_DIR/gitops" rev-parse HEAD)"
-kubectl --context "$KUBE_CONTEXT" apply -f "$ROOT_DIR/gitops/argocd/apisix.yaml"
-kubectl --context "$KUBE_CONTEXT" apply -f "$ROOT_DIR/gitops/argocd/local-alb.yaml"
+desired_revision="$(git -C "$GITOPS_DIR" rev-parse HEAD)"
+kubectl --context "$KUBE_CONTEXT" apply -f "$GITOPS_DIR/argocd/apisix.yaml"
+kubectl --context "$KUBE_CONTEXT" apply -f "$GITOPS_DIR/argocd/local-alb.yaml"
 kubectl --context "$KUBE_CONTEXT" -n argocd annotate application apisix argocd.argoproj.io/refresh=hard --overwrite
 kubectl --context "$KUBE_CONTEXT" -n argocd annotate application local-alb argocd.argoproj.io/refresh=hard --overwrite
 kubectl --context "$KUBE_CONTEXT" -n argocd annotate application platform-demo argocd.argoproj.io/refresh=hard --overwrite

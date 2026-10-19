@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+GITOPS_DIR="${GITOPS_DIR:-$ROOT_DIR/../local-platform-gitops}"
 CLUSTER_NAME="local-platform"
 REGISTRY_NAME="local-registry"
 KUBE_CONTEXT="kind-$CLUSTER_NAME"
@@ -82,6 +83,6 @@ fi
 
 "$ROOT_DIR/scripts/push-gitops.sh" --seed
 "$ROOT_DIR/scripts/ensure-auth-secrets.sh"
-kubectl --context "$KUBE_CONTEXT" apply -f "$ROOT_DIR/gitops/argocd"
+kubectl --context "$KUBE_CONTEXT" apply -f "$GITOPS_DIR/argocd"
 
 echo "Bootstrap complete. Run: make deploy && make verify"
