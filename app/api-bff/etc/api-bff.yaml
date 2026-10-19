@@ -9,3 +9,7 @@ UserRpc:
   ServiceName: user-service
   NacosAddress: nacos.nacos.svc.cluster.local:8848
   EtcdEndpoints: etcd-client.etcd.svc.cluster.local:2379
+GenericRPC:
+  DescriptorPath: /etc/api-bff/schemas/user-service-v1.pb
+  DescriptorSHA256: 840c36f1aa90e30f718e62bc0443bcc27acc030562d73b33bb319afcda3c186d
+  ProfileMethod: /user.v1.UserService/GetProfile

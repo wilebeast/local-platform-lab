@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -14,6 +15,18 @@ import (
 )
 
 type fakeUserClient struct{ tokenPair *userv1.TokenPair }
+
+type fakeGenericCaller struct{}
+
+func (fakeGenericCaller) Call(_ context.Context, method string, request map[string]any) (map[string]any, error) {
+	if method != "/user.v1.UserService/GetProfile" {
+		return nil, fmt.Errorf("unexpected method: %s", method)
+	}
+	return map[string]any{
+		"userId":             request["userId"],
+		"verificationStatus": "verified",
+	}, nil
+}
 
 func (fakeUserClient) GetProfile(_ context.Context, request *userv1.GetProfileRequest, _ ...grpc.CallOption) (*userv1.GetProfileResponse, error) {
 	return &userv1.GetProfileResponse{
@@ -65,13 +78,16 @@ func TestProfileHandlerUsesAuthenticatedActor(t *testing.T) {
 	request := httptest.NewRequest(http.MethodGet, "/api/v3/profile", nil)
 	request = request.WithContext(context.WithValue(request.Context(), actorContextKey{}, Actor{UserID: "user-123"}))
 
-	ProfileHandler(&svc.ServiceContext{UserClient: fakeUserClient{}}).ServeHTTP(recorder, request)
+	ProfileHandler(&svc.ServiceContext{
+		GenericRPC:    fakeGenericCaller{},
+		ProfileMethod: "/user.v1.UserService/GetProfile",
+	}).ServeHTTP(recorder, request)
 
 	var body map[string]string
 	if err := json.Unmarshal(recorder.Body.Bytes(), &body); err != nil {
 		t.Fatalf("decode response: %v", err)
 	}
-	if body["userId"] != "user-123" || body["verificationStatus"] != "verified" || body["source"] != "user-service-grpc" {
+	if body["userId"] != "user-123" || body["verificationStatus"] != "verified" || body["source"] != "user-service-generic-grpc" {
 		t.Fatalf("unexpected response: %#v", body)
 	}
 }
@@ -80,7 +96,7 @@ func TestProfileHandlerRejectsRawUserHeader(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodGet, "/api/v3/profile", nil)
 	request.Header.Set("X-User-ID", "forged-user")
-	ProfileHandler(&svc.ServiceContext{UserClient: fakeUserClient{}}).ServeHTTP(recorder, request)
+	ProfileHandler(&svc.ServiceContext{GenericRPC: fakeGenericCaller{}, ProfileMethod: "/user.v1.UserService/GetProfile"}).ServeHTTP(recorder, request)
 	if recorder.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401, got %d", recorder.Code)
 	}

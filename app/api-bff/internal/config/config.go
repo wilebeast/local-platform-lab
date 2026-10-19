@@ -11,4 +11,9 @@ type Config struct {
 		NacosAddress  string
 		EtcdEndpoints string
 	}
+	GenericRPC struct {
+		DescriptorPath   string
+		DescriptorSHA256 string
+		ProfileMethod    string
+	}
 }

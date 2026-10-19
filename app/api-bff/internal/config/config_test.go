@@ -17,4 +17,7 @@ func TestLocalConfigLoads(t *testing.T) {
 	if cfg.Name != "api-bff" || cfg.Port != 8888 || cfg.UserRpc.Target == "" {
 		t.Fatalf("unexpected config: name=%q port=%d userTarget=%q", cfg.Name, cfg.Port, cfg.UserRpc.Target)
 	}
+	if cfg.GenericRPC.DescriptorPath == "" || cfg.GenericRPC.DescriptorSHA256 == "" || cfg.GenericRPC.ProfileMethod != "/user.v1.UserService/GetProfile" {
+		t.Fatalf("unexpected generic RPC config: %#v", cfg.GenericRPC)
+	}
 }

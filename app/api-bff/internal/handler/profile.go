@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	userv1 "github.com/wilebeast/local-platform-lab/api/user/v1"
 	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/svc"
 	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/types"
 	"github.com/zeromicro/go-zero/rest/httpx"
@@ -20,23 +19,26 @@ func ProfileHandler(serviceContext *svc.ServiceContext) http.HandlerFunc {
 		}
 		userID := actor.UserID
 
-		if serviceContext == nil || serviceContext.UserClient == nil {
+		if serviceContext == nil || serviceContext.GenericRPC == nil || serviceContext.ProfileMethod == "" {
 			httpx.WriteJsonCtx(r.Context(), w, http.StatusServiceUnavailable, map[string]string{"error": "user service is unavailable"})
 			return
 		}
 
 		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 		defer cancel()
-		profile, err := serviceContext.UserClient.GetProfile(ctx, &userv1.GetProfileRequest{UserId: userID})
+		profile, err := serviceContext.GenericRPC.Call(ctx, serviceContext.ProfileMethod, map[string]any{"userId": userID})
 		if err != nil {
 			httpx.WriteJsonCtx(r.Context(), w, http.StatusBadGateway, map[string]string{"error": "user service request failed"})
 			return
 		}
 
-		httpx.OkJson(w, types.ProfileResponse{
-			UserID:             profile.GetUserId(),
-			VerificationStatus: profile.GetVerificationStatus(),
-			Source:             "user-service-grpc",
-		})
+		profileUserID, userIDOK := profile["userId"].(string)
+		verificationStatus, statusOK := profile["verificationStatus"].(string)
+		if !userIDOK || !statusOK {
+			httpx.WriteJsonCtx(r.Context(), w, http.StatusBadGateway, map[string]string{"error": "user service returned an invalid profile"})
+			return
+		}
+
+		httpx.OkJson(w, types.ProfileResponse{UserID: profileUserID, VerificationStatus: verificationStatus, Source: "user-service-generic-grpc"})
 	}
 }

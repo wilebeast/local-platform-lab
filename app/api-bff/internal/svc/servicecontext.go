@@ -5,6 +5,7 @@ import (
 
 	"github.com/wilebeast/local-platform-lab/api/user/v1"
 	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/config"
+	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/genericrpc"
 	"github.com/wilebeast/local-platform-lab/pkg/serviceregistry"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -14,6 +15,8 @@ import (
 type ServiceContext struct {
 	Config              config.Config
 	UserClient          userv1.UserServiceClient
+	GenericRPC          genericrpc.Caller
+	ProfileMethod       string
 	userConn            *grpc.ClientConn
 	resolver            *serviceregistry.Builder
 	Provider            string
@@ -55,6 +58,14 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	}
 	ctx.userConn = conn
 	ctx.UserClient = userv1.NewUserServiceClient(conn)
+	if c.GenericRPC.DescriptorPath != "" {
+		invoker, err := genericrpc.New(conn, c.GenericRPC.DescriptorPath, c.GenericRPC.DescriptorSHA256)
+		if err != nil {
+			panic(err)
+		}
+		ctx.GenericRPC = invoker
+		ctx.ProfileMethod = c.GenericRPC.ProfileMethod
+	}
 	return ctx
 }
 

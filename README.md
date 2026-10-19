@@ -140,6 +140,17 @@ curl --insecure -c cookies.txt -X POST https://localhost:18443/api/v3/auth/login
 浏览器会自动携带 Cookie；命令行可以使用 `curl --insecure -b cookies.txt` 请求
 `GET /api/v3/profile`。
 
+`GET /api/v3/profile` 使用 Descriptor 驱动的泛化 gRPC 调用。API BFF 启动时从
+`/etc/api-bff/schemas/user-service-v1.pb` 加载并校验 Descriptor，运行时通过
+`grpc.ClientConn.Invoke` 调用 `/user.v1.UserService/GetProfile`。Descriptor 由独立
+GitOps 仓库中的 ConfigMap 挂载，登录、刷新和退出仍使用生成的强类型 gRPC Client。
+
+修改 `api/user/v1/user.proto` 后重新生成 Descriptor：
+
+```bash
+make generate-user-descriptor
+```
+
 部署后的请求链路为：
 
 ```text
