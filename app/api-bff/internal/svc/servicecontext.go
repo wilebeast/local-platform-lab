@@ -32,6 +32,7 @@ type ServiceContext struct {
 	GatewaySignatureKey string
 	AuthAllowedOrigin   string
 	AuthValidator       *authn.Validator
+	RBACOrganizationID  string
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -43,7 +44,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	if allowedOrigin == "" {
 		allowedOrigin = "https://localhost:18443"
 	}
-	ctx := &ServiceContext{Config: c, Provider: provider, GatewaySignatureKey: os.Getenv("GATEWAY_SIGNATURE_KEY"), AuthAllowedOrigin: allowedOrigin}
+	ctx := &ServiceContext{Config: c, Provider: provider, GatewaySignatureKey: os.Getenv("GATEWAY_SIGNATURE_KEY"), AuthAllowedOrigin: allowedOrigin, RBACOrganizationID: envOr("RBAC_ORGANIZATION_ID", "local-org")}
 	if publicKey := os.Getenv("JWT_PUBLIC_KEY_B64"); publicKey != "" {
 		validator, err := authn.NewValidator(
 			publicKey, os.Getenv("JWT_KEY_ID"),

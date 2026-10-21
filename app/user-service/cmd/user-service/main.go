@@ -17,6 +17,7 @@ import (
 
 	userv1 "github.com/wilebeast/local-platform-lab/api/user/v1"
 	"github.com/wilebeast/local-platform-lab/app/user-service/internal/auth"
+	"github.com/wilebeast/local-platform-lab/app/user-service/internal/rbac"
 	userserver "github.com/wilebeast/local-platform-lab/app/user-service/internal/server"
 	"github.com/wilebeast/local-platform-lab/pkg/serviceregistry"
 	"github.com/zeromicro/go-zero/core/conf"
@@ -57,9 +58,21 @@ func main() {
 	if err != nil {
 		log.Fatalf("configure auth: %v", err)
 	}
+	postgresDSN := envOr("POSTGRES_DSN", "postgres://local_platform:local_platform@postgres.postgres.svc.cluster.local:5432/local_platform?sslmode=disable")
+	postgresCtx, cancelPostgres := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancelPostgres()
+	db, err := rbac.OpenPostgres(postgresCtx, postgresDSN)
+	if err != nil {
+		log.Fatalf("connect to PostgreSQL: %v", err)
+	}
+	defer db.Close()
+	if err := rbac.Migrate(postgresCtx, db); err != nil {
+		log.Fatalf("migrate RBAC schema: %v", err)
+	}
+	authorizationService := rbac.NewService(rbac.NewPostgresRepository(db))
 
 	server := zrpc.MustNewServer(c, func(grpcServer *grpc.Server) {
-		userv1.RegisterUserServiceServer(grpcServer, userserver.NewUserServer(authService))
+		userv1.RegisterUserServiceServer(grpcServer, userserver.NewUserServer(authService, authorizationService))
 	})
 	defer server.Stop()
 

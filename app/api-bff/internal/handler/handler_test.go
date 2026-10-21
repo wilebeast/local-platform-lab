@@ -21,6 +21,15 @@ type fakeUserClient struct {
 	recoveryCodes       []string
 	passkeyOptions      *userv1.PasskeyOptionsResponse
 	passkeyRegistration *userv1.FinishPasskeyRegistrationResponse
+	permissionAllowed   bool
+	checkPermission     func(*userv1.CheckPermissionRequest)
+}
+
+func (f fakeUserClient) CheckPermission(_ context.Context, request *userv1.CheckPermissionRequest, _ ...grpc.CallOption) (*userv1.CheckPermissionResponse, error) {
+	if f.checkPermission != nil {
+		f.checkPermission(request)
+	}
+	return &userv1.CheckPermissionResponse{Allowed: f.permissionAllowed}, nil
 }
 
 type fakeGenericCaller struct{}
@@ -131,6 +140,46 @@ func TestProfileHandlerUsesAuthenticatedActor(t *testing.T) {
 	}
 	if body["userId"] != "user-123" || body["verificationStatus"] != "verified" || body["source"] != "user-service-generic-grpc" {
 		t.Fatalf("unexpected response: %#v", body)
+	}
+}
+
+func TestAuthorizeRejectsMissingPermission(t *testing.T) {
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/api/v3/profile", nil)
+	request = request.WithContext(context.WithValue(request.Context(), actorContextKey{}, Actor{UserID: "user-123"}))
+	called := false
+
+	Authorize(&svc.ServiceContext{
+		UserClient: fakeUserClient{permissionAllowed: false}, GenericRPC: fakeGenericCaller{}, RBACOrganizationID: "local-org",
+	}, "profile.read", func(http.ResponseWriter, *http.Request) { called = true }).ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusForbidden {
+		t.Fatalf("expected 403, got %d: %s", recorder.Code, recorder.Body.String())
+	}
+	if called {
+		t.Fatal("protected handler was called after permission denial")
+	}
+}
+
+func TestAuthorizePassesTrustedPermissionContext(t *testing.T) {
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/api/v3/profile", nil)
+	request = request.WithContext(context.WithValue(request.Context(), actorContextKey{}, Actor{UserID: "user-123"}))
+	called := false
+	var checked *userv1.CheckPermissionRequest
+
+	Authorize(&svc.ServiceContext{
+		UserClient: fakeUserClient{permissionAllowed: true, checkPermission: func(request *userv1.CheckPermissionRequest) {
+			checked = request
+		}},
+		RBACOrganizationID: "org-456",
+	}, "profile.read", func(http.ResponseWriter, *http.Request) { called = true }).ServeHTTP(recorder, request)
+
+	if !called {
+		t.Fatal("protected handler was not called after permission approval")
+	}
+	if checked.GetUserId() != "user-123" || checked.GetOrganizationId() != "org-456" || checked.GetPermissionKey() != "profile.read" {
+		t.Fatalf("unexpected permission context: %#v", checked)
 	}
 }
 

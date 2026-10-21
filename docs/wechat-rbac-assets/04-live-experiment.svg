@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
+  <rect width="1200" height="675" rx="30" fill="#fff"/><text x="60" y="66" font-family="Arial, PingFang SC" font-size="34" font-weight="700" fill="#111827">同一登录会话下，权限修改为何能立即生效</text>
+  <line x1="115" y1="330" x2="1080" y2="330" stroke="#cbd5e1" stroke-width="8" stroke-linecap="round"/>
+  <g font-family="Arial, PingFang SC" text-anchor="middle">
+    <circle cx="180" cy="330" r="34" fill="#16a34a"/><text x="180" y="340" fill="white" font-size="28" font-weight="700">1</text><text x="180" y="230" fill="#166534" font-size="24" font-weight="700">HTTP 200</text><text x="180" y="270" fill="#475569" font-size="17">拥有 profile.read</text>
+    <circle cx="500" cy="330" r="34" fill="#dc2626"/><text x="500" y="340" fill="white" font-size="28" font-weight="700">2</text><text x="500" y="230" fill="#991b1b" font-size="24" font-weight="700">HTTP 403</text><text x="500" y="270" fill="#475569" font-size="17">删除权限绑定</text>
+    <circle cx="820" cy="330" r="34" fill="#16a34a"/><text x="820" y="340" fill="white" font-size="28" font-weight="700">3</text><text x="820" y="230" fill="#166534" font-size="24" font-weight="700">HTTP 200</text><text x="820" y="270" fill="#475569" font-size="17">恢复权限绑定</text>
+    <circle cx="1050" cy="330" r="34" fill="#2563eb"/><text x="1050" y="340" fill="white" font-size="28" font-weight="700">✓</text><text x="1050" y="230" fill="#1e40af" font-size="24" font-weight="700">结论</text><text x="1050" y="270" fill="#475569" font-size="17">实时读取权威数据</text>
+  </g>
+  <g font-family="Arial, PingFang SC"><rect x="110" y="420" width="1000" height="150" rx="20" fill="#f1f5f9"/><text x="145" y="462" fill="#334155" font-size="20" font-weight="700">实验保持不变的条件</text><text x="145" y="500" fill="#475569" font-size="18">• 同一个 Access Token　• 同一个 Redis Session　• 同一份 Cookie</text><text x="145" y="538" fill="#475569" font-size="18">• 没有退出登录　• 没有刷新 JWT　• 只修改 PostgreSQL 中的 RBAC 数据</text></g>
+</svg>

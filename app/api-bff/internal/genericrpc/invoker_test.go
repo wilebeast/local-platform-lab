@@ -211,7 +211,11 @@ func TestNewRejectsRequiredFieldTypeMismatch(t *testing.T) {
 	descriptorPath, _ := writeDescriptorSet(t)
 	incompatible := protodesc.ToFileDescriptorProto(userv1.File_v1_user_proto)
 	fieldType := descriptorpb.FieldDescriptorProto_TYPE_INT64
-	incompatible.MessageType[0].Field[0].Type = &fieldType
+	for _, message := range incompatible.MessageType {
+		if message.GetName() == "GetProfileRequest" {
+			message.Field[0].Type = &fieldType
+		}
+	}
 	digest := writeDescriptorFile(t, descriptorPath, incompatible)
 	_, err := New(new(fakeConnection), Options{
 		DescriptorPath:  descriptorPath,

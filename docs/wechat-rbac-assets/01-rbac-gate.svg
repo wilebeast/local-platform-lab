@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#081426"/><stop offset="1" stop-color="#102a43"/></linearGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#dbeafe"/><stop offset="1" stop-color="#64748b"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="12" stdDeviation="10" flood-opacity=".35"/></filter>
+  </defs>
+  <rect width="1200" height="675" rx="32" fill="url(#bg)"/>
+  <text x="64" y="72" fill="#f8fafc" font-family="Arial, PingFang SC" font-size="34" font-weight="700">RBAC 权限闸机：身份必须通过三道可信检查</text>
+  <text x="64" y="110" fill="#94a3b8" font-family="Arial, PingFang SC" font-size="20">用户不是直接获得接口访问权，而是经由组织成员、角色与权限点建立授权链</text>
+  <g filter="url(#shadow)">
+    <rect x="70" y="225" width="190" height="250" rx="22" fill="#172554" stroke="#60a5fa" stroke-width="3"/>
+    <circle cx="165" cy="295" r="38" fill="#60a5fa"/><circle cx="165" cy="285" r="14" fill="#dbeafe"/><path d="M125 353 Q165 318 205 353 V394 H125Z" fill="#dbeafe"/>
+    <rect x="100" y="418" width="130" height="30" rx="15" fill="#0f172a"/><text x="165" y="440" text-anchor="middle" fill="#e2e8f0" font-family="monospace" font-size="17">local-user</text>
+  </g>
+  <g fill="url(#metal)" stroke="#e2e8f0" stroke-width="2">
+    <rect x="335" y="190" width="46" height="330" rx="8"/><rect x="505" y="190" width="46" height="330" rx="8"/>
+    <rect x="705" y="190" width="46" height="330" rx="8"/><rect x="875" y="190" width="46" height="330" rx="8"/>
+  </g>
+  <g font-family="Arial, PingFang SC" text-anchor="middle">
+    <rect x="370" y="240" width="145" height="92" rx="16" fill="#0f766e" stroke="#5eead4" stroke-width="3"/><text x="442" y="278" fill="white" font-size="23" font-weight="700">成员闸门</text><text x="442" y="307" fill="#ccfbf1" font-size="17">active?</text>
+    <rect x="740" y="240" width="145" height="92" rx="16" fill="#7c3aed" stroke="#c4b5fd" stroke-width="3"/><text x="812" y="278" fill="white" font-size="23" font-weight="700">角色闸门</text><text x="812" y="307" fill="#ede9fe" font-size="17">active?</text>
+    <rect x="955" y="225" width="170" height="250" rx="22" fill="#064e3b" stroke="#34d399" stroke-width="3"/><circle cx="1040" cy="302" r="45" fill="#10b981"/><path d="M1018 302 l15 16 31-38" fill="none" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><text x="1040" y="394" fill="white" font-size="25" font-weight="700">profile.read</text><text x="1040" y="428" fill="#a7f3d0" font-size="18">允许访问</text>
+  </g>
+  <g stroke="#38bdf8" stroke-width="8" stroke-linecap="round" fill="none"><path d="M260 350 H335"/><path d="M551 350 H705"/><path d="M921 350 H955"/></g>
+  <g fill="#38bdf8"><path d="M330 338 l20 12-20 12z"/><path d="M700 338 l20 12-20 12z"/><path d="M950 338 l20 12-20 12z"/></g>
+  <g font-family="Arial, PingFang SC" font-size="17" fill="#cbd5e1" text-anchor="middle"><text x="442" y="548">组织成员：member-local-user</text><text x="812" y="548">角色：member</text><text x="1040" y="548">最小权限点</text></g>
+  <rect x="70" y="590" width="1055" height="48" rx="14" fill="#0f172a" stroke="#334155"/><text x="598" y="621" text-anchor="middle" fill="#fbbf24" font-family="Arial, PingFang SC" font-size="20">任意一道闸门不成立，授权结果即为 denied；默认拒绝，而不是默认放行</text>
+</svg>

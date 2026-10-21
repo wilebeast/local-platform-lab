@@ -65,7 +65,7 @@ func RegisterHandlers(server *rest.Server, ctx *svc.ServiceContext) {
 		}, {
 			Method:  http.MethodGet,
 			Path:    "/profile",
-			Handler: GatewayAuth(gatewaySecret, validator, true, ProfileHandler(ctx)),
+			Handler: GatewayAuth(gatewaySecret, validator, true, Authorize(ctx, "profile.read", ProfileHandler(ctx))),
 		}, {
 			Method: http.MethodGet, Path: "/account/summary",
 			Handler: GatewayAuth(gatewaySecret, validator, true, AccountSummaryHandler(ctx)),

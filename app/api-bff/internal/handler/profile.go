@@ -16,7 +16,6 @@ func ProfileHandler(serviceContext *svc.ServiceContext) http.HandlerFunc {
 			return
 		}
 		userID := actor.UserID
-
 		if serviceContext == nil || serviceContext.GenericRPC == nil {
 			httpx.WriteJsonCtx(r.Context(), w, http.StatusServiceUnavailable, map[string]string{"error": "user service is unavailable"})
 			return

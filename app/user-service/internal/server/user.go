@@ -7,6 +7,7 @@ import (
 
 	userv1 "github.com/wilebeast/local-platform-lab/api/user/v1"
 	"github.com/wilebeast/local-platform-lab/app/user-service/internal/auth"
+	"github.com/wilebeast/local-platform-lab/app/user-service/internal/rbac"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -14,10 +15,22 @@ import (
 type UserServer struct {
 	userv1.UnimplementedUserServiceServer
 	auth *auth.Service
+	rbac *rbac.Service
 }
 
-func NewUserServer(authService *auth.Service) *UserServer {
-	return &UserServer{auth: authService}
+func NewUserServer(authService *auth.Service, authorizationService *rbac.Service) *UserServer {
+	return &UserServer{auth: authService, rbac: authorizationService}
+}
+
+func (s *UserServer) CheckPermission(ctx context.Context, request *userv1.CheckPermissionRequest) (*userv1.CheckPermissionResponse, error) {
+	allowed, err := s.rbac.CheckPermission(ctx, request.GetUserId(), request.GetOrganizationId(), request.GetPermissionKey())
+	if errors.Is(err, rbac.ErrInvalidCheck) {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+	if err != nil {
+		return nil, status.Error(codes.Internal, "permission check failed")
+	}
+	return &userv1.CheckPermissionResponse{Allowed: allowed}, nil
 }
 
 func (s *UserServer) Login(ctx context.Context, request *userv1.LoginRequest) (*userv1.TokenPair, error) {
