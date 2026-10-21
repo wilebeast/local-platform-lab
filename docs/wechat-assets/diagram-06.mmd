@@ -1,0 +1,4 @@
+flowchart LR
+    A[登录请求] --> B{时间窗口内<br/>是否超过阈值?}
+    B -->|否| C[转发给 BFF]
+    B -->|是| D[429 Too Many Requests]

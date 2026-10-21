@@ -76,7 +76,7 @@ func (s *Service) VerifyLogin2FA(ctx context.Context, sessionToken, code string)
 	if !valid {
 		return TokenPair{}, ErrInvalidSecondFactor
 	}
-	return s.issue(ctx, userID)
+	return s.issue(ctx, userID, "pwd", "totp")
 }
 
 func (s *Service) TOTPOptions(ctx context.Context, userID string) (TOTPSetup, error) {

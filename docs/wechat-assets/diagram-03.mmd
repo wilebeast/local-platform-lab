@@ -1,0 +1,15 @@
+flowchart TD
+    A[收到请求] --> B[删除客户端传入的<br/>X-User-ID 等身份头]
+    B --> C{Authorization Bearer<br/>是否存在?}
+    C -->|是| D[读取 Bearer Token]
+    C -->|否| E[读取 access_token Cookie]
+    D --> F{Token 是否存在?}
+    E --> F
+    F -->|否| X1[401 Authentication Required]
+    F -->|是| G[限定算法必须为 HS256]
+    G --> H[使用 JWT_SIGNING_KEY 验证签名]
+    H -->|失败| X2[401 Invalid Token]
+    H -->|成功| I[检查 exp / iss / aud / id]
+    I -->|失败| X3[401 Invalid Claims]
+    I -->|成功| J[写入可信 X-User-ID]
+    J --> K[为 APISIX → BFF 请求生成 HMAC 签名]

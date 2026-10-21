@@ -1,6 +1,7 @@
 package svc
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -8,6 +9,7 @@ import (
 	"time"
 
 	"github.com/wilebeast/local-platform-lab/api/user/v1"
+	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/authn"
 	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/config"
 	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/genericrpc"
 	"github.com/wilebeast/local-platform-lab/pkg/serviceregistry"
@@ -29,6 +31,7 @@ type ServiceContext struct {
 	Provider            string
 	GatewaySignatureKey string
 	AuthAllowedOrigin   string
+	AuthValidator       *authn.Validator
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -41,6 +44,19 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		allowedOrigin = "https://localhost:18443"
 	}
 	ctx := &ServiceContext{Config: c, Provider: provider, GatewaySignatureKey: os.Getenv("GATEWAY_SIGNATURE_KEY"), AuthAllowedOrigin: allowedOrigin}
+	if publicKey := os.Getenv("JWT_PUBLIC_KEY_B64"); publicKey != "" {
+		validator, err := authn.NewValidator(
+			publicKey, os.Getenv("JWT_KEY_ID"),
+			"local-platform-lab", "api-bff", envOr("REDIS_ADDR", "redis.redis.svc.cluster.local:6379"),
+		)
+		if err != nil {
+			panic(err)
+		}
+		ctx.AuthValidator = validator
+		if err := validator.Ping(context.Background()); err != nil {
+			panic(fmt.Errorf("connect to authentication Redis: %w", err))
+		}
+	}
 	if c.UserRpc.Target != "" {
 		target := c.UserRpc.Target
 		if provider != serviceregistry.ProviderDNS {
@@ -72,6 +88,9 @@ func NewServiceContext(c config.Config) *ServiceContext {
 }
 
 func (s *ServiceContext) Close() error {
+	if s.AuthValidator != nil {
+		_ = s.AuthValidator.Close()
+	}
 	for _, invoker := range s.genericInvokers {
 		invoker.Close()
 	}
@@ -92,6 +111,13 @@ func (s *ServiceContext) Close() error {
 		s.resolver.Close()
 	}
 	return err
+}
+
+func envOr(name, fallback string) string {
+	if value := os.Getenv(name); value != "" {
+		return value
+	}
+	return fallback
 }
 
 func (s *ServiceContext) configureGenericRPC(reloadText string, schemas []config.GenericSchemaConfig, routes []config.GenericRouteConfig) error {

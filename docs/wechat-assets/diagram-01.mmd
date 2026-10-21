@@ -1,0 +1,7 @@
+flowchart LR
+    Browser[浏览器 / App] -->|HTTPS| ALB[Local ALB<br/>TLS 终止]
+    ALB --> APISIX[APISIX<br/>路由、限流、JWT 校验]
+    APISIX -->|HTTP + 网关签名| BFF[API BFF<br/>协议转换、身份上下文]
+    BFF -->|gRPC| User[User Service<br/>登录与 Token 签发]
+    User -->|Refresh Token 哈希| Redis[(Redis)]
+    BFF -.服务发现.-> Registry[Nacos / Etcd]

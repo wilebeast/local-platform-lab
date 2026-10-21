@@ -2,6 +2,9 @@ package main
 
 import (
 	"context"
+	"crypto/ed25519"
+	"crypto/x509"
+	"encoding/base64"
 	"flag"
 	"fmt"
 	"log"
@@ -37,7 +40,8 @@ func main() {
 		log.Fatalf("connect to Redis at %s: %v", redisAddress, err)
 	}
 	authService, err := auth.NewService(auth.Config{
-		JWTSigningKey: mustEnv("JWT_SIGNING_KEY"),
+		JWTPrivateKey: mustEd25519PrivateKey("JWT_PRIVATE_KEY_B64"),
+		JWTKeyID:      envOr("JWT_KEY_ID", "local-auth-1"),
 		Issuer:        "local-platform-lab", Audience: "api-bff",
 		AccessTTL: 30 * time.Minute, RefreshTTL: 7 * 24 * time.Hour,
 		DemoEmail:          envOr("DEMO_USER_EMAIL", "demo@local.test"),
@@ -92,4 +96,21 @@ func mustEnv(name string) string {
 		log.Fatalf("%s is required", name)
 	}
 	return value
+}
+
+func mustEd25519PrivateKey(name string) ed25519.PrivateKey {
+	encoded := mustEnv(name)
+	der, err := base64.StdEncoding.DecodeString(encoded)
+	if err != nil {
+		log.Fatalf("decode %s: %v", name, err)
+	}
+	key, err := x509.ParsePKCS8PrivateKey(der)
+	if err != nil {
+		log.Fatalf("parse %s: %v", name, err)
+	}
+	privateKey, ok := key.(ed25519.PrivateKey)
+	if !ok {
+		log.Fatalf("%s is not an Ed25519 private key", name)
+	}
+	return privateKey
 }

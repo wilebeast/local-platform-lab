@@ -1,0 +1,24 @@
+sequenceDiagram
+    autonumber
+    participant C as 浏览器
+    participant L as Local ALB
+    participant G as APISIX
+    participant B as API BFF
+    participant U as User Service
+    participant R as Redis
+
+    C->>L: POST /api/v3/auth/login<br/>邮箱 + 密码
+    L->>G: HTTPS 终止后转发 HTTP
+    G->>G: 按来源 IP 对登录路由限流
+    G->>B: 转发登录请求 + 网关 HMAC 签名
+    B->>B: 验证网关签名和 Origin
+    B->>U: gRPC Login(email, password)
+    U->>U: 验证账号密码
+    U->>U: 签发 30 分钟 Access Token
+    U->>U: 生成 7 天 Refresh Token
+    U->>R: 保存 SHA-256(refresh_token) → user_id
+    R-->>U: OK
+    U-->>B: gRPC TokenPair
+    B-->>G: Set-Cookie + 脱敏 JSON
+    G-->>L: 透明代理响应
+    L-->>C: 浏览器保存 HttpOnly Cookie

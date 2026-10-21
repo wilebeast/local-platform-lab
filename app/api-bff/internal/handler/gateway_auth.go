@@ -5,30 +5,48 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/authn"
 )
 
 type actorContextKey struct{}
 
 type Actor struct {
-	UserID string
+	UserID      string
+	SessionID   string
+	TokenID     string
+	UserVersion int64
 }
 
-func GatewayAuth(secret string, requireUser bool, next http.HandlerFunc) http.HandlerFunc {
+type requestValidator interface {
+	ValidateRequest(context.Context, *http.Request) (authn.Actor, error)
+}
+
+func GatewayAuth(secret string, validator requestValidator, requireUser bool, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if !validGatewayRequest(r, secret, time.Now()) {
 			writeError(w, http.StatusUnauthorized, "untrusted gateway request")
 			return
 		}
-		userID := r.Header.Get("X-User-ID")
-		if requireUser && (r.Header.Get("X-Authenticated") != "true" || userID == "") {
-			writeError(w, http.StatusUnauthorized, "authentication required")
-			return
+		actor := Actor{}
+		if requireUser {
+			if validator == nil {
+				writeError(w, http.StatusInternalServerError, "authentication is not configured")
+				return
+			}
+			validated, err := validator.ValidateRequest(r.Context(), r)
+			if err != nil {
+				writeError(w, http.StatusUnauthorized, "invalid access token")
+				return
+			}
+			actor = Actor{UserID: validated.UserID, SessionID: validated.SessionID, TokenID: validated.TokenID, UserVersion: validated.UserVersion}
 		}
-		ctx := context.WithValue(r.Context(), actorContextKey{}, Actor{UserID: userID})
+		ctx := context.WithValue(r.Context(), actorContextKey{}, actor)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 }
@@ -52,4 +70,16 @@ func validGatewayRequest(r *http.Request, secret string, now time.Time) bool {
 	_, _ = mac.Write([]byte(payload))
 	expected := base64.StdEncoding.EncodeToString(mac.Sum(nil))
 	return hmac.Equal([]byte(expected), []byte(r.Header.Get("X-Gateway-Signature")))
+}
+
+func JWKSHandler(validator *authn.Validator) http.HandlerFunc {
+	return func(w http.ResponseWriter, _ *http.Request) {
+		if validator == nil {
+			writeError(w, http.StatusServiceUnavailable, "JWKS is not configured")
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "public, max-age=300")
+		_ = json.NewEncoder(w).Encode(validator.JWKS())
+	}
 }

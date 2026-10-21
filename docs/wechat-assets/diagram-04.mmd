@@ -1,0 +1,6 @@
+flowchart LR
+    HTTP[HTTP GET /api/v3/profile] --> Verify[验证网关 HMAC]
+    Verify --> Actor[构造 Actor<br/>UserID=local-user]
+    Actor --> GRPC[gRPC<br/>UserService.GetProfile]
+    GRPC --> PB[Protobuf Response]
+    PB --> JSON[转换为 JSON HTTP Response]

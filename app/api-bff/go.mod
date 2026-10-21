@@ -2,7 +2,11 @@ module github.com/wilebeast/local-platform-lab/app/api-bff
 
 go 1.26
 
-require github.com/zeromicro/go-zero v1.10.3
+require (
+	github.com/golang-jwt/jwt/v4 v4.5.2
+	github.com/redis/go-redis/v9 v9.21.0
+	github.com/zeromicro/go-zero v1.10.3
+)
 
 require (
 	github.com/wilebeast/local-platform-lab/api/user v0.0.0
@@ -50,7 +54,6 @@ require (
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/uuid v1.6.0 // indirect

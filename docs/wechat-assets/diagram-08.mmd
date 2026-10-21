@@ -1,0 +1,8 @@
+flowchart TD
+    TLS[HTTPS<br/>保护传输] --> Cookie[Secure / HttpOnly Cookie<br/>保护浏览器凭证]
+    Cookie --> JWT[JWT 签名<br/>证明用户身份]
+    JWT --> Gateway[APISIX 校验与头部清洗<br/>建立边缘信任]
+    Gateway --> HMAC[网关 HMAC<br/>保护内部身份传递]
+    HMAC --> Actor[BFF Actor<br/>统一业务身份上下文]
+    Actor --> Session[Refresh Token + Redis<br/>管理长期会话]
+    Session --> Control[CSRF、限流、MFA、审计<br/>抵御滥用和异常行为]

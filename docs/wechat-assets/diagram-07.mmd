@@ -1,0 +1,12 @@
+sequenceDiagram
+    participant C as 用户
+    participant U as User Service
+    participant A as 认证器 App
+
+    C->>U: 邮箱 + 密码
+    U->>U: 密码验证成功，发现已开启 MFA
+    U-->>C: 返回一次性 MFA Challenge
+    A-->>C: 显示 6 位 TOTP
+    C->>U: Challenge + TOTP
+    U->>U: 验证时间窗口和使用次数
+    U-->>C: 验证成功后才签发 Token

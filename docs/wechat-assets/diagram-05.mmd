@@ -1,0 +1,19 @@
+sequenceDiagram
+    participant C as 浏览器
+    participant B as API BFF
+    participant U as User Service
+    participant R as Redis
+
+    C->>B: POST /auth/refresh<br/>Cookie: refresh_token=R1
+    B->>U: gRPC Refresh(R1)
+    U->>R: 原子 GETDEL hash(R1)
+    alt R1 有效
+        R-->>U: user_id
+        U->>R: SET hash(R2) → user_id
+        U-->>B: 新 Access Token + R2
+        B-->>C: Set-Cookie 更新两个 Token
+    else R1 已使用或不存在
+        R-->>U: Not Found
+        U-->>B: Unauthenticated
+        B-->>C: 401 Invalid Refresh Token
+    end

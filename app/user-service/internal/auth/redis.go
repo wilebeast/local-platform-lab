@@ -2,13 +2,20 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/redis/go-redis/v9"
 )
 
 const refreshPrefix = "auth:refresh:"
+
+const (
+	sessionPrefix     = "auth:session:"
+	userVersionPrefix = "auth:user-version:"
+)
 
 const (
 	totpSecretPrefix   = "auth:totp:secret:"
@@ -48,6 +55,67 @@ func (s *RedisStore) Consume(ctx context.Context, hash string) (string, error) {
 func (s *RedisStore) Delete(ctx context.Context, hash string) (bool, error) {
 	deleted, err := s.client.Del(ctx, refreshPrefix+hash).Result()
 	return deleted > 0, err
+}
+
+func (s *RedisStore) PutSession(ctx context.Context, session Session, ttl time.Duration) error {
+	value, err := json.Marshal(session)
+	if err != nil {
+		return err
+	}
+	return s.client.Set(ctx, sessionPrefix+session.ID, value, ttl).Err()
+}
+
+func (s *RedisStore) GetSession(ctx context.Context, sid string) (Session, error) {
+	value, err := s.client.Get(ctx, sessionPrefix+sid).Bytes()
+	if err != nil {
+		return Session{}, err
+	}
+	var session Session
+	if err := json.Unmarshal(value, &session); err != nil {
+		return Session{}, err
+	}
+	return session, nil
+}
+
+func (s *RedisStore) RevokeSession(ctx context.Context, sid string) error {
+	key := sessionPrefix + sid
+	value, err := s.client.Get(ctx, key).Bytes()
+	if err != nil {
+		return err
+	}
+	var session Session
+	if err := json.Unmarshal(value, &session); err != nil {
+		return err
+	}
+	session.Status = "revoked"
+	updated, err := json.Marshal(session)
+	if err != nil {
+		return err
+	}
+	ttl, err := s.client.TTL(ctx, key).Result()
+	if err != nil {
+		return err
+	}
+	return s.client.Set(ctx, key, updated, ttl).Err()
+}
+
+func (s *RedisStore) GetUserVersion(ctx context.Context, userID string) (int64, error) {
+	key := userVersionPrefix + userID
+	value, err := s.client.Get(ctx, key).Result()
+	if errors.Is(err, redis.Nil) {
+		created, setErr := s.client.SetNX(ctx, key, "1", 0).Result()
+		if setErr != nil {
+			return 0, setErr
+		}
+		if created {
+			return 1, nil
+		}
+		value, err = s.client.Get(ctx, key).Result()
+	}
+	if err != nil {
+		return 0, err
+	}
+	return strconv.ParseInt(value, 10, 64)
 }
 
 func (s *RedisStore) PutTOTPSecret(ctx context.Context, userID, secret string) error {
