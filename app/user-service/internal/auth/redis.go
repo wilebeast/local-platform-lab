@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"strconv"
@@ -18,14 +19,70 @@ const (
 )
 
 const (
-	totpSecretPrefix   = "auth:totp:secret:"
-	totpSetupPrefix    = "auth:totp:setup:"
-	loginSessionPrefix = "auth:totp:login:"
-	recoveryPrefix     = "auth:totp:recovery:"
+	totpSecretPrefix        = "auth:totp:secret:"
+	totpSetupPrefix         = "auth:totp:setup:"
+	loginSessionPrefix      = "auth:totp:login:"
+	recoveryPrefix          = "auth:totp:recovery:"
+	passkeyCeremonyPrefix   = "auth:passkey:ceremony:"
+	passkeyCredentialPrefix = "auth:passkey:credential:"
+	passkeyUserPrefix       = "auth:passkey:user:"
 )
 
 type RedisStore struct {
 	client *redis.Client
+}
+
+func (s *RedisStore) PutPasskeyCeremony(ctx context.Context, ceremonyID string, ceremony PasskeyCeremony, ttl time.Duration) error {
+	value, err := json.Marshal(ceremony)
+	if err != nil {
+		return err
+	}
+	return s.client.Set(ctx, passkeyCeremonyPrefix+ceremonyID, value, ttl).Err()
+}
+
+func (s *RedisStore) ConsumePasskeyCeremony(ctx context.Context, ceremonyID string) (PasskeyCeremony, error) {
+	value, err := s.client.GetDel(ctx, passkeyCeremonyPrefix+ceremonyID).Bytes()
+	if errors.Is(err, redis.Nil) {
+		return PasskeyCeremony{}, ErrInvalidPasskeyCeremony
+	}
+	if err != nil {
+		return PasskeyCeremony{}, err
+	}
+	var ceremony PasskeyCeremony
+	if err := json.Unmarshal(value, &ceremony); err != nil {
+		return PasskeyCeremony{}, ErrInvalidPasskeyCeremony
+	}
+	return ceremony, nil
+}
+
+func (s *RedisStore) PutPasskeyCredential(ctx context.Context, credential PasskeyCredential) error {
+	value, err := json.Marshal(credential)
+	if err != nil {
+		return err
+	}
+	id := base64.RawURLEncoding.EncodeToString(credential.Credential.ID)
+	_, err = s.client.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
+		pipe.Set(ctx, passkeyCredentialPrefix+id, value, 0)
+		pipe.SAdd(ctx, passkeyUserPrefix+credential.UserID, id)
+		return nil
+	})
+	return err
+}
+
+func (s *RedisStore) GetPasskeyCredential(ctx context.Context, credentialID []byte) (PasskeyCredential, error) {
+	id := base64.RawURLEncoding.EncodeToString(credentialID)
+	value, err := s.client.Get(ctx, passkeyCredentialPrefix+id).Bytes()
+	if errors.Is(err, redis.Nil) {
+		return PasskeyCredential{}, ErrInvalidPasskeyCeremony
+	}
+	if err != nil {
+		return PasskeyCredential{}, err
+	}
+	var credential PasskeyCredential
+	if err := json.Unmarshal(value, &credential); err != nil {
+		return PasskeyCredential{}, ErrInvalidPasskeyCeremony
+	}
+	return credential, nil
 }
 
 func NewRedisStore(address string) *RedisStore {

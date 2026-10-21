@@ -18,7 +18,7 @@ GenericRPC:
       Version: 1.0.0
       DescriptorPath: /etc/api-bff/schemas/user-service-v1.pb
       MetadataPath: /etc/api-bff/schemas/user-service-v1.yaml
-      DescriptorSHA256: 840c36f1aa90e30f718e62bc0443bcc27acc030562d73b33bb319afcda3c186d
+      DescriptorSHA256: 9c2578a0f289ea07b281cc7bfe2eefb7f5b25d670d1a7cde3192d5a151ce5d4b
       Target: dns:///user-service.user-service.svc.cluster.local:9001
       Provider: nacos
       NacosAddress: nacos.nacos.svc.cluster.local:8848

@@ -19,16 +19,20 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserService_GetProfile_FullMethodName              = "/user.v1.UserService/GetProfile"
-	UserService_Login_FullMethodName                   = "/user.v1.UserService/Login"
-	UserService_PrepareLogin_FullMethodName            = "/user.v1.UserService/PrepareLogin"
-	UserService_VerifyLogin2FA_FullMethodName          = "/user.v1.UserService/VerifyLogin2FA"
-	UserService_TOTPOptions_FullMethodName             = "/user.v1.UserService/TOTPOptions"
-	UserService_ConfirmTOTP_FullMethodName             = "/user.v1.UserService/ConfirmTOTP"
-	UserService_UnbindTOTP_FullMethodName              = "/user.v1.UserService/UnbindTOTP"
-	UserService_RegenerateRecoveryCodes_FullMethodName = "/user.v1.UserService/RegenerateRecoveryCodes"
-	UserService_Refresh_FullMethodName                 = "/user.v1.UserService/Refresh"
-	UserService_Logout_FullMethodName                  = "/user.v1.UserService/Logout"
+	UserService_GetProfile_FullMethodName                = "/user.v1.UserService/GetProfile"
+	UserService_Login_FullMethodName                     = "/user.v1.UserService/Login"
+	UserService_PrepareLogin_FullMethodName              = "/user.v1.UserService/PrepareLogin"
+	UserService_VerifyLogin2FA_FullMethodName            = "/user.v1.UserService/VerifyLogin2FA"
+	UserService_TOTPOptions_FullMethodName               = "/user.v1.UserService/TOTPOptions"
+	UserService_ConfirmTOTP_FullMethodName               = "/user.v1.UserService/ConfirmTOTP"
+	UserService_UnbindTOTP_FullMethodName                = "/user.v1.UserService/UnbindTOTP"
+	UserService_RegenerateRecoveryCodes_FullMethodName   = "/user.v1.UserService/RegenerateRecoveryCodes"
+	UserService_BeginPasskeyRegistration_FullMethodName  = "/user.v1.UserService/BeginPasskeyRegistration"
+	UserService_FinishPasskeyRegistration_FullMethodName = "/user.v1.UserService/FinishPasskeyRegistration"
+	UserService_BeginPasskeyLogin_FullMethodName         = "/user.v1.UserService/BeginPasskeyLogin"
+	UserService_FinishPasskeyLogin_FullMethodName        = "/user.v1.UserService/FinishPasskeyLogin"
+	UserService_Refresh_FullMethodName                   = "/user.v1.UserService/Refresh"
+	UserService_Logout_FullMethodName                    = "/user.v1.UserService/Logout"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -43,6 +47,10 @@ type UserServiceClient interface {
 	ConfirmTOTP(ctx context.Context, in *ConfirmTOTPRequest, opts ...grpc.CallOption) (*RecoveryCodesResponse, error)
 	UnbindTOTP(ctx context.Context, in *UnbindTOTPRequest, opts ...grpc.CallOption) (*UnbindTOTPResponse, error)
 	RegenerateRecoveryCodes(ctx context.Context, in *RegenerateRecoveryCodesRequest, opts ...grpc.CallOption) (*RecoveryCodesResponse, error)
+	BeginPasskeyRegistration(ctx context.Context, in *BeginPasskeyRegistrationRequest, opts ...grpc.CallOption) (*PasskeyOptionsResponse, error)
+	FinishPasskeyRegistration(ctx context.Context, in *FinishPasskeyRegistrationRequest, opts ...grpc.CallOption) (*FinishPasskeyRegistrationResponse, error)
+	BeginPasskeyLogin(ctx context.Context, in *BeginPasskeyLoginRequest, opts ...grpc.CallOption) (*PasskeyOptionsResponse, error)
+	FinishPasskeyLogin(ctx context.Context, in *FinishPasskeyLoginRequest, opts ...grpc.CallOption) (*TokenPair, error)
 	Refresh(ctx context.Context, in *RefreshRequest, opts ...grpc.CallOption) (*TokenPair, error)
 	Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*LogoutResponse, error)
 }
@@ -135,6 +143,46 @@ func (c *userServiceClient) RegenerateRecoveryCodes(ctx context.Context, in *Reg
 	return out, nil
 }
 
+func (c *userServiceClient) BeginPasskeyRegistration(ctx context.Context, in *BeginPasskeyRegistrationRequest, opts ...grpc.CallOption) (*PasskeyOptionsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PasskeyOptionsResponse)
+	err := c.cc.Invoke(ctx, UserService_BeginPasskeyRegistration_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) FinishPasskeyRegistration(ctx context.Context, in *FinishPasskeyRegistrationRequest, opts ...grpc.CallOption) (*FinishPasskeyRegistrationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FinishPasskeyRegistrationResponse)
+	err := c.cc.Invoke(ctx, UserService_FinishPasskeyRegistration_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) BeginPasskeyLogin(ctx context.Context, in *BeginPasskeyLoginRequest, opts ...grpc.CallOption) (*PasskeyOptionsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PasskeyOptionsResponse)
+	err := c.cc.Invoke(ctx, UserService_BeginPasskeyLogin_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) FinishPasskeyLogin(ctx context.Context, in *FinishPasskeyLoginRequest, opts ...grpc.CallOption) (*TokenPair, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TokenPair)
+	err := c.cc.Invoke(ctx, UserService_FinishPasskeyLogin_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *userServiceClient) Refresh(ctx context.Context, in *RefreshRequest, opts ...grpc.CallOption) (*TokenPair, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(TokenPair)
@@ -167,6 +215,10 @@ type UserServiceServer interface {
 	ConfirmTOTP(context.Context, *ConfirmTOTPRequest) (*RecoveryCodesResponse, error)
 	UnbindTOTP(context.Context, *UnbindTOTPRequest) (*UnbindTOTPResponse, error)
 	RegenerateRecoveryCodes(context.Context, *RegenerateRecoveryCodesRequest) (*RecoveryCodesResponse, error)
+	BeginPasskeyRegistration(context.Context, *BeginPasskeyRegistrationRequest) (*PasskeyOptionsResponse, error)
+	FinishPasskeyRegistration(context.Context, *FinishPasskeyRegistrationRequest) (*FinishPasskeyRegistrationResponse, error)
+	BeginPasskeyLogin(context.Context, *BeginPasskeyLoginRequest) (*PasskeyOptionsResponse, error)
+	FinishPasskeyLogin(context.Context, *FinishPasskeyLoginRequest) (*TokenPair, error)
 	Refresh(context.Context, *RefreshRequest) (*TokenPair, error)
 	Logout(context.Context, *LogoutRequest) (*LogoutResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
@@ -202,6 +254,18 @@ func (UnimplementedUserServiceServer) UnbindTOTP(context.Context, *UnbindTOTPReq
 }
 func (UnimplementedUserServiceServer) RegenerateRecoveryCodes(context.Context, *RegenerateRecoveryCodesRequest) (*RecoveryCodesResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method RegenerateRecoveryCodes not implemented")
+}
+func (UnimplementedUserServiceServer) BeginPasskeyRegistration(context.Context, *BeginPasskeyRegistrationRequest) (*PasskeyOptionsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method BeginPasskeyRegistration not implemented")
+}
+func (UnimplementedUserServiceServer) FinishPasskeyRegistration(context.Context, *FinishPasskeyRegistrationRequest) (*FinishPasskeyRegistrationResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method FinishPasskeyRegistration not implemented")
+}
+func (UnimplementedUserServiceServer) BeginPasskeyLogin(context.Context, *BeginPasskeyLoginRequest) (*PasskeyOptionsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method BeginPasskeyLogin not implemented")
+}
+func (UnimplementedUserServiceServer) FinishPasskeyLogin(context.Context, *FinishPasskeyLoginRequest) (*TokenPair, error) {
+	return nil, status.Error(codes.Unimplemented, "method FinishPasskeyLogin not implemented")
 }
 func (UnimplementedUserServiceServer) Refresh(context.Context, *RefreshRequest) (*TokenPair, error) {
 	return nil, status.Error(codes.Unimplemented, "method Refresh not implemented")
@@ -374,6 +438,78 @@ func _UserService_RegenerateRecoveryCodes_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_BeginPasskeyRegistration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BeginPasskeyRegistrationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).BeginPasskeyRegistration(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_BeginPasskeyRegistration_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).BeginPasskeyRegistration(ctx, req.(*BeginPasskeyRegistrationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_FinishPasskeyRegistration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FinishPasskeyRegistrationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).FinishPasskeyRegistration(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_FinishPasskeyRegistration_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).FinishPasskeyRegistration(ctx, req.(*FinishPasskeyRegistrationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_BeginPasskeyLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BeginPasskeyLoginRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).BeginPasskeyLogin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_BeginPasskeyLogin_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).BeginPasskeyLogin(ctx, req.(*BeginPasskeyLoginRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_FinishPasskeyLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FinishPasskeyLoginRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).FinishPasskeyLogin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_FinishPasskeyLogin_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).FinishPasskeyLogin(ctx, req.(*FinishPasskeyLoginRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _UserService_Refresh_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RefreshRequest)
 	if err := dec(in); err != nil {
@@ -448,6 +584,22 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RegenerateRecoveryCodes",
 			Handler:    _UserService_RegenerateRecoveryCodes_Handler,
+		},
+		{
+			MethodName: "BeginPasskeyRegistration",
+			Handler:    _UserService_BeginPasskeyRegistration_Handler,
+		},
+		{
+			MethodName: "FinishPasskeyRegistration",
+			Handler:    _UserService_FinishPasskeyRegistration_Handler,
+		},
+		{
+			MethodName: "BeginPasskeyLogin",
+			Handler:    _UserService_BeginPasskeyLogin_Handler,
+		},
+		{
+			MethodName: "FinishPasskeyLogin",
+			Handler:    _UserService_FinishPasskeyLogin_Handler,
 		},
 		{
 			MethodName: "Refresh",

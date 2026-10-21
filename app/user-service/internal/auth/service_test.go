@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"crypto/ed25519"
+	"encoding/base64"
 	"errors"
 	"sync"
 	"testing"
@@ -12,21 +13,56 @@ import (
 )
 
 type memoryStore struct {
-	mu            sync.Mutex
-	values        map[string]string
-	totpSecrets   map[string]string
-	totpSetups    map[string]string
-	loginSessions map[string]string
-	recovery      map[string]map[string]struct{}
-	sessions      map[string]Session
-	versions      map[string]int64
+	mu                 sync.Mutex
+	values             map[string]string
+	totpSecrets        map[string]string
+	totpSetups         map[string]string
+	loginSessions      map[string]string
+	recovery           map[string]map[string]struct{}
+	sessions           map[string]Session
+	versions           map[string]int64
+	passkeyCeremonies  map[string]PasskeyCeremony
+	passkeyCredentials map[string]PasskeyCredential
 }
 
 func newMemoryStore() *memoryStore {
 	return &memoryStore{
 		values: map[string]string{}, totpSecrets: map[string]string{}, totpSetups: map[string]string{},
 		loginSessions: map[string]string{}, recovery: map[string]map[string]struct{}{}, sessions: map[string]Session{}, versions: map[string]int64{},
+		passkeyCeremonies:  map[string]PasskeyCeremony{},
+		passkeyCredentials: map[string]PasskeyCredential{},
 	}
+}
+func (s *memoryStore) PutPasskeyCeremony(_ context.Context, ceremonyID string, ceremony PasskeyCeremony, _ time.Duration) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.passkeyCeremonies[ceremonyID] = ceremony
+	return nil
+}
+func (s *memoryStore) ConsumePasskeyCeremony(_ context.Context, ceremonyID string) (PasskeyCeremony, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	ceremony, ok := s.passkeyCeremonies[ceremonyID]
+	if !ok {
+		return PasskeyCeremony{}, ErrInvalidPasskeyCeremony
+	}
+	delete(s.passkeyCeremonies, ceremonyID)
+	return ceremony, nil
+}
+func (s *memoryStore) PutPasskeyCredential(_ context.Context, credential PasskeyCredential) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.passkeyCredentials[base64.RawURLEncoding.EncodeToString(credential.Credential.ID)] = credential
+	return nil
+}
+func (s *memoryStore) GetPasskeyCredential(_ context.Context, credentialID []byte) (PasskeyCredential, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	credential, ok := s.passkeyCredentials[base64.RawURLEncoding.EncodeToString(credentialID)]
+	if !ok {
+		return PasskeyCredential{}, ErrInvalidPasskeyCeremony
+	}
+	return credential, nil
 }
 func (s *memoryStore) Put(_ context.Context, key, value string, _ time.Duration) error {
 	s.mu.Lock()

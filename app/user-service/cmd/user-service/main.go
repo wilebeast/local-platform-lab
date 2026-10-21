@@ -11,6 +11,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -49,6 +50,9 @@ func main() {
 		DemoUserID:         envOr("DEMO_USER_ID", "local-user"),
 		TOTPEncryptionKey:  mustEnv("TOTP_ENCRYPTION_KEY"),
 		RecoveryCodePepper: mustEnv("RECOVERY_CODE_PEPPER"),
+		PasskeyRPID:        envOr("PASSKEY_RP_ID", "localhost"),
+		PasskeyRPName:      envOr("PASSKEY_RP_NAME", "Local Platform Lab"),
+		PasskeyOrigins:     splitCSV(envOr("PASSKEY_ORIGINS", "https://localhost:18443")),
 	}, refreshStore)
 	if err != nil {
 		log.Fatalf("configure auth: %v", err)
@@ -81,6 +85,17 @@ func main() {
 
 	fmt.Printf("Starting %s at %s; registered %s:%s in Nacos and Etcd\n", c.Name, c.ListenOn, podIP, port)
 	server.Start()
+}
+
+func splitCSV(value string) []string {
+	parts := strings.Split(value, ",")
+	result := make([]string, 0, len(parts))
+	for _, part := range parts {
+		if trimmed := strings.TrimSpace(part); trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+	return result
 }
 
 func envOr(name, fallback string) string {

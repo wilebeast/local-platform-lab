@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 
 	userv1 "github.com/wilebeast/local-platform-lab/api/user/v1"
@@ -78,10 +79,49 @@ func (s *UserServer) RegenerateRecoveryCodes(ctx context.Context, request *userv
 	return &userv1.RecoveryCodesResponse{RecoveryCodes: codes}, nil
 }
 
+func (s *UserServer) BeginPasskeyRegistration(ctx context.Context, request *userv1.BeginPasskeyRegistrationRequest) (*userv1.PasskeyOptionsResponse, error) {
+	result, err := s.auth.BeginPasskeyRegistration(ctx, request.GetUserId(), request.GetUserName())
+	if err != nil {
+		return nil, authStatus(err, "begin passkey registration failed")
+	}
+	return &userv1.PasskeyOptionsResponse{CeremonyId: result.CeremonyID, OptionsJson: result.OptionsJSON}, nil
+}
+
+func (s *UserServer) FinishPasskeyRegistration(ctx context.Context, request *userv1.FinishPasskeyRegistrationRequest) (*userv1.FinishPasskeyRegistrationResponse, error) {
+	credential, err := s.auth.FinishPasskeyRegistration(ctx, request.GetCeremonyId(), request.GetResponseJson())
+	if err != nil {
+		return nil, authStatus(err, "finish passkey registration failed")
+	}
+	return &userv1.FinishPasskeyRegistrationResponse{
+		Registered:   true,
+		CredentialId: base64.RawURLEncoding.EncodeToString(credential.Credential.ID),
+	}, nil
+}
+
+func (s *UserServer) BeginPasskeyLogin(ctx context.Context, _ *userv1.BeginPasskeyLoginRequest) (*userv1.PasskeyOptionsResponse, error) {
+	result, err := s.auth.BeginPasskeyLogin(ctx)
+	if err != nil {
+		return nil, authStatus(err, "begin passkey login failed")
+	}
+	return &userv1.PasskeyOptionsResponse{CeremonyId: result.CeremonyID, OptionsJson: result.OptionsJSON}, nil
+}
+
+func (s *UserServer) FinishPasskeyLogin(ctx context.Context, request *userv1.FinishPasskeyLoginRequest) (*userv1.TokenPair, error) {
+	pair, err := s.auth.FinishPasskeyLogin(ctx, request.GetCeremonyId(), request.GetResponseJson())
+	if err != nil {
+		return nil, authStatus(err, "finish passkey login failed")
+	}
+	return toProto(pair), nil
+}
+
 func authStatus(err error, internalMessage string) error {
 	switch {
 	case errors.Is(err, auth.ErrInvalidCredentials), errors.Is(err, auth.ErrInvalidSecondFactor):
 		return status.Error(codes.Unauthenticated, err.Error())
+	case errors.Is(err, auth.ErrInvalidPasskeyCeremony):
+		return status.Error(codes.Unauthenticated, "invalid passkey ceremony")
+	case errors.Is(err, auth.ErrPasskeyNotConfigured):
+		return status.Error(codes.FailedPrecondition, "passkey is not configured")
 	case errors.Is(err, auth.ErrTOTPAlreadyBound), errors.Is(err, auth.ErrTOTPNotBound):
 		return status.Error(codes.FailedPrecondition, err.Error())
 	case errors.Is(err, auth.ErrSecondFactorRequired):

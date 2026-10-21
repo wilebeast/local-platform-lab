@@ -110,3 +110,29 @@ func TestTOTPOptionsUsesAuthenticatedActor(t *testing.T) {
 		t.Fatalf("unexpected options response: status=%d body=%s", recorder.Code, recorder.Body.String())
 	}
 }
+
+func TestBeginPasskeyRegistrationUsesAuthenticatedActor(t *testing.T) {
+	serviceContext := &svc.ServiceContext{UserClient: fakeUserClient{passkeyOptions: &userv1.PasskeyOptionsResponse{
+		CeremonyId: "registration-ceremony", OptionsJson: []byte(`{"publicKey":{"challenge":"challenge"}}`),
+	}}}
+	request := httptest.NewRequest(http.MethodPost, "/api/v3/auth/passkey/register/options", nil)
+	request = request.WithContext(context.WithValue(request.Context(), actorContextKey{}, Actor{UserID: "local-user"}))
+	recorder := httptest.NewRecorder()
+	BeginPasskeyRegistrationHandler(serviceContext)(recorder, request)
+	if recorder.Code != http.StatusOK || !strings.Contains(recorder.Body.String(), `"ceremonyId":"registration-ceremony"`) || !strings.Contains(recorder.Body.String(), `"publicKey"`) {
+		t.Fatalf("unexpected registration options response: status=%d body=%s", recorder.Code, recorder.Body.String())
+	}
+}
+
+func TestFinishPasskeyLoginSetsTokensInSecureCookies(t *testing.T) {
+	serviceContext := testServiceContextWithTokens()
+	request := httptest.NewRequest(http.MethodPost, "/api/v3/auth/passkey/login/verify", strings.NewReader(`{"ceremonyId":"login-ceremony","credential":{"id":"credential-id"}}`))
+	recorder := httptest.NewRecorder()
+	FinishPasskeyLoginHandler(serviceContext)(recorder, request)
+	if recorder.Code != http.StatusOK || len(recorder.Result().Cookies()) != 3 {
+		t.Fatalf("expected token cookies after passkey login: status=%d cookies=%d body=%s", recorder.Code, len(recorder.Result().Cookies()), recorder.Body.String())
+	}
+	if strings.Contains(recorder.Body.String(), "access-value") || strings.Contains(recorder.Body.String(), "refresh-value") {
+		t.Fatal("passkey tokens must not be present in JSON response")
+	}
+}

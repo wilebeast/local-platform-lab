@@ -65,6 +65,9 @@ type Config struct {
 	DemoUserID         string
 	TOTPEncryptionKey  string
 	RecoveryCodePepper string
+	PasskeyRPID        string
+	PasskeyRPName      string
+	PasskeyOrigins     []string
 }
 
 type TokenPair struct {
@@ -74,11 +77,13 @@ type TokenPair struct {
 }
 
 type Service struct {
-	config   Config
-	store    RefreshStore
-	sessions SessionStore
-	factors  FactorStore
-	now      func() time.Time
+	config       Config
+	store        RefreshStore
+	sessions     SessionStore
+	factors      FactorStore
+	passkeyStore PasskeyStore
+	passkey      passkeyProvider
+	now          func() time.Time
 }
 
 func NewService(config Config, store RefreshStore) (*Service, error) {
@@ -96,7 +101,15 @@ func NewService(config Config, store RefreshStore) (*Service, error) {
 	if !ok {
 		return nil, errors.New("session store is required")
 	}
-	return &Service{config: config, store: store, sessions: sessions, factors: factors, now: time.Now}, nil
+	passkey, err := newPasskeyProvider(config)
+	if err != nil {
+		return nil, err
+	}
+	passkeyStore, ok := store.(PasskeyStore)
+	if passkey != nil && !ok {
+		return nil, errors.New("passkey store is required")
+	}
+	return &Service{config: config, store: store, sessions: sessions, factors: factors, passkeyStore: passkeyStore, passkey: passkey, now: time.Now}, nil
 }
 
 func (s *Service) Login(ctx context.Context, email, password string) (TokenPair, error) {

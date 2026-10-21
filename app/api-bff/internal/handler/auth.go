@@ -56,6 +56,10 @@ type unbindTOTPRequest struct {
 type codeRequest struct {
 	Code string `json:"code"`
 }
+type passkeyCeremonyRequest struct {
+	CeremonyID string          `json:"ceremonyId"`
+	Credential json.RawMessage `json:"credential"`
+}
 
 func VerifyLogin2FAHandler(serviceContext *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -138,6 +142,80 @@ func RegenerateRecoveryCodesHandler(serviceContext *svc.ServiceContext) http.Han
 		result, err := serviceContext.UserClient.RegenerateRecoveryCodes(r.Context(), &userv1.RegenerateRecoveryCodesRequest{UserId: actor.UserID, Code: request.Code})
 		writeRecoveryCodes(w, result, err)
 	}
+}
+
+func BeginPasskeyRegistrationHandler(serviceContext *svc.ServiceContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		actor, ok := actorFromContext(r.Context())
+		if !ok {
+			writeError(w, http.StatusUnauthorized, "authentication required")
+			return
+		}
+		result, err := serviceContext.UserClient.BeginPasskeyRegistration(r.Context(), &userv1.BeginPasskeyRegistrationRequest{
+			UserId: actor.UserID, UserName: actor.UserID,
+		})
+		writePasskeyOptions(w, result, err)
+	}
+}
+
+func FinishPasskeyRegistrationHandler(serviceContext *svc.ServiceContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if _, ok := actorFromContext(r.Context()); !ok {
+			writeError(w, http.StatusUnauthorized, "authentication required")
+			return
+		}
+		var request passkeyCeremonyRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil || request.CeremonyID == "" || len(request.Credential) == 0 {
+			writeError(w, http.StatusBadRequest, "ceremonyId and credential are required")
+			return
+		}
+		result, err := serviceContext.UserClient.FinishPasskeyRegistration(r.Context(), &userv1.FinishPasskeyRegistrationRequest{
+			CeremonyId: request.CeremonyID, ResponseJson: request.Credential,
+		})
+		if err != nil {
+			writeRPCError(w, err)
+			return
+		}
+		httpx.OkJson(w, map[string]any{"registered": result.GetRegistered(), "credentialId": result.GetCredentialId()})
+	}
+}
+
+func BeginPasskeyLoginHandler(serviceContext *svc.ServiceContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		result, err := serviceContext.UserClient.BeginPasskeyLogin(r.Context(), &userv1.BeginPasskeyLoginRequest{})
+		writePasskeyOptions(w, result, err)
+	}
+}
+
+func FinishPasskeyLoginHandler(serviceContext *svc.ServiceContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var request passkeyCeremonyRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil || request.CeremonyID == "" || len(request.Credential) == 0 {
+			writeError(w, http.StatusBadRequest, "ceremonyId and credential are required")
+			return
+		}
+		pair, err := serviceContext.UserClient.FinishPasskeyLogin(r.Context(), &userv1.FinishPasskeyLoginRequest{
+			CeremonyId: request.CeremonyID, ResponseJson: request.Credential,
+		})
+		writeTokenResult(w, r, pair, err)
+	}
+}
+
+func writePasskeyOptions(w http.ResponseWriter, result *userv1.PasskeyOptionsResponse, err error) {
+	if err != nil {
+		writeRPCError(w, err)
+		return
+	}
+	if result == nil || result.GetCeremonyId() == "" || len(result.GetOptionsJson()) == 0 {
+		writeError(w, http.StatusBadGateway, "user service returned incomplete passkey options")
+		return
+	}
+	var options any
+	if err := json.Unmarshal(result.GetOptionsJson(), &options); err != nil {
+		writeError(w, http.StatusBadGateway, "user service returned invalid passkey options")
+		return
+	}
+	httpx.OkJson(w, map[string]any{"ceremonyId": result.GetCeremonyId(), "options": options})
 }
 
 func writeRecoveryCodes(w http.ResponseWriter, result *userv1.RecoveryCodesResponse, err error) {

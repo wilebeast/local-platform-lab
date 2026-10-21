@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Passkey 认证实验台</title>
+  <style>
+    :root{--ink:#13233a;--navy:#0b1d33;--paper:#f4f7f8;--line:#b9c8d2;--cyan:#38c6d9;--orange:#ff8c42;--good:#18745a;--bad:#a23b3b}
+    *{box-sizing:border-box}body{margin:0;background:var(--navy);color:var(--ink);font:16px/1.55 Inter,"PingFang SC","Microsoft YaHei",sans-serif}
+    header{max-width:1180px;margin:auto;padding:48px 28px 28px;color:white;display:grid;grid-template-columns:1.5fr 1fr;gap:40px;align-items:end}
+    h1{font-size:clamp(38px,6vw,72px);line-height:.98;letter-spacing:-.055em;margin:0;max-width:720px}header p{margin:0;color:#b9d2df;max-width:430px}
+    .shell{max-width:1180px;margin:0 auto 64px;background:var(--paper);display:grid;grid-template-columns:minmax(0,1.08fr) minmax(330px,.92fr);min-height:680px}
+    main{padding:34px}.trace{padding:34px;background:#e7eef1;border-left:1px solid var(--line)}
+    .step{display:grid;grid-template-columns:46px 1fr;gap:14px;padding:22px 0;border-top:1px solid var(--line)}.step:first-of-type{border-top:0}
+    .num{width:36px;height:36px;border:2px solid var(--ink);display:grid;place-items:center;font-weight:800}.step.done .num{background:var(--good);border-color:var(--good);color:white}
+    h2{font-size:22px;margin:0 0 6px}p{margin:0 0 14px}.muted{color:#597083;font-size:14px}.field{display:grid;gap:6px;margin:12px 0}
+    label{font-size:13px;font-weight:700}input{width:100%;padding:11px 12px;border:1px solid #8ea3b1;background:white;font:inherit;color:inherit}
+    button{border:0;background:var(--ink);color:white;padding:11px 16px;font:700 14px inherit;cursor:pointer}button:hover{background:#24496b}button:focus-visible,input:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}button.secondary{background:transparent;color:var(--ink);border:1px solid var(--ink)}button:disabled{opacity:.45;cursor:not-allowed}
+    .actions{display:flex;gap:9px;flex-wrap:wrap}.key-rule{border-left:5px solid var(--orange);padding:10px 14px;background:#fff3e9;font-weight:700;margin:18px 0 8px}
+    .status{min-height:25px;font-weight:700}.status.ok{color:var(--good)}.status.err{color:var(--bad)}
+    .trace h2{font-size:16px;margin:0 0 14px}.packet{background:var(--navy);color:#d8ecf2;padding:18px;min-height:360px;white-space:pre-wrap;overflow:auto;font:13px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace}
+    .flow{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin:0 0 22px;font-size:13px}.flow span{padding:8px;background:white;text-align:center;border:1px solid var(--line)}.flow b{color:var(--good)}
+    @media(max-width:800px){header,.shell{grid-template-columns:1fr}.trace{border-left:0;border-top:1px solid var(--line)}header{padding-top:30px}}
+    @media(prefers-reduced-motion:no-preference){.status.flash{animation:flash .5s ease}@keyframes flash{50%{opacity:.25}}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Passkey<br>认证实验台</h1>
+    <p>你操作浏览器，系统展示每一步的公开数据。设备私钥不会进入网页、BFF、user-service 或 Redis。</p>
+  </header>
+  <div class="shell">
+    <main>
+      <div class="key-rule">私钥留在设备；服务端只保存公钥与凭据 ID。</div>
+      <section class="step" id="step-login"><div class="num">1</div><div><h2>先用密码建立当前会话</h2><p class="muted">绑定 Passkey 是高风险操作，必须先证明当前身份。</p><div class="field"><label for="email">演练邮箱</label><input id="email" value="demo@local.test"></div><div class="field"><label for="password">演练密码</label><input id="password" type="password" value="local-demo-password"></div><button id="password-login">密码登录</button></div></section>
+      <section class="step" id="step-register"><div class="num">2</div><div><h2>绑定这台设备的 Passkey</h2><p class="muted">浏览器会调用 Touch ID、系统解锁或安全密钥，并为本站创建密钥对。</p><button id="register" disabled>绑定 Passkey</button></div></section>
+      <section class="step" id="step-logout"><div class="num">3</div><div><h2>退出密码会话</h2><p class="muted">清除 Cookie 后，下一步只用 Passkey 建立新会话。</p><button class="secondary" id="logout" disabled>退出当前会话</button></div></section>
+      <section class="step" id="step-passkey"><div class="num">4</div><div><h2>使用 Passkey 登录</h2><p class="muted">认证器用私钥签名一次性 challenge，服务端使用已保存的公钥验签。</p><div class="actions"><button id="passkey-login">Passkey 登录</button><button class="secondary" id="profile">读取个人资料</button></div></div></section>
+      <p class="status" id="status">等待开始。</p>
+    </main>
+    <aside class="trace">
+      <h2>实时信任链</h2>
+      <div class="flow"><span>浏览器<br><b>持有私钥</b></span><strong>⇄</strong><span>BFF → gRPC<br>user-service</span></div>
+      <h2>最近一次请求 / 回包</h2>
+      <pre class="packet" id="packet">这里会显示 ceremonyId、公开选项和业务响应。敏感 Cookie 与私钥不会显示。</pre>
+    </aside>
+  </div>
+  <script>
+    const $=id=>document.getElementById(id), api='/api/v3/auth';
+    const b64uToBuf=s=>{s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return Uint8Array.from(atob(s),c=>c.charCodeAt(0)).buffer};
+    const bufToB64u=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    const csrf=()=>document.cookie.split('; ').find(v=>v.startsWith('csrf_token='))?.split('=')[1]||'';
+    function creationOptions(o){const p=o.publicKey;p.challenge=b64uToBuf(p.challenge);p.user.id=b64uToBuf(p.user.id);if(p.excludeCredentials)p.excludeCredentials.forEach(c=>c.id=b64uToBuf(c.id));return p}
+    function requestOptions(o){const p=o.publicKey;p.challenge=b64uToBuf(p.challenge);if(p.allowCredentials)p.allowCredentials.forEach(c=>c.id=b64uToBuf(c.id));return p}
+    function registrationJSON(c){return{id:c.id,rawId:bufToB64u(c.rawId),type:c.type,authenticatorAttachment:c.authenticatorAttachment,response:{clientDataJSON:bufToB64u(c.response.clientDataJSON),attestationObject:bufToB64u(c.response.attestationObject),transports:c.response.getTransports?.()||[]},clientExtensionResults:c.getClientExtensionResults()}}
+    function assertionJSON(c){return{id:c.id,rawId:bufToB64u(c.rawId),type:c.type,authenticatorAttachment:c.authenticatorAttachment,response:{clientDataJSON:bufToB64u(c.response.clientDataJSON),authenticatorData:bufToB64u(c.response.authenticatorData),signature:bufToB64u(c.response.signature),userHandle:c.response.userHandle?bufToB64u(c.response.userHandle):null},clientExtensionResults:c.getClientExtensionResults()}}
+    async function call(path,body,needsCSRF=false){const headers={'Content-Type':'application/json','Origin':location.origin};if(needsCSRF)headers['X-CSRF-Token']=csrf();const res=await fetch(api+path,{method:'POST',credentials:'include',headers,body:JSON.stringify(body||{})});const data=await res.json();$('packet').textContent=JSON.stringify({request:{path,body:body||{},csrf:needsCSRF?'present':'not required'},response:{status:res.status,body:data}},null,2);if(!res.ok)throw new Error(data.error||`HTTP ${res.status}`);return data}
+    function done(step,message){$(step).classList.add('done');$('status').className='status ok flash';$('status').textContent=message;setTimeout(()=>$('status').classList.remove('flash'),550)}
+    function fail(e){$('status').className='status err';$('status').textContent=e.message}
+    $('password-login').onclick=async()=>{try{await call('/login',{email:$('email').value,password:$('password').value});$('register').disabled=false;$('logout').disabled=false;done('step-login','密码会话已建立，可以绑定 Passkey。')}catch(e){fail(e)}};
+    $('register').onclick=async()=>{try{const start=await call('/passkey/register/options',{},true);const credential=await navigator.credentials.create({publicKey:creationOptions(start.options)});await call('/passkey/register/verify',{ceremonyId:start.ceremonyId,credential:registrationJSON(credential)},true);done('step-register','Passkey 已绑定；服务端只保存了公钥。')}catch(e){fail(e)}};
+    $('logout').onclick=async()=>{try{await call('/logout',{},true);$('register').disabled=true;done('step-logout','当前 Cookie 会话已退出。')}catch(e){fail(e)}};
+    $('passkey-login').onclick=async()=>{try{const start=await call('/passkey/login/options',{});const credential=await navigator.credentials.get({publicKey:requestOptions(start.options)});await call('/passkey/login/verify',{ceremonyId:start.ceremonyId,credential:assertionJSON(credential)});$('logout').disabled=false;done('step-passkey','Passkey 签名验证成功，新会话的 amr 为 passkey。')}catch(e){fail(e)}};
+    $('profile').onclick=async()=>{try{const res=await fetch('/api/v3/profile',{credentials:'include'}),data=await res.json();$('packet').textContent=JSON.stringify({request:{path:'/api/v3/profile'},response:{status:res.status,body:data}},null,2);if(!res.ok)throw new Error(data.error||`HTTP ${res.status}`);done('step-passkey','当前会话有效，个人资料读取成功。')}catch(e){fail(e)}};
+  </script>
+</body>
+</html>

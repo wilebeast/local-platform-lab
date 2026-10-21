@@ -15,10 +15,12 @@ import (
 )
 
 type fakeUserClient struct {
-	tokenPair     *userv1.TokenPair
-	prepare       *userv1.PrepareLoginResponse
-	setup         *userv1.TOTPOptionsResponse
-	recoveryCodes []string
+	tokenPair           *userv1.TokenPair
+	prepare             *userv1.PrepareLoginResponse
+	setup               *userv1.TOTPOptionsResponse
+	recoveryCodes       []string
+	passkeyOptions      *userv1.PasskeyOptionsResponse
+	passkeyRegistration *userv1.FinishPasskeyRegistrationResponse
 }
 
 type fakeGenericCaller struct{}
@@ -68,6 +70,18 @@ func (f fakeUserClient) UnbindTOTP(_ context.Context, _ *userv1.UnbindTOTPReques
 }
 func (f fakeUserClient) RegenerateRecoveryCodes(_ context.Context, _ *userv1.RegenerateRecoveryCodesRequest, _ ...grpc.CallOption) (*userv1.RecoveryCodesResponse, error) {
 	return &userv1.RecoveryCodesResponse{RecoveryCodes: f.recoveryCodes}, nil
+}
+func (f fakeUserClient) BeginPasskeyRegistration(_ context.Context, _ *userv1.BeginPasskeyRegistrationRequest, _ ...grpc.CallOption) (*userv1.PasskeyOptionsResponse, error) {
+	return f.passkeyOptions, nil
+}
+func (f fakeUserClient) FinishPasskeyRegistration(_ context.Context, _ *userv1.FinishPasskeyRegistrationRequest, _ ...grpc.CallOption) (*userv1.FinishPasskeyRegistrationResponse, error) {
+	return f.passkeyRegistration, nil
+}
+func (f fakeUserClient) BeginPasskeyLogin(_ context.Context, _ *userv1.BeginPasskeyLoginRequest, _ ...grpc.CallOption) (*userv1.PasskeyOptionsResponse, error) {
+	return f.passkeyOptions, nil
+}
+func (f fakeUserClient) FinishPasskeyLogin(_ context.Context, _ *userv1.FinishPasskeyLoginRequest, _ ...grpc.CallOption) (*userv1.TokenPair, error) {
+	return f.tokenPair, nil
 }
 
 func testServiceContextWithTokens() *svc.ServiceContext {

@@ -1,3 +1,16 @@
 Name: user-service
 ListenOn: 0.0.0.0:9001
 Mode: dev
+Middlewares:
+  StatConf:
+    IgnoreContentMethods:
+      - /user.v1.UserService/Login
+      - /user.v1.UserService/PrepareLogin
+      - /user.v1.UserService/VerifyLogin2FA
+      - /user.v1.UserService/ConfirmTOTP
+      - /user.v1.UserService/UnbindTOTP
+      - /user.v1.UserService/RegenerateRecoveryCodes
+      - /user.v1.UserService/FinishPasskeyRegistration
+      - /user.v1.UserService/FinishPasskeyLogin
+      - /user.v1.UserService/Refresh
+      - /user.v1.UserService/Logout
