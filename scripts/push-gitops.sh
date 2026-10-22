@@ -25,4 +25,4 @@ if git -C "$GITOPS_DIR" remote get-url local >/dev/null 2>&1; then
 else
   git -C "$GITOPS_DIR" remote add local "git://localhost:$PORT/platform.git"
 fi
-git -C "$GITOPS_DIR" push --force local main
+git -C "$GITOPS_DIR" push local main

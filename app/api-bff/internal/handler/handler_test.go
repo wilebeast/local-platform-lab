@@ -9,10 +9,21 @@ import (
 	"testing"
 
 	userv1 "github.com/wilebeast/local-platform-lab/api/user/v1"
+	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/apikey"
 	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/config"
 	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/svc"
 	"google.golang.org/grpc"
 )
+
+type fakeAPIKeyValidator struct {
+	result  apikey.ValidationResult
+	request apikey.ValidationRequest
+}
+
+func (f *fakeAPIKeyValidator) Validate(_ context.Context, request apikey.ValidationRequest) (apikey.ValidationResult, error) {
+	f.request = request
+	return f.result, nil
+}
 
 type fakeUserClient struct {
 	tokenPair           *userv1.TokenPair
@@ -180,6 +191,30 @@ func TestAuthorizePassesTrustedPermissionContext(t *testing.T) {
 	}
 	if checked.GetUserId() != "user-123" || checked.GetOrganizationId() != "org-456" || checked.GetPermissionKey() != "profile.read" {
 		t.Fatalf("unexpected permission context: %#v", checked)
+	}
+}
+
+func TestAuthorizeRejectsAPIKeyWithoutRoutePermission(t *testing.T) {
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/api/v3/profile", nil)
+	request = request.WithContext(context.WithValue(request.Context(), actorContextKey{}, Actor{
+		Type: ActorTypeAPIKey, MerchantID: "local-org", KeyID: "local-key-1",
+	}))
+	validator := &fakeAPIKeyValidator{result: apikey.ValidationResult{Forbidden: true}}
+	called := false
+
+	Authorize(&svc.ServiceContext{APIKeyValidator: validator}, "profile.read", func(http.ResponseWriter, *http.Request) {
+		called = true
+	}).ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusForbidden {
+		t.Fatalf("expected 403, got %d: %s", recorder.Code, recorder.Body.String())
+	}
+	if called {
+		t.Fatal("protected handler was called after API key permission denial")
+	}
+	if validator.request.MerchantID != "local-org" || validator.request.KeyID != "local-key-1" || validator.request.RequiredPermission != "profile.read" {
+		t.Fatalf("unexpected API key validation request: %#v", validator.request)
 	}
 }
 

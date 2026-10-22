@@ -24,6 +24,13 @@ func RegisterHandlers(server *rest.Server, ctx *svc.ServiceContext) {
 
 	server.AddRoutes([]rest.Route{
 		{
+			Method: http.MethodGet, Path: "/open/profile",
+			Handler: APIKeyGatewayAuth(gatewaySecret, Authorize(ctx, "profile.read", ProfileHandler(ctx))),
+		}, {
+			Method: http.MethodGet, Path: "/open/v2/profile",
+			Handler: Ed25519APIKeyAuth(gatewaySecret, ctx.Ed25519Authenticator, Authorize(ctx, "profile.read", ProfileHandler(ctx))),
+		},
+		{
 			Method: http.MethodPost, Path: "/auth/login",
 			Handler: GatewayAuth(gatewaySecret, validator, false, BrowserOrigin(allowedOrigin, LoginHandler(ctx))),
 		}, {

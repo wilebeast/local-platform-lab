@@ -2,6 +2,7 @@ package svc
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"github.com/wilebeast/local-platform-lab/api/user/v1"
+	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/apikey"
 	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/authn"
 	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/config"
 	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/genericrpc"
@@ -20,19 +22,23 @@ import (
 )
 
 type ServiceContext struct {
-	Config              config.Config
-	UserClient          userv1.UserServiceClient
-	GenericRPC          genericrpc.RouteCaller
-	genericInvokers     []*genericrpc.Invoker
-	genericConnections  []*grpc.ClientConn
-	genericResolvers    []*serviceregistry.Builder
-	userConn            *grpc.ClientConn
-	resolver            *serviceregistry.Builder
-	Provider            string
-	GatewaySignatureKey string
-	AuthAllowedOrigin   string
-	AuthValidator       *authn.Validator
-	RBACOrganizationID  string
+	Config               config.Config
+	UserClient           userv1.UserServiceClient
+	GenericRPC           genericrpc.RouteCaller
+	genericInvokers      []*genericrpc.Invoker
+	genericConnections   []*grpc.ClientConn
+	genericResolvers     []*serviceregistry.Builder
+	userConn             *grpc.ClientConn
+	resolver             *serviceregistry.Builder
+	Provider             string
+	GatewaySignatureKey  string
+	AuthAllowedOrigin    string
+	AuthValidator        *authn.Validator
+	RBACOrganizationID   string
+	APIKeyValidator      apikey.Validator
+	Ed25519Authenticator apikey.Ed25519RequestAuthenticator
+	apiKeyDB             *sql.DB
+	apiKeyNonceStore     *apikey.RedisNonceStore
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -45,6 +51,28 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		allowedOrigin = "https://localhost:18443"
 	}
 	ctx := &ServiceContext{Config: c, Provider: provider, GatewaySignatureKey: os.Getenv("GATEWAY_SIGNATURE_KEY"), AuthAllowedOrigin: allowedOrigin, RBACOrganizationID: envOr("RBAC_ORGANIZATION_ID", "local-org")}
+	if dsn := os.Getenv("POSTGRES_DSN"); dsn != "" {
+		postgresCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		db, err := apikey.OpenPostgres(postgresCtx, dsn)
+		if err != nil {
+			panic(fmt.Errorf("connect to API key PostgreSQL: %w", err))
+		}
+		if err := apikey.Migrate(postgresCtx, db); err != nil {
+			_ = db.Close()
+			panic(fmt.Errorf("migrate API key schema: %w", err))
+		}
+		ctx.apiKeyDB = db
+		validator := apikey.NewPostgresValidator(db)
+		ctx.APIKeyValidator = validator
+		nonceStore := apikey.NewRedisNonceStore(envOr("REDIS_ADDR", "redis.redis.svc.cluster.local:6379"))
+		if err := nonceStore.Ping(postgresCtx); err != nil {
+			_ = db.Close()
+			panic(fmt.Errorf("connect to API key nonce Redis: %w", err))
+		}
+		ctx.apiKeyNonceStore = nonceStore
+		ctx.Ed25519Authenticator = apikey.NewEd25519Authenticator(validator, nonceStore)
+	}
 	if publicKey := os.Getenv("JWT_PUBLIC_KEY_B64"); publicKey != "" {
 		validator, err := authn.NewValidator(
 			publicKey, os.Getenv("JWT_KEY_ID"),
@@ -89,6 +117,12 @@ func NewServiceContext(c config.Config) *ServiceContext {
 }
 
 func (s *ServiceContext) Close() error {
+	if s.apiKeyDB != nil {
+		_ = s.apiKeyDB.Close()
+	}
+	if s.apiKeyNonceStore != nil {
+		_ = s.apiKeyNonceStore.Close()
+	}
 	if s.AuthValidator != nil {
 		_ = s.AuthValidator.Close()
 	}

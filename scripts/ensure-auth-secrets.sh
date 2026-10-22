@@ -41,11 +41,15 @@ fi
 
 totp_key="$(kubectl --context "$KUBE_CONTEXT" -n user-service get secret platform-auth -o jsonpath='{.data.totp-encryption-key}' 2>/dev/null | base64 --decode || true)"
 recovery_pepper="$(kubectl --context "$KUBE_CONTEXT" -n user-service get secret platform-auth -o jsonpath='{.data.recovery-code-pepper}' 2>/dev/null | base64 --decode || true)"
+local_api_key_secret="$(kubectl --context "$KUBE_CONTEXT" -n apisix get secret platform-auth -o jsonpath='{.data.local-api-key-secret}' 2>/dev/null | base64 --decode || true)"
 if [ -z "$totp_key" ]; then
   totp_key="$(openssl rand -hex 32)"
 fi
 if [ -z "$recovery_pepper" ]; then
   recovery_pepper="$(openssl rand -hex 32)"
+fi
+if [ -z "$local_api_key_secret" ]; then
+  local_api_key_secret="$(openssl rand -base64 32 | tr -d '\n')"
 fi
 
 kubectl --context "$KUBE_CONTEXT" -n user-service create secret generic platform-auth \
@@ -63,6 +67,7 @@ kubectl --context "$KUBE_CONTEXT" -n api-bff create secret generic platform-auth
 
 kubectl --context "$KUBE_CONTEXT" -n apisix create secret generic platform-auth \
   --from-literal="gateway-signature-key=$gateway_key" \
+  --from-literal="local-api-key-secret=$local_api_key_secret" \
   --dry-run=client -o yaml | kubectl --context "$KUBE_CONTEXT" apply -f - >/dev/null
 
 echo "Authentication keys and the local TLS certificate are present."
