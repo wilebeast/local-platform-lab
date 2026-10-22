@@ -84,6 +84,7 @@ fi
 "$ROOT_DIR/scripts/push-gitops.sh" --seed
 "$ROOT_DIR/scripts/ensure-auth-secrets.sh"
 "$ROOT_DIR/scripts/ensure-postgres-secrets.sh"
+"$ROOT_DIR/scripts/ensure-webhook-secrets.sh"
 kubectl --context "$KUBE_CONTEXT" apply -f "$GITOPS_DIR/argocd"
 
 echo "Bootstrap complete. Run: make deploy && make verify"

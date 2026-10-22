@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+  <defs><linearGradient id="b" y2="1"><stop stop-color="#f9fcff"/><stop offset="1" stop-color="#edf3fa"/></linearGradient><filter id="sh"><feDropShadow dy="6" stdDeviation="7" flood-opacity=".14"/></filter></defs>
+  <rect width="1200" height="700" rx="34" fill="url(#b)"/><text x="55" y="68" font-family="PingFang SC" font-size="32" font-weight="700" fill="#10233f">Kafka Offset 与 LAG：归零的是积压，不是位置</text>
+  <g transform="translate(75 165)" filter="url(#sh)">
+    <rect width="1050" height="190" rx="22" fill="#fff" stroke="#bdcee0" stroke-width="2"/>
+    <g font-family="monospace" font-size="18" text-anchor="middle">
+      <g><rect x="42" y="55" width="130" height="80" rx="12" fill="#dceaff" stroke="#568ad3"/><text x="107" y="89" fill="#17345e">offset 10</text><text x="107" y="116" fill="#17345e">evt_A</text></g>
+      <g><rect x="188" y="55" width="130" height="80" rx="12" fill="#dceaff" stroke="#568ad3"/><text x="253" y="89" fill="#17345e">offset 11</text><text x="253" y="116" fill="#17345e">evt_B</text></g>
+      <g><rect x="334" y="55" width="130" height="80" rx="12" fill="#fff0c8" stroke="#dda72e"/><text x="399" y="89" fill="#6d4b00">offset 12</text><text x="399" y="116" fill="#6d4b00">evt_C</text></g>
+      <g><rect x="480" y="55" width="130" height="80" rx="12" fill="#fff0c8" stroke="#dda72e"/><text x="545" y="89" fill="#6d4b00">offset 13</text><text x="545" y="116" fill="#6d4b00">evt_D</text></g>
+      <g><rect x="626" y="55" width="130" height="80" rx="12" fill="#fff0c8" stroke="#dda72e"/><text x="691" y="89" fill="#6d4b00">offset 14</text><text x="691" y="116" fill="#6d4b00">evt_E</text></g>
+      <g><rect x="772" y="55" width="130" height="80" rx="12" fill="#edf1f5" stroke="#9bacbd" stroke-dasharray="6 5"/><text x="837" y="89" fill="#536a82">offset 15</text><text x="837" y="116" fill="#536a82">next write</text></g>
+    </g>
+  </g>
+  <path d="M409 365v80" stroke="#2563eb" stroke-width="5"/><path d="M397 430l12 18 12-18" fill="#2563eb"/><text x="304" y="480" font-family="PingFang SC" font-size="19" font-weight="700" fill="#2563eb">CURRENT-OFFSET = 12</text><text x="314" y="510" font-family="PingFang SC" font-size="15" fill="#60748c">下一条从 12 开始</text>
+  <path d="M912 365v80" stroke="#1d9b67" stroke-width="5"/><path d="M900 430l12 18 12-18" fill="#1d9b67"/><text x="826" y="480" font-family="PingFang SC" font-size="19" font-weight="700" fill="#177652">LOG END = 15</text><text x="824" y="510" font-family="PingFang SC" font-size="15" fill="#60748c">下一条写在 15</text>
+  <path d="M410 550H910" stroke="#db8d18" stroke-width="7"/><path d="M410 538v24M910 538v24" stroke="#db8d18" stroke-width="5"/><text x="531" y="602" font-family="PingFang SC" font-size="24" font-weight="700" fill="#a9680c">LAG = 15 - 12 = 3</text>
+  <text x="55" y="657" font-family="PingFang SC" font-size="17" fill="#60748c">Consumer 是 webhook-sender；Committed Offset 属于 Consumer Group webhook-sender-v1。</text>
+</svg>

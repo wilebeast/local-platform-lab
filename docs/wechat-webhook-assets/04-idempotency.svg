@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+  <defs><linearGradient id="c" y2="1"><stop stop-color="#fbfdff"/><stop offset="1" stop-color="#eef4fb"/></linearGradient><filter id="d"><feDropShadow dy="6" stdDeviation="8" flood-opacity=".13"/></filter><marker id="m" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0v6l9-3z" fill="#2563eb"/></marker></defs>
+  <rect width="1200" height="700" rx="34" fill="url(#c)"/><text x="55" y="68" font-family="PingFang SC" font-size="32" font-weight="700" fill="#10233f">幂等：请求可以重试，业务效果只能发生一次</text>
+  <g filter="url(#d)" font-family="PingFang SC">
+    <rect x="70" y="165" width="210" height="120" rx="20" fill="#fff" stroke="#7fa9df" stroke-width="2"/><text x="115" y="214" font-size="22" font-weight="700" fill="#17345e">Webhook 请求</text><text x="102" y="252" font-family="monospace" font-size="15" fill="#56708d">event_id = evt_123</text>
+    <rect x="395" y="165" width="250" height="120" rx="20" fill="#fff4d8" stroke="#d8a333" stroke-width="2"/><text x="444" y="213" font-size="22" font-weight="700" fill="#6d4b00">查询幂等记录</text><text x="451" y="251" font-family="monospace" font-size="15" fill="#7b5b17">endpoint + event_id</text>
+    <rect x="775" y="110" width="335" height="120" rx="20" fill="#e9f7f1" stroke="#54a67c" stroke-width="2"/><text x="828" y="158" font-size="21" font-weight="700" fill="#176443">首次出现：事务处理业务</text><text x="830" y="196" font-size="16" fill="#3d765f">写业务数据 + 幂等记录</text>
+    <rect x="775" y="310" width="335" height="120" rx="20" fill="#e8f1ff" stroke="#6c9bd9" stroke-width="2"/><text x="827" y="358" font-size="21" font-weight="700" fill="#1d4f91">已经存在：跳过业务处理</text><text x="856" y="396" font-size="16" fill="#4c6d94">仍然返回 HTTP 200</text>
+  </g>
+  <path d="M280 225H385" stroke="#2563eb" stroke-width="5" marker-end="url(#m)"/><path d="M645 205C710 205 710 170 765 170" fill="none" stroke="#1d9b67" stroke-width="5" marker-end="url(#m)"/><path d="M645 245C710 245 710 370 765 370" fill="none" stroke="#2563eb" stroke-width="5" marker-end="url(#m)"/>
+  <text x="670" y="164" font-family="PingFang SC" font-size="16" fill="#177652">不存在</text><text x="680" y="345" font-family="PingFang SC" font-size="16" fill="#2563eb">已存在</text>
+  <rect x="250" y="500" width="700" height="96" rx="20" fill="#17283f"/><text x="338" y="541" font-family="PingFang SC" font-size="22" font-weight="700" fill="#fff">至少一次投递 + event_id 幂等</text><text x="397" y="574" font-family="PingFang SC" font-size="18" fill="#9ee4c5">= 业务效果恰好一次</text>
+  <text x="55" y="655" font-family="PingFang SC" font-size="17" fill="#60748c">生产实现：数据库 UNIQUE(endpoint_id, event_id)，且幂等记录与业务变更处于同一事务。</text>
+</svg>

@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: doctor bootstrap deploy verify deploy-api-bff verify-api-bff deploy-user-service verify-user-service deploy-account-service verify-account-service deploy-local-gateway verify-local-gateway deploy-service-discovery verify-service-discovery verify-service-registration deploy-auth verify-auth verify-bff-session auth-ui rollback argocd-ui destroy generate-user-descriptor generate-account-descriptor ensure-postgres-secrets
+.PHONY: doctor bootstrap deploy verify deploy-api-bff verify-api-bff deploy-user-service verify-user-service deploy-account-service verify-account-service deploy-local-gateway verify-local-gateway deploy-service-discovery verify-service-discovery verify-service-registration deploy-auth verify-auth verify-bff-session auth-ui rollback argocd-ui destroy generate-user-descriptor generate-account-descriptor ensure-postgres-secrets deploy-webhook-lab verify-webhook-lab
 
 doctor:
 	@./scripts/doctor.sh
@@ -76,6 +76,12 @@ deploy-account-service:
 
 verify-account-service:
 	@./scripts/verify-account-service.sh
+
+deploy-webhook-lab:
+	@./scripts/deploy-webhook-lab.sh
+
+verify-webhook-lab:
+	@./scripts/verify-webhook-lab.sh
 
 .PHONY: deploy-matching-service verify-matching-service
 deploy-matching-service:

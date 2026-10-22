@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#f8fbff"/><stop offset="1" stop-color="#eef4fb"/></linearGradient>
+    <linearGradient id="metal" x2="0" y2="1"><stop stop-color="#dde7f2"/><stop offset="1" stop-color="#afc2d6"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity=".16"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+  </defs>
+  <rect width="1200" height="700" rx="36" fill="url(#bg)"/>
+  <text x="60" y="72" font-family="PingFang SC, sans-serif" font-size="34" font-weight="700" fill="#10233f">Webhook 可靠投递机</text>
+  <text x="60" y="108" font-family="PingFang SC, sans-serif" font-size="18" fill="#60748c">业务线程与外部 HTTP 解耦 · 可积压 · 可恢复 · 可验签</text>
+  <g filter="url(#shadow)">
+    <rect x="52" y="160" width="210" height="350" rx="22" fill="#fff" stroke="#bfd0e2" stroke-width="2"/>
+    <rect x="78" y="190" width="158" height="86" rx="14" fill="#e8f1ff" stroke="#7aa7ea" stroke-width="2"/>
+    <circle cx="111" cy="233" r="15" fill="#2563eb"/><path d="M102 233h18M111 224v18" stroke="#fff" stroke-width="3"/>
+    <text x="136" y="226" font-family="PingFang SC" font-size="20" font-weight="700" fill="#17345e">Producer</text>
+    <text x="136" y="251" font-family="PingFang SC" font-size="14" fill="#54708f">业务事件入站</text>
+    <rect x="83" y="310" width="148" height="112" rx="10" fill="#fffaf0" stroke="#e7b85b" stroke-width="2"/>
+    <path d="M99 335h116M99 359h90M99 383h105" stroke="#c88b1e" stroke-width="4" stroke-linecap="round"/>
+    <text x="101" y="407" font-family="monospace" font-size="13" fill="#7a591a">profile.updated</text>
+    <circle cx="76" cy="473" r="7" fill="#9bb0c5"/><circle cx="238" cy="473" r="7" fill="#9bb0c5"/>
+  </g>
+  <path d="M262 335H350" stroke="#2563eb" stroke-width="5" marker-end="url(#arrow)"/>
+  <g filter="url(#shadow)">
+    <rect x="360" y="145" width="310" height="390" rx="24" fill="url(#metal)" stroke="#7c93ac" stroke-width="2"/>
+    <rect x="388" y="178" width="254" height="300" rx="18" fill="#17283f"/>
+    <text x="415" y="218" font-family="PingFang SC" font-size="26" font-weight="700" fill="#fff">Kafka 缓冲仓</text>
+    <g fill="#f6b940" stroke="#fff3c5" stroke-width="2">
+      <rect x="414" y="250" width="202" height="48" rx="8"/><rect x="414" y="312" width="202" height="48" rx="8"/><rect x="414" y="374" width="202" height="48" rx="8"/>
+    </g>
+    <text x="435" y="281" font-family="monospace" font-size="17" fill="#4a3405">offset 10 · evt_A</text>
+    <text x="435" y="343" font-family="monospace" font-size="17" fill="#4a3405">offset 11 · evt_B</text>
+    <text x="435" y="405" font-family="monospace" font-size="17" fill="#4a3405">offset 12 · evt_C</text>
+    <rect x="405" y="445" width="220" height="14" rx="7" fill="#6d8199"/><circle cx="438" cy="452" r="15" fill="#e7eef6"/><circle cx="592" cy="452" r="15" fill="#e7eef6"/>
+    <text x="405" y="510" font-family="PingFang SC" font-size="15" fill="#314b68">持久缓冲 · Consumer Group Offset</text>
+  </g>
+  <path d="M670 335H748" stroke="#2563eb" stroke-width="5" marker-end="url(#arrow)"/>
+  <g filter="url(#shadow)">
+    <rect x="760" y="160" width="180" height="350" rx="22" fill="#fff" stroke="#bfd0e2" stroke-width="2"/>
+    <rect x="787" y="197" width="126" height="94" rx="16" fill="#e9f7f1" stroke="#51a97c" stroke-width="2"/>
+    <circle cx="850" cy="235" r="23" fill="#1d9b67"/><path d="M840 235l7 7 15-18" fill="none" stroke="#fff" stroke-width="4"/>
+    <text x="813" y="276" font-family="PingFang SC" font-size="18" font-weight="700" fill="#145e43">Sender</text>
+    <rect x="791" y="323" width="118" height="70" rx="12" fill="#f0edff" stroke="#8574cf" stroke-width="2"/>
+    <text x="815" y="350" font-family="PingFang SC" font-size="16" font-weight="700" fill="#51419b">HMAC</text>
+    <text x="809" y="376" font-family="monospace" font-size="13" fill="#685aa7">SHA-256</text>
+    <path d="M804 430h92" stroke="#8ca0b6" stroke-width="5"/><circle cx="816" cy="430" r="9" fill="#2563eb"/><circle cx="884" cy="430" r="9" fill="#1d9b67"/>
+    <text x="801" y="463" font-family="PingFang SC" font-size="14" fill="#54708f">成功后提交 Offset</text>
+  </g>
+  <path d="M940 335H1018" stroke="#2563eb" stroke-width="5" marker-end="url(#arrow)"/>
+  <g filter="url(#shadow)">
+    <rect x="1030" y="160" width="120" height="350" rx="22" fill="#fff" stroke="#bfd0e2" stroke-width="2"/>
+    <path d="M1065 214h50v54h-50z" fill="#e8f1ff" stroke="#2563eb" stroke-width="2"/><path d="M1075 230h30M1075 243h30M1075 256h20" stroke="#2563eb" stroke-width="3"/>
+    <text x="1051" y="302" font-family="PingFang SC" font-size="17" font-weight="700" fill="#17345e">商户</text>
+    <text x="1043" y="327" font-family="PingFang SC" font-size="14" fill="#54708f">Receiver</text>
+    <circle cx="1090" cy="376" r="30" fill="#e9f7f1" stroke="#1d9b67" stroke-width="2"/><path d="M1077 376l9 9 18-22" fill="none" stroke="#1d9b67" stroke-width="5"/>
+    <text x="1044" y="438" font-family="PingFang SC" font-size="14" fill="#54708f">验签 · 幂等</text>
+  </g>
+  <g font-family="PingFang SC" font-size="16" fill="#415b78">
+    <text x="62" y="590">① 业务只负责产生事件</text><text x="330" y="590">② Kafka 接住故障与流量波动</text><text x="700" y="590">③ Sender 签名并投递</text><text x="955" y="590">④ 商户安全处理</text>
+  </g>
+  <rect x="52" y="622" width="1098" height="2" fill="#c8d5e3"/>
+  <text x="52" y="660" font-family="PingFang SC" font-size="16" fill="#60748c">核心性质：至少一次投递 · 消费位点可恢复 · HMAC 防篡改 · Event ID 保证幂等</text>
+</svg>

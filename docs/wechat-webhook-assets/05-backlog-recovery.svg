@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+  <defs><linearGradient id="e" y2="1"><stop stop-color="#fbfdff"/><stop offset="1" stop-color="#edf3fa"/></linearGradient><filter id="f"><feDropShadow dy="6" stdDeviation="7" flood-opacity=".13"/></filter><marker id="n" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0v6l9-3z" fill="#2563eb"/></marker></defs>
+  <rect width="1200" height="700" rx="34" fill="url(#e)"/><text x="55" y="68" font-family="PingFang SC" font-size="32" font-weight="700" fill="#10233f">Sender 故障时：Kafka 积压；恢复后：从 Committed Offset 续传</text>
+  <g font-family="PingFang SC" filter="url(#f)">
+    <rect x="60" y="150" width="210" height="120" rx="20" fill="#fff" stroke="#78a4dc" stroke-width="2"/><text x="106" y="200" font-size="23" font-weight="700" fill="#17345e">Producer</text><text x="94" y="238" font-size="16" fill="#56708d">持续产生 A / B / C</text>
+    <rect x="380" y="115" width="310" height="330" rx="24" fill="#17283f" stroke="#5d7189" stroke-width="2"/><text x="462" y="160" font-size="25" font-weight="700" fill="#fff">Kafka</text>
+    <rect x="420" y="195" width="230" height="55" rx="10" fill="#f7be45"/><text x="450" y="230" font-family="monospace" font-size="17" fill="#483306">offset 10 · event A</text>
+    <rect x="420" y="268" width="230" height="55" rx="10" fill="#f7be45"/><text x="450" y="303" font-family="monospace" font-size="17" fill="#483306">offset 11 · event B</text>
+    <rect x="420" y="341" width="230" height="55" rx="10" fill="#f7be45"/><text x="450" y="376" font-family="monospace" font-size="17" fill="#483306">offset 12 · event C</text>
+    <rect x="810" y="150" width="300" height="120" rx="20" fill="#fff1f1" stroke="#d96d6d" stroke-width="2"/><text x="872" y="199" font-size="22" font-weight="700" fill="#923b3b">Sender 停止</text><text x="860" y="237" font-size="16" fill="#9c5555">CURRENT 不变 · LAG=3</text>
+    <rect x="810" y="355" width="300" height="120" rx="20" fill="#e9f7f1" stroke="#54a67c" stroke-width="2"/><text x="872" y="404" font-size="22" font-weight="700" fill="#176443">Sender 恢复</text><text x="852" y="442" font-size="16" fill="#3d765f">继续消费 · LAG → 0</text>
+  </g>
+  <path d="M270 210H370" stroke="#2563eb" stroke-width="5" marker-end="url(#n)"/><path d="M700 210H800" stroke="#d96d6d" stroke-width="5" stroke-dasharray="10 8"/><path d="M810 415H700" stroke="#1d9b67" stroke-width="5" marker-end="url(#n)"/>
+  <path d="M960 280v62" stroke="#71859b" stroke-width="4" stroke-dasharray="7 6"/><path d="M950 330l10 16 10-16" fill="#71859b"/>
+  <rect x="185" y="535" width="830" height="80" rx="18" fill="#fff" stroke="#bfd0e2" stroke-width="2"/><text x="250" y="585" font-family="PingFang SC" font-size="20" font-weight="700" fill="#17345e">故障不会让消息消失，但长期消费不足会让 LAG 和最老事件年龄持续增长</text>
+  <text x="55" y="662" font-family="PingFang SC" font-size="17" fill="#60748c">必须监控：LAG、最老消息年龄、发送成功率、连续失败次数、DLQ 数量与磁盘保留能力。</text>
+</svg>
