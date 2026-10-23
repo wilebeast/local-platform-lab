@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package notification.v1;
+
+option go_package = "github.com/wilebeast/local-platform-lab/api/notification/v1;notificationv1";
+
+service NotificationService {
+  rpc SendTemplatedEmail(SendTemplatedEmailRequest) returns (SendTemplatedEmailResponse);
+  rpc IssueEmailCode(IssueEmailCodeRequest) returns (IssueEmailCodeResponse);
+  rpc VerifyEmailCode(VerifyEmailCodeRequest) returns (VerifyEmailCodeResponse);
+}
+
+message Attachment {
+  string filename = 1;
+  string content_type = 2;
+  bytes content = 3;
+}
+
+message SendTemplatedEmailRequest {
+  string template_key = 1;
+  string locale = 2;
+  string recipient = 3;
+  map<string, string> variables = 4;
+  repeated Attachment attachments = 5;
+}
+
+message SendTemplatedEmailResponse {
+  string message_id = 1;
+}
+
+message IssueEmailCodeRequest {
+  string recipient = 1;
+  string purpose = 2;
+  string locale = 3;
+}
+
+message IssueEmailCodeResponse {
+  bool sent = 1;
+  int64 expires_in_seconds = 2;
+}
+
+message VerifyEmailCodeRequest {
+  string recipient = 1;
+  string purpose = 2;
+  string code = 3;
+}
+
+message VerifyEmailCodeResponse {
+  bool valid = 1;
+}
