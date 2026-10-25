@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1400" viewBox="0 0 1400 1400">
+  <rect width="1400" height="1400" rx="36" fill="#f7f8fa"/>
+  <text x="70" y="78" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif" font-size="40" font-weight="700" fill="#16181d">企业资金从入金到退款的账户迁移</text>
+  <g font-family="-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif">
+    <g fill="#fff" stroke="#cfd5df" stroke-width="3">
+      <rect x="70" y="150" width="260" height="120" rx="24"/><rect x="410" y="150" width="260" height="120" rx="24"/><rect x="750" y="150" width="260" height="120" rx="24"/><rect x="1090" y="150" width="240" height="120" rx="24"/>
+    </g>
+    <g text-anchor="middle" fill="#16181d">
+      <text x="200" y="200" font-size="28" font-weight="700">平台现金资产</text><text x="200" y="240" font-size="22">Asset · Debit</text>
+      <text x="540" y="200" font-size="28" font-weight="700">企业可用资金</text><text x="540" y="240" font-size="22">Liability · Credit</text>
+      <text x="880" y="200" font-size="28" font-weight="700">企业冻结资金</text><text x="880" y="240" font-size="22">Liability · Credit</text>
+      <text x="1210" y="200" font-size="28" font-weight="700">渠道应付款</text><text x="1210" y="240" font-size="22">Liability · Credit</text>
+    </g>
+    <g stroke-width="6" fill="none" marker-end="url(#a)">
+      <path d="M200 300 C260 380 425 340 505 300" stroke="#4f89ff"/>
+      <path d="M575 300 C650 380 765 380 840 300" stroke="#8b5cf6"/>
+      <path d="M920 300 C1000 360 1110 350 1170 300" stroke="#f59e0b"/>
+      <path d="M840 420 C765 490 650 490 575 420" stroke="#10b981"/>
+    </g>
+    <g font-size="23" font-weight="650">
+      <text x="350" y="360" fill="#2f65b9">入金：Dr Cash / Cr Available</text>
+      <text x="700" y="410" text-anchor="middle" fill="#6d3fc0">授权：Dr Available / Cr Held</text>
+      <text x="1040" y="345" fill="#a55f00">清算：Dr Held / Cr Payable</text>
+      <text x="700" y="525" text-anchor="middle" fill="#087f5b">撤销：Dr Held / Cr Available</text>
+    </g>
+    <rect x="90" y="610" width="1220" height="205" rx="28" fill="#111827"/>
+    <text x="135" y="670" font-size="28" font-weight="700" fill="#fff">余额轨迹（本地教练实验）</text>
+    <text x="135" y="720" font-size="24" fill="#cbd5e1">两次入金后：Posted 200000 · Held 0 · Available 200000</text>
+    <text x="135" y="762" font-size="24" fill="#cbd5e1">冻结 2500 后：Posted 200000 · Held 2500 · Available 197500</text>
+    <text x="135" y="804" font-size="24" fill="#cbd5e1">撤销 2500 后：Posted 200000 · Held 0 · Available 200000</text>
+  </g>
+  <defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="context-stroke"/></marker></defs>
+</svg>

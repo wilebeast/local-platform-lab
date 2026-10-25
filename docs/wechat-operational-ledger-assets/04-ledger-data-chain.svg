@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1400" viewBox="0 0 1400 1400">
+  <rect width="1400" height="1400" rx="36" fill="#f7f8fa"/>
+  <text x="70" y="80" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif" font-size="40" font-weight="700" fill="#16181d">一笔资金变化的四层证据链</text>
+  <g font-family="-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif">
+    <g fill="#fff" stroke-width="3">
+      <rect x="95" y="155" width="270" height="480" rx="28" stroke="#cbd5e1"/>
+      <rect x="405" y="155" width="270" height="480" rx="28" stroke="#b8d2ff"/>
+      <rect x="715" y="155" width="270" height="480" rx="28" stroke="#b8d2ff"/>
+      <rect x="1025" y="155" width="270" height="480" rx="28" stroke="#ffcc9a"/>
+    </g>
+    <g text-anchor="middle" fill="#16181d">
+      <text x="230" y="215" font-size="30" font-weight="700">业务事实</text><text x="230" y="255" font-size="20" fill="#667085">Authorization / Funding</text>
+      <text x="540" y="215" font-size="30" font-weight="700">Journal</text><text x="540" y="255" font-size="20" fill="#667085">一张完整凭证</text>
+      <text x="850" y="215" font-size="30" font-weight="700">Postings</text><text x="850" y="255" font-size="20" fill="#667085">不可修改的借贷行</text>
+      <text x="1160" y="215" font-size="30" font-weight="700">Balance</text><text x="1160" y="255" font-size="20" fill="#667085">可重建的余额投影</text>
+    </g>
+    <g font-size="22" fill="#344054">
+      <text x="130" y="335">business_id</text><text x="130" y="385">status</text><text x="130" y="435">amount</text><text x="130" y="485">journal_id</text>
+      <text x="440" y="335">event_type</text><text x="440" y="385">currency</text><text x="440" y="435">fingerprint</text><text x="440" y="485">posted</text>
+      <text x="750" y="335">account_id</text><text x="750" y="385">debit / credit</text><text x="750" y="435">amount_minor</text><text x="750" y="485">sequence_no</text>
+      <text x="1060" y="335">debits_total</text><text x="1060" y="385">credits_total</text><text x="1060" y="435">version</text><text x="1060" y="485">derived balance</text>
+    </g>
+    <g stroke="#667085" stroke-width="4" marker-end="url(#a)"><path d="M365 395 H400"/><path d="M675 395 H710"/><path d="M985 395 H1020"/></g>
+    <rect x="235" y="680" width="930" height="76" rx="18" fill="#111827"/>
+    <text x="700" y="728" text-anchor="middle" font-size="25" fill="#fff">同一事务：业务状态 + Journal + Postings + Balance，要么全部成功，要么全部回滚</text>
+  </g>
+  <defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#667085"/></marker></defs>
+</svg>

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1400" viewBox="0 0 1400 1400">
+  <rect width="1400" height="1400" rx="36" fill="#f7f8fa"/>
+  <text x="70" y="80" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif" font-size="40" font-weight="700" fill="#16181d">业务事件如何推导为借贷分录</text>
+  <g font-family="-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif">
+    <g fill="#fff" stroke="#cfd5df" stroke-width="3">
+      <rect x="70" y="135" width="235" height="120" rx="22"/><rect x="355" y="135" width="235" height="120" rx="22"/><rect x="640" y="135" width="235" height="120" rx="22"/><rect x="925" y="135" width="405" height="120" rx="22"/>
+    </g>
+    <g text-anchor="middle" fill="#171a21">
+      <text x="187" y="187" font-size="27" font-weight="700">1. 经济实质</text><text x="187" y="226" font-size="21">谁欠谁？什么增加？</text>
+      <text x="472" y="187" font-size="27" font-weight="700">2. 选择账户</text><text x="472" y="226" font-size="21">资产 / 负债 / 收入 / 费用</text>
+      <text x="757" y="187" font-size="27" font-weight="700">3. 判断方向</text><text x="757" y="226" font-size="21">增加还是减少？</text>
+      <text x="1127" y="187" font-size="27" font-weight="700">4. 生成 Posting Plan</text><text x="1127" y="226" font-size="21">账户 + 借贷方向 + 金额</text>
+    </g>
+    <g stroke="#667085" stroke-width="4" marker-end="url(#a)"><path d="M305 195 H350"/><path d="M590 195 H635"/><path d="M875 195 H920"/></g>
+    <rect x="70" y="335" width="1260" height="390" rx="28" fill="#111827"/>
+    <text x="115" y="395" font-size="28" font-weight="700" fill="#fff">例：企业入金 100000</text>
+    <text x="115" y="448" font-size="23" fill="#cbd5e1">平台收到现金，资产增加；同时平台欠企业的钱增加，负债增加。</text>
+    <rect x="115" y="500" width="520" height="145" rx="20" fill="#1f2937" stroke="#4f89ff" stroke-width="3"/>
+    <text x="375" y="555" text-anchor="middle" font-size="28" font-weight="700" fill="#9fc2ff">借 Debit</text>
+    <text x="375" y="600" text-anchor="middle" font-size="27" fill="#fff">平台现金资产 100000</text>
+    <rect x="765" y="500" width="520" height="145" rx="20" fill="#1f2937" stroke="#ffae61" stroke-width="3"/>
+    <text x="1025" y="555" text-anchor="middle" font-size="28" font-weight="700" fill="#ffc58f">贷 Credit</text>
+    <text x="1025" y="600" text-anchor="middle" font-size="27" fill="#fff">企业可用资金负债 100000</text>
+    <path d="M635 573 H760" stroke="#e5e7eb" stroke-width="4" marker-end="url(#w)"/>
+    <text x="700" y="684" text-anchor="middle" font-size="24" fill="#9ca3af">最后检查：Σ Debit = Σ Credit，业务事实与凭证在同一事务提交</text>
+  </g>
+  <defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#667085"/></marker><marker id="w" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#e5e7eb"/></marker></defs>
+</svg>
