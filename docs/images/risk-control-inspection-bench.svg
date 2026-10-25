@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">统一风控检查台</title>
+  <desc id="desc">一台由事实档案柜、版本化策略滚筒、评估工作台和三个决策托盘组成的检查机器。</desc>
+  <defs>
+    <linearGradient id="top" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#e9edf2"/></linearGradient>
+    <linearGradient id="side" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#cbd3dc"/><stop offset="1" stop-color="#9aa7b5"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="12" stdDeviation="12" flood-opacity=".18"/></filter>
+    <style>
+      .line{stroke:#17202a;stroke-width:2;fill:none;stroke-linejoin:round}.fine{stroke:#667482;stroke-width:1.4;fill:none}.bolt{fill:#34404c}.paper{fill:#fff;stroke:#17202a;stroke-width:2}.label{font-family:ui-sans-serif,system-ui;fill:#17202a}.small{font-size:18px}.tiny{font-size:14px}.lit{fill:#dff5e8;stroke:#177245;stroke-width:2}.warn{fill:#fff1c9;stroke:#9a6700;stroke-width:2}.deny{fill:#ffe0e0;stroke:#b42318;stroke-width:2}
+    </style>
+  </defs>
+  <rect width="1200" height="720" rx="28" fill="#f7f8fa"/>
+  <text x="56" y="62" class="label" font-size="28" font-weight="700">统一风控检查台</text>
+  <text x="1144" y="62" class="label small" text-anchor="end">事实变化 · 历史决定不改写</text>
+  <g filter="url(#shadow)">
+    <path d="M110 560 L800 560 L1040 430 L350 430 Z" fill="url(#top)" stroke="#17202a" stroke-width="2"/>
+    <path d="M110 560 L350 430 L350 470 L110 600 Z" fill="url(#side)" stroke="#17202a" stroke-width="2"/>
+    <path d="M110 560 L800 560 L800 600 L110 600 Z" fill="#b4bec9" stroke="#17202a" stroke-width="2"/>
+    <g fill="#65717d"><rect x="150" y="600" width="42" height="36" rx="6"/><rect x="715" y="600" width="42" height="36" rx="6"/><rect x="330" y="486" width="34" height="28" rx="5"/><rect x="930" y="452" width="34" height="28" rx="5"/></g>
+    <g class="bolt"><circle cx="150" cy="550" r="5"/><circle cx="765" cy="550" r="5"/><circle cx="344" cy="447" r="5"/><circle cx="984" cy="447" r="5"/></g>
+
+    <!-- fact cabinet -->
+    <path d="M170 455 L315 375 L315 185 L170 265 Z" fill="#d7dee6" stroke="#17202a" stroke-width="2"/>
+    <path d="M315 375 L400 422 L400 232 L315 185 Z" fill="#aab5c1" stroke="#17202a" stroke-width="2"/>
+    <path d="M170 265 L315 185 L400 232 L255 312 Z" fill="url(#top)" stroke="#17202a" stroke-width="2"/>
+    <g class="paper"><path d="M188 292 L300 231 L300 274 L188 335 Z"/><path d="M188 348 L300 287 L300 330 L188 391 Z"/><path d="M188 404 L300 343 L300 386 L188 447 Z"/></g>
+    <g class="fine"><path d="M205 304 L270 268"/><path d="M205 316 L255 289"/><path d="M205 360 L270 324"/><path d="M205 372 L255 345"/><path d="M205 416 L270 380"/><path d="M205 428 L255 401"/></g>
+    <g class="bolt"><circle cx="286" cy="258" r="4"/><circle cx="286" cy="314" r="4"/><circle cx="286" cy="370" r="4"/></g>
+    <text x="214" y="250" class="label small" transform="rotate(-28 214 250)">FACTS</text>
+
+    <!-- policy drum -->
+    <path d="M470 294 C470 260 535 225 590 245 C620 256 620 313 590 334 C535 371 470 340 470 294 Z" fill="#cfd7df" stroke="#17202a" stroke-width="2"/>
+    <ellipse cx="590" cy="289" rx="34" ry="47" fill="#e9edf2" stroke="#17202a" stroke-width="2"/>
+    <ellipse cx="590" cy="289" rx="19" ry="28" fill="#f7f8fa" stroke="#17202a" stroke-width="2"/>
+    <g class="fine"><path d="M490 265 L572 277"/><path d="M484 283 L570 291"/><path d="M486 303 L572 306"/><path d="M494 322 L577 320"/></g>
+    <circle cx="590" cy="289" r="6" class="bolt"/>
+    <text x="495" y="238" class="label small">POLICY v1</text>
+
+    <!-- evaluation carriage -->
+    <path d="M430 450 L650 450 L730 405 L510 405 Z" fill="url(#top)" stroke="#17202a" stroke-width="2"/>
+    <path d="M430 450 L650 450 L650 493 L430 493 Z" fill="#aeb9c5" stroke="#17202a" stroke-width="2"/>
+    <path d="M650 450 L730 405 L730 448 L650 493 Z" fill="#929fac" stroke="#17202a" stroke-width="2"/>
+    <g class="bolt"><circle cx="456" cy="458" r="5"/><circle cx="624" cy="458" r="5"/><circle cx="692" cy="420" r="5"/><circle cx="530" cy="420" r="5"/></g>
+    <path d="M520 399 L632 399 L675 376 L563 376 Z" class="paper"/>
+    <g class="fine"><path d="M548 392 L623 392"/><path d="M562 384 L641 384"/></g>
+    <text x="440" y="522" class="label tiny">EVALUATION SNAPSHOT</text>
+
+    <!-- rails and connectors -->
+    <g stroke="#465564" stroke-width="8" fill="none" stroke-linecap="round"><path d="M385 400 L475 350"/><path d="M407 418 L496 369"/><path d="M627 348 L702 389"/><path d="M638 332 L718 376"/></g>
+    <g class="bolt"><circle cx="385" cy="400" r="7"/><circle cx="407" cy="418" r="7"/><circle cx="702" cy="389" r="7"/><circle cx="718" cy="376" r="7"/></g>
+
+    <!-- decision bins -->
+    <g>
+      <path d="M770 250 L880 190 L950 228 L840 288 Z" class="lit"/><path d="M770 250 L840 288 L840 362 L770 324 Z" fill="#acd9bd" stroke="#177245" stroke-width="2"/><path d="M840 288 L950 228 L950 302 L840 362 Z" fill="#8dc7a3" stroke="#177245" stroke-width="2"/>
+      <path d="M745 367 L855 307 L925 345 L815 405 Z" class="warn"/><path d="M745 367 L815 405 L815 479 L745 441 Z" fill="#f1d681" stroke="#9a6700" stroke-width="2"/><path d="M815 405 L925 345 L925 419 L815 479 Z" fill="#ddbd5e" stroke="#9a6700" stroke-width="2"/>
+      <path d="M895 430 L1005 370 L1075 408 L965 468 Z" class="deny"/><path d="M895 430 L965 468 L965 542 L895 504 Z" fill="#efaaaa" stroke="#b42318" stroke-width="2"/><path d="M965 468 L1075 408 L1075 482 L965 542 Z" fill="#d88e8e" stroke="#b42318" stroke-width="2"/>
+      <text x="847" y="258" class="label small" text-anchor="middle">ALLOW</text><text x="811" y="375" class="label small" text-anchor="middle">REVIEW</text><text x="966" y="438" class="label small" text-anchor="middle">DENY</text>
+    </g>
+
+    <!-- action ticket -->
+    <path d="M678 520 L800 454 L862 488 L740 554 Z" class="paper"/>
+    <path d="M707 518 L784 477" class="fine"/><path d="M720 526 L796 484" class="fine"/><circle cx="821" cy="492" r="8" class="warn"/>
+    <text x="790" y="553" class="label tiny" text-anchor="middle">ACTION / CASE</text>
+  </g>
+  <g class="label tiny"><text x="84" y="676">Fig 1 · 档案柜保存可变事实，策略滚筒带版本，检查台冻结快照，托盘输出决定，工单承接可补救问题。</text><text x="1118" y="676" text-anchor="end">Subject v1 → Review · v2 → Allow · v3 → Deny</text></g>
+</svg>
