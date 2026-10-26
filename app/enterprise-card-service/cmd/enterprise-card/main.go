@@ -51,6 +51,7 @@ func main() {
 		mux.Handle("/api/v3/card-lab/provider-authorization-reversals", card.NewAuthorizationReversalHandler(store, []byte(required("PROVIDER_WEBHOOK_SECRET")), time.Now))
 		mux.Handle("/api/v3/card-lab/provider-authorization-settlements", card.NewAuthorizationSettlementHandler(store, []byte(required("PROVIDER_WEBHOOK_SECRET")), time.Now))
 		mux.Handle("/api/v3/card-lab/provider-settlement-refunds", card.NewSettlementRefundHandler(store, []byte(required("PROVIDER_WEBHOOK_SECRET")), time.Now))
+		mux.Handle("/api/v3/card-lab/ledger/reconciliation", card.NewOperationalLedgerReconciliationHandler(store))
 		mux.HandleFunc("GET /healthz", databaseHealthHandler(pool))
 		runHTTP(ctx, ":8080", mux)
 	case "worker":

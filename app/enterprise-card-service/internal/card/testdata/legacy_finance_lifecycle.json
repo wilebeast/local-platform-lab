@@ -1,0 +1,58 @@
+{
+  "funding": {
+    "card_id": "card-contract",
+    "currency": "USD",
+    "posted_balance_minor": 100000,
+    "held_amount_minor": 0,
+    "available_balance_minor": 100000
+  },
+  "hold": {
+    "authorization_id": "auth-contract-settle",
+    "decision": "approved",
+    "posted_balance_minor": 100000,
+    "held_amount_minor": 2500,
+    "available_balance_minor": 97500
+  },
+  "settlement": {
+    "settlement_id": "settlement-contract",
+    "authorization_id": "auth-contract-settle",
+    "status": "settled",
+    "settled_amount_minor": 2500,
+    "posted_balance_minor": 97500,
+    "held_amount_minor": 0,
+    "available_balance_minor": 97500
+  },
+  "refund": {
+    "refund_id": "refund-contract",
+    "settlement_id": "settlement-contract",
+    "status": "refunded",
+    "refunded_amount_minor": 2500,
+    "posted_balance_minor": 100000,
+    "held_amount_minor": 0,
+    "available_balance_minor": 100000
+  },
+  "second_hold": {
+    "authorization_id": "auth-contract-reverse",
+    "decision": "approved",
+    "posted_balance_minor": 100000,
+    "held_amount_minor": 4000,
+    "available_balance_minor": 96000
+  },
+  "reversal": {
+    "reversal_id": "reversal-contract",
+    "authorization_id": "auth-contract-reverse",
+    "status": "reversed",
+    "released_amount_minor": 4000,
+    "posted_balance_minor": 100000,
+    "held_amount_minor": 0,
+    "available_balance_minor": 100000
+  },
+  "insufficient": {
+    "authorization_id": "auth-contract-insufficient",
+    "decision": "declined",
+    "reason": "insufficient_funds",
+    "posted_balance_minor": 100000,
+    "held_amount_minor": 0,
+    "available_balance_minor": 100000
+  }
+}

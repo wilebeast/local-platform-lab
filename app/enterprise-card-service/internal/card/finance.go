@@ -94,6 +94,25 @@ type SettlementRefundStore interface {
 	RefundSettlement(context.Context, SettlementRefundParams) (SettlementRefundResult, error)
 }
 
+type OperationalLedgerReconciliationStore interface {
+	ReconcileOperationalLedger(context.Context) (OperationalLedgerReconciliation, error)
+}
+
+func NewOperationalLedgerReconciliationHandler(store OperationalLedgerReconciliationStore) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet || r.URL.Path != "/api/v3/card-lab/ledger/reconciliation" {
+			http.NotFound(w, r)
+			return
+		}
+		report, err := store.ReconcileOperationalLedger(r.Context())
+		if err != nil {
+			writeError(w, http.StatusServiceUnavailable, "ledger reconciliation unavailable")
+			return
+		}
+		writeJSON(w, http.StatusOK, report)
+	})
+}
+
 type memoryFunding struct {
 	cardID, currency string
 	amount           int64
