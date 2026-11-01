@@ -7,4 +7,6 @@ type Store interface {
 	Evaluate(context.Context, EvaluationCommand) (Evaluation, bool, error)
 	GetEvaluation(context.Context, string) (Evaluation, error)
 	CompleteAction(context.Context, string, CompleteActionCommand) (Action, error)
+	CheckRestriction(context.Context, RestrictionCheckCommand) (RestrictionCheck, error)
+	GetOfflineRun(context.Context, string) (OfflineRunResult, error)
 }

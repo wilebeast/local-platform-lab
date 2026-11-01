@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -41,8 +42,31 @@ func main() {
 	if _, err = pool.Exec(ctx, schema); err != nil {
 		log.Fatal(err)
 	}
+	store := risk.NewPostgresStore(pool)
+	apiHandler := risk.NewHandler(store)
+	policyKey := os.Getenv("RISK_POLICY_KEY")
+	policyVersionText := os.Getenv("RISK_POLICY_VERSION")
+	if policyKey != "" || policyVersionText != "" {
+		if policyKey == "" || policyVersionText == "" {
+			log.Fatal("RISK_POLICY_KEY and RISK_POLICY_VERSION must be configured together")
+		}
+		policyVersion, parseErr := strconv.Atoi(policyVersionText)
+		if parseErr != nil || policyVersion <= 0 {
+			log.Fatal("RISK_POLICY_VERSION must be a positive integer")
+		}
+		loader := risk.NewPolicySnapshotLoader(store, risk.NewRPCFactorAdapterRegistry())
+		runtime, loadErr := risk.LoadPolicySnapshotRuntime(ctx, loader, policyKey, policyVersion)
+		if loadErr != nil {
+			log.Fatalf("load configured risk policy: %v", loadErr)
+		}
+		apiHandler = risk.NewHandlerWithRealtimeDecider(
+			store,
+			risk.NewRealtimeDecisionService(pool, runtime),
+		)
+		log.Printf("loaded risk policy %s version %d", policyKey, policyVersion)
+	}
 	mux := http.NewServeMux()
-	mux.Handle("/api/v1/", risk.NewHandler(risk.NewPostgresStore(pool)))
+	mux.Handle("/api/v1/", apiHandler)
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
 		if err := pool.Ping(r.Context()); err != nil {
 			http.Error(w, "postgres unavailable", 503)

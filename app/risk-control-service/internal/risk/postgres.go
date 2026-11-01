@@ -194,8 +194,231 @@ func (s *PostgresStore) CompleteAction(ctx context.Context, id string, cmd Compl
 	return a, nil
 }
 
+func (s *PostgresStore) CheckRestriction(ctx context.Context, cmd RestrictionCheckCommand) (RestrictionCheck, error) {
+	if cmd.SubjectType == "" || cmd.SubjectID == "" || cmd.Capability == "" {
+		return RestrictionCheck{}, fmt.Errorf("subject_type, subject_id and capability are required")
+	}
+	check := RestrictionCheck{
+		SubjectType: cmd.SubjectType, SubjectID: cmd.SubjectID, Capability: cmd.Capability,
+		Decision: "allow", ReasonCodes: []string{"no_active_restriction"},
+	}
+	err := s.pool.QueryRow(ctx, `
+		SELECT restriction_id, COALESCE(finding_id, '')
+		FROM risk_restrictions
+		WHERE subject_type=$1 AND subject_id=$2 AND capability=$3 AND status='active'
+		ORDER BY activated_at DESC
+		LIMIT 1`, cmd.SubjectType, cmd.SubjectID, cmd.Capability).
+		Scan(&check.RestrictionID, &check.FindingID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return check, nil
+	}
+	if err != nil {
+		return RestrictionCheck{}, err
+	}
+	check.Decision = "deny"
+	check.ReasonCodes = []string{"offline_restriction_active"}
+	return check, nil
+}
+
 func commandFingerprint(cmd EvaluationCommand) string {
 	b, _ := json.Marshal(cmd)
 	sum := sha256.Sum256(b)
 	return hex.EncodeToString(sum[:])
+}
+
+func (s *PostgresStore) LoadOfflinePolicy(ctx context.Context, key string, version int) (OfflinePolicy, error) {
+	var policy OfflinePolicy
+	var config []byte
+	err := s.pool.QueryRow(ctx, `
+		SELECT policy_key, policy_version, status, config
+		FROM risk_offline_policy_versions
+		WHERE policy_key=$1 AND policy_version=$2`, key, version).
+		Scan(&policy.PolicyKey, &policy.Version, &policy.Status, &config)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return OfflinePolicy{}, NotFoundError{"offline policy version not found"}
+	}
+	if err != nil {
+		return OfflinePolicy{}, err
+	}
+	var stored struct {
+		WindowHours  int     `json:"window_hours"`
+		MinInflow    int64   `json:"min_inflow_minor"`
+		OutflowRatio float64 `json:"outflow_ratio"`
+		Capability   string  `json:"capability"`
+	}
+	if err := json.Unmarshal(config, &stored); err != nil {
+		return OfflinePolicy{}, err
+	}
+	policy.Window = time.Duration(stored.WindowHours) * time.Hour
+	policy.MinInflow = stored.MinInflow
+	policy.OutflowRatio = stored.OutflowRatio
+	policy.Capability = stored.Capability
+	return policy, nil
+}
+
+func (s *PostgresStore) LoadActivityEvents(ctx context.Context, start, end time.Time) ([]ActivityEvent, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT event_id,subject_type,subject_id,event_type,amount_minor,currency,occurred_at
+		FROM risk_activity_events
+		WHERE occurred_at >= $1 AND occurred_at < $2
+		ORDER BY occurred_at,event_id`, start, end)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	events := make([]ActivityEvent, 0)
+	for rows.Next() {
+		var event ActivityEvent
+		if err := rows.Scan(&event.EventID, &event.SubjectType, &event.SubjectID, &event.EventType, &event.AmountMinor, &event.Currency, &event.OccurredAt); err != nil {
+			return nil, err
+		}
+		events = append(events, event)
+	}
+	return events, rows.Err()
+}
+
+func (s *PostgresStore) SaveOfflineRun(ctx context.Context, result OfflineRunResult) (OfflineRunResult, bool, error) {
+	tx, err := s.pool.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.Serializable})
+	if err != nil {
+		return OfflineRunResult{}, false, err
+	}
+	defer tx.Rollback(ctx)
+	if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`, result.RunID); err != nil {
+		return OfflineRunResult{}, false, err
+	}
+	var existingFingerprint string
+	var existingJSON []byte
+	err = tx.QueryRow(ctx, `SELECT command_fingerprint,result_json FROM risk_offline_runs WHERE run_id=$1`, result.RunID).Scan(&existingFingerprint, &existingJSON)
+	if err == nil {
+		if existingFingerprint != result.CommandFingerprint {
+			return OfflineRunResult{}, false, ConflictError{"run_id belongs to another request"}
+		}
+		var existing OfflineRunResult
+		if err := json.Unmarshal(existingJSON, &existing); err != nil {
+			return OfflineRunResult{}, false, err
+		}
+		if err := tx.Commit(ctx); err != nil {
+			return OfflineRunResult{}, false, err
+		}
+		return existing, true, nil
+	}
+	if !errors.Is(err, pgx.ErrNoRows) {
+		return OfflineRunResult{}, false, err
+	}
+	resultJSON, err := json.Marshal(result)
+	if err != nil {
+		return OfflineRunResult{}, false, err
+	}
+	_, err = tx.Exec(ctx, `
+		INSERT INTO risk_offline_runs(
+			run_id,status,as_of,window_start,window_end,policy_key,policy_version,
+			subjects_evaluated,findings_created,restrictions_activated,command_fingerprint,result_json,completed_at)
+		VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,NOW())`,
+		result.RunID, result.Status, result.AsOf, result.WindowStart, result.WindowEnd, result.PolicyKey, result.PolicyVersion,
+		result.SubjectsEvaluated, result.FindingsCreated, result.RestrictionsActivated, result.CommandFingerprint, resultJSON)
+	if err != nil {
+		return OfflineRunResult{}, false, err
+	}
+	actualRestrictionsActivated := 0
+	for i := range result.Evaluations {
+		evaluation := &result.Evaluations[i]
+		featuresJSON, _ := json.Marshal(evaluation.Features)
+		reasonsJSON, _ := json.Marshal(evaluation.ReasonCodes)
+		_, err = tx.Exec(ctx, `
+			INSERT INTO risk_feature_snapshots(run_id,subject_type,subject_id,currency,window_start,window_end,features)
+			VALUES($1,$2,$3,$4,$5,$6,$7)`, result.RunID, evaluation.SubjectType, evaluation.SubjectID,
+			evaluation.Features.Currency, result.WindowStart, result.WindowEnd, featuresJSON)
+		if err != nil {
+			return OfflineRunResult{}, false, err
+		}
+		_, err = tx.Exec(ctx, `
+			INSERT INTO risk_offline_evaluations(run_id,subject_type,subject_id,currency,policy_key,policy_version,decision,matched_strategy_key,matched_rule_key,reason_codes,features)
+			VALUES($1,$2,$3,$4,$5,$6,$7,NULLIF($8,''),NULLIF($9,''),$10,$11)`, result.RunID, evaluation.SubjectType, evaluation.SubjectID,
+			evaluation.Features.Currency, result.PolicyKey, result.PolicyVersion, evaluation.Decision, evaluation.MatchedStrategyKey, evaluation.MatchedRuleKey, reasonsJSON, featuresJSON)
+		if err != nil {
+			return OfflineRunResult{}, false, err
+		}
+		if evaluation.Finding == nil || evaluation.Restriction == nil {
+			continue
+		}
+		finding := evaluation.Finding
+		_, err = tx.Exec(ctx, `
+			INSERT INTO risk_findings(finding_id,run_id,subject_type,subject_id,risk_type,severity,policy_key,policy_version,window_start,window_end,status)
+			VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`, finding.FindingID, result.RunID, finding.SubjectType,
+			finding.SubjectID, finding.RiskType, finding.Severity, finding.PolicyKey, finding.PolicyVersion,
+			finding.WindowStart, finding.WindowEnd, finding.Status)
+		if err != nil {
+			return OfflineRunResult{}, false, err
+		}
+		restriction := evaluation.Restriction
+		restrictionKey := restriction.SubjectType + "\n" + restriction.SubjectID + "\n" + restriction.Capability
+		if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`, restrictionKey); err != nil {
+			return OfflineRunResult{}, false, err
+		}
+		var existingID string
+		var existingStatus string
+		err = tx.QueryRow(ctx, `
+			SELECT restriction_id,status
+			FROM risk_restrictions
+			WHERE subject_type=$1 AND subject_id=$2 AND capability=$3
+			ORDER BY CASE WHEN status='active' THEN 0 ELSE 1 END, activated_at DESC
+			LIMIT 1
+			FOR UPDATE`, restriction.SubjectType, restriction.SubjectID, restriction.Capability).Scan(&existingID, &existingStatus)
+		if errors.Is(err, pgx.ErrNoRows) {
+			actualRestrictionsActivated++
+			_, err = tx.Exec(ctx, `
+				INSERT INTO risk_restrictions(restriction_id,finding_id,subject_type,subject_id,capability,status)
+				VALUES($1,$2,$3,$4,$5,$6)`, restriction.RestrictionID, restriction.FindingID, restriction.SubjectType,
+				restriction.SubjectID, restriction.Capability, restriction.Status)
+		} else if err != nil {
+			return OfflineRunResult{}, false, err
+		} else {
+			restriction.RestrictionID = existingID
+			if existingStatus == "lifted" {
+				actualRestrictionsActivated++
+			}
+			_, err = tx.Exec(ctx, `
+				UPDATE risk_restrictions
+				SET finding_id=$2,
+					status='active',
+					activated_at=CASE WHEN status='lifted' THEN NOW() ELSE activated_at END,
+					lifted_at=NULL
+				WHERE restriction_id=$1`, existingID, restriction.FindingID)
+		}
+		if err != nil {
+			return OfflineRunResult{}, false, err
+		}
+	}
+	result.RestrictionsActivated = actualRestrictionsActivated
+	resultJSON, err = json.Marshal(result)
+	if err != nil {
+		return OfflineRunResult{}, false, err
+	}
+	_, err = tx.Exec(ctx, `
+		UPDATE risk_offline_runs
+		SET restrictions_activated=$2,result_json=$3
+		WHERE run_id=$1`, result.RunID, result.RestrictionsActivated, resultJSON)
+	if err != nil {
+		return OfflineRunResult{}, false, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return OfflineRunResult{}, false, err
+	}
+	return result, false, nil
+}
+
+func (s *PostgresStore) GetOfflineRun(ctx context.Context, id string) (OfflineRunResult, error) {
+	var resultJSON []byte
+	err := s.pool.QueryRow(ctx, `SELECT result_json FROM risk_offline_runs WHERE run_id=$1`, id).Scan(&resultJSON)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return OfflineRunResult{}, NotFoundError{"offline run not found"}
+	}
+	if err != nil {
+		return OfflineRunResult{}, err
+	}
+	var result OfflineRunResult
+	if err := json.Unmarshal(resultJSON, &result); err != nil {
+		return OfflineRunResult{}, err
+	}
+	return result, nil
 }

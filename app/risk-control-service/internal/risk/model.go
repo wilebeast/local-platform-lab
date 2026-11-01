@@ -53,6 +53,22 @@ type CompleteActionCommand struct {
 	QuestionnaireCompleted *bool `json:"questionnaire_completed,omitempty"`
 }
 
+type RestrictionCheckCommand struct {
+	SubjectType string `json:"subject_type"`
+	SubjectID   string `json:"subject_id"`
+	Capability  string `json:"capability"`
+}
+
+type RestrictionCheck struct {
+	SubjectType   string   `json:"subject_type"`
+	SubjectID     string   `json:"subject_id"`
+	Capability    string   `json:"capability"`
+	Decision      string   `json:"decision"`
+	ReasonCodes   []string `json:"reason_codes"`
+	RestrictionID string   `json:"restriction_id,omitempty"`
+	FindingID     string   `json:"finding_id,omitempty"`
+}
+
 type ConflictError struct{ Message string }
 
 func (e ConflictError) Error() string { return e.Message }

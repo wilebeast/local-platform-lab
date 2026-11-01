@@ -1,15 +1,27 @@
 package risk
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"strings"
 )
 
-type Handler struct{ store Store }
+type Handler struct {
+	store           Store
+	realtimeDecider RealtimeDecider
+}
 
 func NewHandler(store Store) http.Handler { return &Handler{store: store} }
+
+type RealtimeDecider interface {
+	Decide(context.Context, RealtimeDecisionCommand) (DurableRealtimeDecision, bool, error)
+}
+
+func NewHandlerWithRealtimeDecider(store Store, decider RealtimeDecider) http.Handler {
+	return &Handler{store: store, realtimeDecider: decider}
+}
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -34,6 +46,20 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Idempotent-Replay", "true")
 		}
 		h.write(w, result, err, http.StatusOK)
+	case r.Method == http.MethodPost && path == "/policy-decisions":
+		var request RealtimeDecisionCommand
+		if !decode(w, r, &request) {
+			return
+		}
+		if h.realtimeDecider == nil {
+			h.write(w, nil, errors.New("policy runtime is unavailable"), http.StatusOK)
+			return
+		}
+		result, replay, err := h.realtimeDecider.Decide(r.Context(), request)
+		if replay {
+			w.Header().Set("Idempotent-Replay", "true")
+		}
+		h.write(w, result, err, http.StatusOK)
 	case r.Method == http.MethodGet && strings.HasPrefix(path, "/evaluations/"):
 		result, err := h.store.GetEvaluation(r.Context(), strings.TrimPrefix(path, "/evaluations/"))
 		h.write(w, result, err, http.StatusOK)
@@ -45,13 +71,26 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		result, err := h.store.CompleteAction(r.Context(), id, cmd)
 		h.write(w, result, err, http.StatusOK)
+	case r.Method == http.MethodPost && path == "/withdrawal-checks":
+		var cmd RestrictionCheckCommand
+		if !decode(w, r, &cmd) {
+			return
+		}
+		cmd.Capability = "withdrawal"
+		result, err := h.store.CheckRestriction(r.Context(), cmd)
+		h.write(w, result, err, http.StatusOK)
+	case r.Method == http.MethodGet && strings.HasPrefix(path, "/offline-runs/"):
+		result, err := h.store.GetOfflineRun(r.Context(), strings.TrimPrefix(path, "/offline-runs/"))
+		h.write(w, result, err, http.StatusOK)
 	default:
 		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
 	}
 }
 
 func decode(w http.ResponseWriter, r *http.Request, target any) bool {
-	if err := json.NewDecoder(r.Body).Decode(target); err != nil {
+	decoder := json.NewDecoder(r.Body)
+	decoder.UseNumber()
+	if err := decoder.Decode(target); err != nil {
 		http.Error(w, `{"error":"invalid json"}`, http.StatusBadRequest)
 		return false
 	}

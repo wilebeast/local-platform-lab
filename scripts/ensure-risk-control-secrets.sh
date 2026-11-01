@@ -12,4 +12,21 @@ kubectl --context "$KUBE_CONTEXT" -n risk-control-lab create secret generic risk
   --dry-run=client -o yaml |
   kubectl --context "$KUBE_CONTEXT" apply -f - >/dev/null
 
-echo "Risk control database credentials are stored only in a Kubernetes Secret."
+if ! kubectl --context "$KUBE_CONTEXT" -n risk-control-lab get secret risk-raw-minio >/dev/null 2>&1; then
+  minio_access_key="riskraw"
+  minio_secret_key="$(openssl rand -hex 24)"
+  kubectl --context "$KUBE_CONTEXT" -n risk-control-lab create secret generic risk-raw-minio \
+    --from-literal=access-key="$minio_access_key" \
+    --from-literal=secret-key="$minio_secret_key" \
+    >/dev/null
+fi
+
+if ! kubectl --context "$KUBE_CONTEXT" -n risk-control-lab get secret risk-warehouse-clickhouse >/dev/null 2>&1; then
+  clickhouse_password="$(openssl rand -hex 24)"
+  kubectl --context "$KUBE_CONTEXT" -n risk-control-lab create secret generic risk-warehouse-clickhouse \
+    --from-literal=username="risk" \
+    --from-literal=password="$clickhouse_password" \
+    >/dev/null
+fi
+
+echo "Risk control database, object-storage and warehouse credentials are stored only in Kubernetes Secrets."
