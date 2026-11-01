@@ -1185,7 +1185,39 @@ PASS
 
 该阶段 Kind 中运行 `risk-control-service`、`risk-action-worker`、`risk-nearline-worker` 和周期性 Offline Scan。验收时 Argo CD 状态为 `Synced/Healthy`，GitOps revision 为 `9567c43`，镜像标签为 `20261101104041`。这证明当时的工作区源码对应镜像已部署并完成纵向验收；后续收口以 S3 Shadow 和流批对账的正式提交、镜像及最终验收为准，且不代表已达到生产可用标准。
 
-## 13. 参考实现与资料
+## 13. 2026-11-01 阶段收口证据与恢复手册
+
+本阶段以 Flink Shadow 流批对账闭环为边界完成收口。应用源码提交为 `3a443b8`，GitOps 提交与 Argo CD 实际 revision 为 `06d2600a0286e77b431114ed7b16763b22d3004b`。部署使用以下不可变版本：
+
+```text
+risk-control-service:20261101-closure1
+sha256:2b369d4a0b261bef7aa791b8aee92655e91638bfba54cf55b93731b8c12ddf97
+
+risk-flink-shadow:20261101-closure1
+sha256:b9eccb8306d34e4ad6f11a2787328d07b49148fb2a4aa41e96c5933cf08f9bd8
+```
+
+最终验收结果：
+
+- Go 全量测试、静态检查、Race 检查及 Kind PostgreSQL 集成测试通过；
+- Flink 模块 6 个测试通过，Job 状态为 `RUNNING`，2/2 Tasks 运行；
+- Argo CD 为 `Synced / Healthy`；
+- `risk-feature-reconciler-v1` 的 Kafka `CURRENT-OFFSET=111`、`LOG-END-OFFSET=111`、`LAG=0`；
+- 重放同一份 matched Shadow Snapshot 后，Worker 记录 `replay=true`，PostgreSQL 仍只有同一 `comparison_id` 的一行，证明消费重试不会重复产生对账事实；
+- 敏感信息扫描未发现私钥、云访问密钥、GitHub/Slack Token 等凭证模式。
+
+Shadow 链路不会驱动生产 Decision 或 Actions。发生异常时按以下顺序恢复：
+
+1. 先暂停 `risk-feature-reconciler`，保留 Kafka 消息、PostgreSQL 对账记录与告警证据；
+2. 若异常来自 Flink 计算，停止 Shadow Job，在线 Factor 继续使用既有权威来源；
+3. 通过 Git revert 将 GitOps 镜像恢复到上一个已验收版本，由 Argo CD 同步，禁止直接修改集群制造未审计漂移；
+4. 恢复后检查 Flink Job/Task 状态、Kafka LAG、对账状态分布和最新错误日志；
+5. 重新投递相同 Snapshot 验证 `replay=true` 与数据库单行幂等，再恢复持续消费；
+6. 不删除历史快照、Comparison 或开放告警；错误事实通过新 Run 或补偿记录修复。
+
+本次“收口”表示本地 MVP 阶段具有可复现的构建、部署、对账和恢复证据，不表示已达到生产可用。Schema Registry、HA JobManager、24 小时容量验证、持续匹配率门禁、告警生命周期、真实业务接入和完整策略治理仍属于后续阶段。
+
+## 14. 参考实现与资料
 
 - Uber Mastermind：实时特征聚合、模型分数、规则与 Action；
 - Grab Griffin：Data Orchestration 与 Rule Engine 分离、Shadow、灰度和审批；
@@ -1197,7 +1229,7 @@ PASS
 
 这些资料用于提炼设计原则，不代表本实验必须完整复制其技术栈。
 
-## 14. 尚未阻塞 S0 的开放问题
+## 15. 尚未阻塞 S0 的开放问题
 
 1. 第一批 Actions 中，哪些允许自动执行，哪些必须人工审批；
 2. 第一批远程 RPC Factor 的超时和降级策略；
