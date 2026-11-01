@@ -190,7 +190,7 @@ Policy
 - 没有 Factor 注册表、数据来源、类型、时效和血缘；
 - 没有 Policy 发布审批、Shadow、灰度、回滚和冲突治理；
 - 没有原始事件湖仓、OLAP、回算编排及流批一致性校验；
-- 应用源码变更尚未提交；实时 API、Action Worker 与近线 Worker 已通过 GitOps 部署并完成 Kind 人工验收。
+- 实时 API、Action Worker 与近线 Worker 已通过 GitOps 部署并完成 Kind 人工验收；本轮 S3 Shadow 与流批对账作为独立收口提交交付。
 
 ## 5. 核心用例契约
 
@@ -586,6 +586,67 @@ flowchart LR
 
 Flink 不能完全替代离线批处理：流式链路追求新鲜度，离线链路保留完整事实、历史重算、迟到修正和权威审计。二者共享 Feature Definition 和点时语义，但拥有独立实现，通过持续对账建立信任。
 
+#### 7.4.2 S3a Kind 验收结果（2026-11-01）
+
+首轮只实现 `subject_fund_activity_24h`，保持 Shadow 输出，不接入 Strategy、Decision 或 Action。运行链路为：
+
+```mermaid
+flowchart LR
+    RAW[platform.raw.events.v1] --> PARSE[契约校验]
+    PARSE --> ET[Event Time + Watermark]
+    ET --> WIN[按主体滑动窗口]
+    WIN --> SHADOW[risk.shadow.feature.subject_fund_activity_24h.v1]
+    ET -->|所有关联窗口均已过期| LATE[risk.shadow.late-events.v1]
+    WIN --> CP[(Filesystem Checkpoint)]
+    CP -.TaskManager 重启恢复.-> WIN
+```
+
+Kind 验收使用 1 小时窗口、1 分钟步长、2 秒 Watermark 和 3 秒允许迟到，以便在短时间内观察完整行为；正式 GitOps 配置使用 24 小时窗口、1 分钟步长、120 秒 Watermark 和 300 秒允许迟到。两者使用相同代码和事件契约。
+
+本轮已经验证：
+
+- 合法事件必须满足 `funds.movement.recorded`、`event_version=1`、ISO-8601 `occurred_at` 和类型化 `payload`；不符合契约的扁平消息不会进入窗口；
+- `100000` 入金和 `95000` 出金按 Event Time 聚合，Shadow 输出得到 `outflow_ratio=0.95`；
+- 迟于当前 Watermark、但仍属于未关闭滑动窗口的事件仍可被接纳；只有所有关联窗口都超过 `allowed lateness` 后，事件才进入 Late Event Side Output；
+- 作业连续完成 Checkpoint；重启 TaskManager 后从 `chk-31` 恢复 Kafka 位点和窗口状态，Job ID 保持不变；
+- 恢复后新主体继续得到 `200000 / 180000 = 0.9` 的窗口结果。
+
+本阶段尚未宣称完成流批一致性切换。下一子阶段 S3b 需要把同一 `subject + as_of + feature_set_version` 的 Flink 结果与 ClickHouse/Airflow Snapshot 对齐比较，并记录差异率、迟到修正和回退结论。在差异门槛持续通过之前，Shadow 结果不得驱动 Action。
+
+#### 7.4.3 S3b 流批对账（2026-11-01）
+
+S3b 增加独立 `risk-feature-reconciler`，消费 Shadow Feature Topic，并读取不晚于流快照 `as_of` 的 ClickHouse 批快照。对账键必须同时满足：
+
+```text
+feature_set_key + feature_set_version
++ subject_type + subject_id + currency
++ window_start + window_end/as_of
+```
+
+不能用“最新可见批快照”代替“同一点时批快照”。键或时间窗口不一致时结果为 `not_comparable`，不会伪造成金额差异；完全找不到批快照时记录 `batch_missing` 并打开数据质量告警。
+
+```mermaid
+flowchart LR
+    FS[Flink Shadow Snapshot] --> R[Feature Reconciler]
+    BS[ClickHouse/Airflow Batch Snapshot] --> R
+    R -->|完全对齐且在阈值内| M[matched / alert none]
+    R -->|值差异超过阈值| D[drift / alert open]
+    R -->|点时或定义不一致| N[not_comparable]
+    R -->|批快照不存在| B[batch_missing / alert open]
+    M --> PG[(PostgreSQL immutable evidence)]
+    D --> PG
+    N --> PG
+    B --> PG
+```
+
+首轮阈值为金额绝对差 `0` minor unit、比例绝对差 `0.000001`；来源事件数和 `ratio_defined` 必须精确相同。阈值是运行配置并随每条比较记录持久化，避免后续修改阈值后无法解释历史结论。
+
+`risk_feature_reconciliations` 保存两侧原始 Snapshot、差值、阈值、状态、原因和告警状态。`comparison_id` 是两侧 Snapshot 与阈值的规范化 SHA-256 指纹，因此 Kafka 至少一次重放只返回 `replay=true`，而同一 `as_of` 因迟到修正产生的新内容会形成新的不可变比较证据。ClickHouse `FixedString(64)` 的空值会带 NUL padding；写 PostgreSQL JSONB 前必须规范化，否则 PostgreSQL 会拒绝 `\\u0000`。
+
+Kind 验收得到：没有批快照的 50 个快速演练窗口均记录为 `batch_missing/open`；一条与真实 ClickHouse 批快照完全一致的对照消息得到 `matched/none`；将出金从 `95000` 改为 `96000` 后得到 `drift/open`、`outflow_delta_minor=1000`；重复发送匹配消息后仍只有一行并记录 `replay=true`。
+
+这仍是 Shadow 数据质量告警，不是业务风控 Action。进入在线切换前还需要持续运行期指标、告警投递与关闭生命周期、Schema Registry、正式 24 小时 Flink 作业的容量验证，以及一段可接受的连续匹配率证据。
+
 ### 7.5 数据平台实施节奏
 
 | 子阶段 | 结果 | 明确不包含 | 完成门槛 |
@@ -661,7 +722,7 @@ flowchart LR
 
 ### S3：Flink 替换近线聚合
 
-- 只实现一个多窗口场景；
+- 只实现 `subject_fund_activity_24h` 一个窗口场景；
 - Worker 保留为回退实现；
 - Flink 先 Shadow 计算，不立即执行 Restriction；
 - 通过流批和双跑差异对账后再切换。
@@ -753,12 +814,12 @@ Policy Evaluation
 
 | 阶段 | 状态 | Commit/PR | 验证证据 | 阻塞项 |
 |---|---|---|---|---|
-| S0 | 已完成（尚未提交） | 未提交 | 2026-10-31 全量 Go 测试与 PostgreSQL 幂等集成测试通过 | 无 |
-| S1 | 本地纵向切片完成，生产接入未完成 | 未提交 | CEL 发布 Gate；Value/Expression/RPC Provider；FactorEngine；Strategy/Action Policy Snapshot；Offline Scanner 回归；PostgreSQL Published Policy 加载、原子发布、数据库不可变保护、运行时 CAS 热切换、HTTP 决策与幂等 Evaluation/Action Job 通过 | 真实业务 RPC Adapter；多 Pod 发布一致性 |
-| S2 | 进行中（最小 Kafka 输入、决策与 Action 闭环已完成） | GitOps `9567c43`；应用源码未提交 | Kafka Consumer Group；类型安全 JSON 解码；共享 Policy Snapshot；Evaluation/Action/Restriction 幂等；重复投递 replay；LAG 归零；Kind 提现限制生效 | 业务 Outbox、DLQ、乱序/迟到、决策结果事件、名单/案件/通知 Effect |
-| S3 | 未开始 | - | - | 依赖 S2 |
-| S4 | 已完成本地纵向切片（S4a Raw、S4b DWD、S4c Feature Snapshot、S4d Feature Provider → CEL） | GitOps `602566a`；应用源码未提交 | Raw 摘要校验；确定性 Parquet；固定 `as_of` 得到 100000/95000/0.95；Factor 类型转换；CEL 得到 block + Action；过期快照以 `stale_feature` 拒绝 | 生产级批量读取、缓存、HA 与容量治理 |
-| S5 | 本地纵向切片完成（S5a 编排、S5b 质量闸门、S5c Run/Backfill/血缘/不可变历史/指纹注册） | 既有 GitOps 基线已部署；最新应用源码未提交，实验镜像仅用于一次性 Job | 显式 `as_of`；空快照阻断；Run 状态；区间 Backfill 断点恢复；多 Evaluation 血缘审计；History/Current 分离；PostgreSQL 原子 Run 指纹注册；并发 `1 success + 1 conflict` | 大规模并行、租约/取消、分布漂移、Flink 流批对账、生产容量治理 |
+| S0 | 已完成 | 应用基线 `c1565fa` | 2026-10-31 全量 Go 测试与 PostgreSQL 幂等集成测试通过 | 无 |
+| S1 | 本地纵向切片完成，生产接入未完成 | 应用基线 `c1565fa` | CEL 发布 Gate；Value/Expression/RPC Provider；FactorEngine；Strategy/Action Policy Snapshot；Offline Scanner 回归；PostgreSQL Published Policy 加载、原子发布、数据库不可变保护、运行时 CAS 热切换、HTTP 决策与幂等 Evaluation/Action Job 通过 | 真实业务 RPC Adapter；多 Pod 发布一致性 |
+| S2 | 进行中（最小 Kafka 输入、决策与 Action 闭环已完成） | 应用基线 `c1565fa`；GitOps `9567c43` | Kafka Consumer Group；类型安全 JSON 解码；共享 Policy Snapshot；Evaluation/Action/Restriction 幂等；重复投递 replay；LAG 归零；Kind 提现限制生效 | 业务 Outbox、DLQ、乱序/迟到、决策结果事件、名单/案件/通知 Effect |
+| S3 | S3a/S3b 本地 Shadow 与流批对账纵向切片完成，尚未达到在线切换门槛 | 2026-11-01 收口提交与 `closure1` 镜像 | Event Time 窗口得到 0.95；Late Side Output；Checkpoint 恢复；`batch_missing/open`、`matched/none`、`drift/open` 与 Kafka 幂等重放通过 | 连续匹配率、告警投递/关闭、Schema Registry、HA JobManager、正式 24h 容量与状态后端 |
+| S4 | 已完成本地纵向切片（S4a Raw、S4b DWD、S4c Feature Snapshot、S4d Feature Provider → CEL） | 应用基线 `c1565fa`；GitOps `602566a` | Raw 摘要校验；确定性 Parquet；固定 `as_of` 得到 100000/95000/0.95；Factor 类型转换；CEL 得到 block + Action；过期快照以 `stale_feature` 拒绝 | 生产级批量读取、缓存、HA 与容量治理 |
+| S5 | 本地纵向切片完成（S5a 编排、S5b 质量闸门、S5c Run/Backfill/血缘/不可变历史/指纹注册） | 应用基线 `c1565fa`；既有 GitOps 基线已部署 | 显式 `as_of`；空快照阻断；Run 状态；区间 Backfill 断点恢复；多 Evaluation 血缘审计；History/Current 分离；PostgreSQL 原子 Run 指纹注册；并发 `1 success + 1 conflict` | 大规模并行、租约/取消、分布漂移、生产容量治理 |
 | S6 | 未开始 | - | - | 依赖 S5 的真实复用证据 |
 | S7 | 未开始 | - | - | 依赖 S2/S5 |
 
@@ -766,7 +827,7 @@ Policy Evaluation
 
 当前执行主线已经完成 **S5c 本地纵向闭环**：失败状态业务化、区间 Backfill、失败点恢复、多主体血缘审计、不可变 Feature History、Current Projection、内容指纹冲突保护和 PostgreSQL 原子注册均已有源码与 Kind 实验证据。S4 的数据链路已经从不可变 Raw 事实贯通到 DWD、DWS/Feature Snapshot、Factor、CEL Rule 与 Policy Decision；Airflow 将 Snapshot、Quality Gate、Evaluation 和 Backfill 组织成有依赖、可观察、可恢复的 DAG。
 
-当前固定执行项不是继续扩张概念，而是：审查并提交现有应用基线，更新正式 GitOps 镜像并重新完成 Kind 端到端验收。之后进入 **S3 Flink Shadow**：只选择 `subject_fund_activity_24h` 一个窗口，验证 Event Time、Watermark、Late Event、Checkpoint、重启恢复和流批差异；Shadow 结果不执行 Restriction。与此同时，S7 先只补齐 Action 类型与策略发布状态机设计，不与 S3 首个提交混合。
+当前已经完成 **S3a/S3b 本地纵向闭环**：`subject_fund_activity_24h` 已验证 Event Time、Watermark、Late Event、Checkpoint、TaskManager 恢复，以及同点时流批比较、阈值、不可变证据和告警状态。下一固定执行项不是直接切流，而是持续运行 Shadow：补齐对账指标、告警投递/关闭和正式 24 小时窗口容量验证，形成连续匹配率证据后再评审在线 Factor 来源切换。Action 扩展和策略发布治理继续保持为独立阶段，不与 S3 首个提交混合。
 
 此前完成的 S1/S2 纵向切片仍作为统一 Factor、Policy 和近线执行基线，下面保留其实现与验证记录。
 
@@ -1122,7 +1183,7 @@ PASS
 
 2026-11-01 在 Kind PostgreSQL 上再次通过独立临时 schema 集成测试，验证：精确重放返回原 Run、相同 `run_id` 的不同命令被拒绝、重复扫描不创建第二条能力 Restriction、不同 Run 保留独立 Finding，并且 `risk_offline_evaluations` 可直接读回 `matched_strategy_key=block_rapid_fund_movement` 与 `matched_rule_key=rapid_fund_movement`。测试未输出或写入真实 Secret，临时 schema 在测试结束后删除。
 
-Kind 中当前运行 `risk-control-service`、`risk-action-worker`、`risk-nearline-worker` 和周期性 Offline Scan。Argo CD 状态为 `Synced/Healthy`，GitOps revision 为 `9567c43`，镜像标签为 `20261101104041`。这证明该工作区源码对应镜像已部署并完成纵向验收，但应用源码仍未提交，且不代表已达到生产可用标准。
+该阶段 Kind 中运行 `risk-control-service`、`risk-action-worker`、`risk-nearline-worker` 和周期性 Offline Scan。验收时 Argo CD 状态为 `Synced/Healthy`，GitOps revision 为 `9567c43`，镜像标签为 `20261101104041`。这证明当时的工作区源码对应镜像已部署并完成纵向验收；后续收口以 S3 Shadow 和流批对账的正式提交、镜像及最终验收为准，且不代表已达到生产可用标准。
 
 ## 13. 参考实现与资料
 

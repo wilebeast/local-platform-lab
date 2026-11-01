@@ -16,7 +16,8 @@ RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/risk-co
 	CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/risk-feature-evaluator ./cmd/risk-feature-evaluator && \
 	CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/risk-warehouse-run ./cmd/risk-warehouse-run && \
 	CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/risk-warehouse-backfill ./cmd/risk-warehouse-backfill && \
-	CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/risk-lineage-auditor ./cmd/risk-lineage-auditor
+	CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/risk-lineage-auditor ./cmd/risk-lineage-auditor && \
+	CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/risk-feature-reconciler ./cmd/risk-feature-reconciler
 
 FROM alpine:3.22
 RUN addgroup -S app && adduser -S -G app app
@@ -33,5 +34,6 @@ COPY --from=builder /out/risk-feature-evaluator /risk-feature-evaluator
 COPY --from=builder /out/risk-warehouse-run /risk-warehouse-run
 COPY --from=builder /out/risk-warehouse-backfill /risk-warehouse-backfill
 COPY --from=builder /out/risk-lineage-auditor /risk-lineage-auditor
+COPY --from=builder /out/risk-feature-reconciler /risk-feature-reconciler
 EXPOSE 8080
 ENTRYPOINT ["/risk-control"]

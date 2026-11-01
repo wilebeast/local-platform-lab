@@ -346,6 +346,41 @@ CREATE TABLE IF NOT EXISTS risk_feature_snapshots (
     PRIMARY KEY (run_id, subject_type, subject_id, currency)
 );
 
+CREATE TABLE IF NOT EXISTS risk_feature_reconciliations (
+    comparison_id TEXT PRIMARY KEY,
+    feature_set_key TEXT NOT NULL,
+    feature_set_version INTEGER NOT NULL CHECK (feature_set_version > 0),
+    subject_type TEXT NOT NULL,
+    subject_id TEXT NOT NULL,
+    currency TEXT NOT NULL,
+    as_of TIMESTAMPTZ NOT NULL,
+    window_start TIMESTAMPTZ NOT NULL,
+    window_end TIMESTAMPTZ NOT NULL,
+    stream_source_run_id TEXT NOT NULL,
+    batch_source_run_id TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('matched', 'drift', 'not_comparable', 'batch_missing')),
+    reason TEXT NOT NULL,
+    inflow_delta_minor BIGINT NOT NULL,
+    outflow_delta_minor BIGINT NOT NULL,
+    ratio_delta DOUBLE PRECISION NOT NULL,
+    source_event_count_delta BIGINT NOT NULL,
+    amount_threshold_minor BIGINT NOT NULL CHECK (amount_threshold_minor >= 0),
+    ratio_threshold DOUBLE PRECISION NOT NULL CHECK (ratio_threshold >= 0),
+    alert_status TEXT NOT NULL CHECK (alert_status IN ('none', 'open')),
+    stream_snapshot JSONB NOT NULL,
+    batch_snapshot JSONB NOT NULL,
+    compared_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS risk_feature_reconciliations_lookup_idx
+    ON risk_feature_reconciliations(
+        feature_set_key,feature_set_version,subject_type,subject_id,currency,as_of DESC
+    );
+
+CREATE INDEX IF NOT EXISTS risk_feature_reconciliations_open_alert_idx
+    ON risk_feature_reconciliations(compared_at DESC)
+    WHERE alert_status='open';
+
 CREATE TABLE IF NOT EXISTS risk_warehouse_evaluations (
     evaluation_id TEXT PRIMARY KEY,
     dag_run_id TEXT NOT NULL,
