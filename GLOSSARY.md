@@ -119,3 +119,65 @@ _Avoid_: Ledger Repair, Journal Edit, Manual Balance Update
 **Payout Correction**:
 An evidence-backed correction used when a locally recorded merchant payout is proven not to have occurred externally. It posts a new reversal journal, marks the payout reversed, and preserves the original payout and journal as immutable history.
 _Avoid_: Delete Payout, Edit Journal, Retry Unknown Transfer
+
+## Risk control
+
+**Evaluation**:
+An immutable record of one policy execution against a frozen set of factor values and point-in-time context.
+_Avoid_: Risk Request, Mutable Decision Row
+
+**Decision**:
+The synchronous answer that states whether the current business operation may continue: `pass` or `block`.
+_Avoid_: Risk Level, Action, Business Status
+
+**Disposition**:
+The path that explains how a blocked operation may proceed, such as rejection, step-up verification, manual review, or deferral.
+_Avoid_: Decision, Action
+
+**Business Disposition**:
+A typed business-state outcome that the authoritative business module must apply synchronously, such as keeping inbound funds in `pending_credit`.
+_Avoid_: Asynchronous Action, Risk Level
+
+**Action Intent**:
+An immutable request for a separately executed side effect produced by an Evaluation.
+_Avoid_: Decision, Business Disposition, Completed Action
+
+**Finding**:
+A durable risk observation that may require investigation; it is evidence, not permission to modify a business fact.
+_Avoid_: Decision, Restriction, Case
+
+**Restriction**:
+A versioned, continuing limitation on one subject's capability, activated or released through audited actions.
+_Avoid_: Block Decision, Finding
+
+**Case**:
+The operational container for human investigation, evidence, assignment, review, and resolution.
+_Avoid_: Evaluation, Finding
+
+**Feature Snapshot**:
+An immutable, point-in-time set of warehouse-derived feature values identified by feature-set version, subject, `as_of`, and source run.
+_Avoid_: Factor Value, Current Projection
+
+**Feature Window Type**:
+A stable, named definition of how a Feature Snapshot selects time, such as a rolling five-minute window, rolling twenty-four-hour window, calendar day, or lifetime window.
+_Avoid_: Window Start, Table Name, Feature Set
+
+**Feature Window Instance**:
+The concrete interval selected by one Feature Window Type at one `as_of`, recorded with its actual window start and window end for validation and replay.
+_Avoid_: Feature Window Type, Computation Time
+
+**Factor Value**:
+A typed input value frozen for one Evaluation, regardless of whether it originated from request context, an RPC, state, a Feature Snapshot, an expression, or a model.
+_Avoid_: Feature Definition, Raw Fact
+
+**Source Domain**:
+The business domain that owns the fact from which an event originated, such as acquiring, card, withdrawal, security, or customer verification.
+_Avoid_: Tenant, Service Name
+
+**DWD Fact**:
+A normalized, event-grained business fact whose identity, time meaning, and lifecycle are stable across its source systems.
+_Avoid_: Raw Event, Subject Summary, Universal Event Row
+
+**DWS Summary**:
+A point-in-time analytical summary grouped by subject, risk theme, window, and row grain, from which one or more Features may be produced.
+_Avoid_: Raw Fact, Factor Value, One Table Per Factor
