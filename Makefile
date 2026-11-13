@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 PROFILE ?= light
 
-.PHONY: doctor bootstrap deploy verify lab-profiles lab-plan lab-up lab-down lab-status test-lab-profiles deploy-api-bff verify-api-bff deploy-user-service verify-user-service deploy-account-service verify-account-service deploy-local-gateway verify-local-gateway deploy-service-discovery verify-service-discovery verify-service-registration deploy-auth verify-auth verify-bff-session auth-ui rollback argocd-ui destroy generate-user-descriptor generate-account-descriptor ensure-postgres-secrets deploy-webhook-lab verify-webhook-lab deploy-notification-lab verify-notification-lab notification-ui deploy-inbound-webhook-lab verify-inbound-webhook-lab deploy-enterprise-card-lab verify-enterprise-card-lab deploy-xxl-job-lab verify-xxl-job-lab compare-xxl-job-shadow compare-xxl-job-business-shadow verify-xxl-job-recovery cutover-xxl-job verify-xxl-job-cutover xxl-job-ui
+.PHONY: doctor bootstrap deploy verify lab-profiles lab-plan lab-up lab-down lab-status test-lab-profiles deploy-api-bff verify-api-bff deploy-user-service verify-user-service deploy-account-service verify-account-service deploy-local-gateway verify-local-gateway deploy-service-discovery verify-service-discovery verify-service-registration deploy-auth verify-auth verify-bff-session auth-ui rollback argocd-ui destroy generate-user-descriptor generate-account-descriptor ensure-postgres-secrets deploy-webhook-lab verify-webhook-lab deploy-notification-lab verify-notification-lab notification-ui deploy-inbound-webhook-lab verify-inbound-webhook-lab deploy-enterprise-card-lab verify-enterprise-card-lab deploy-xxl-job-lab verify-xxl-job-lab compare-xxl-job-shadow compare-xxl-job-business-shadow verify-xxl-job-recovery cutover-xxl-job verify-xxl-job-cutover verify-xxl-job-retirement-readiness xxl-job-ui
 
 doctor:
 	@./scripts/doctor.sh
@@ -143,6 +143,9 @@ cutover-xxl-job:
 
 verify-xxl-job-cutover:
 	@./scripts/verify-xxl-job-cutover.sh
+
+verify-xxl-job-retirement-readiness:
+	@./scripts/verify-xxl-job-retirement-readiness.sh
 
 xxl-job-ui:
 	@./scripts/xxl-job-ui.sh

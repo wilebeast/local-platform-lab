@@ -34,7 +34,7 @@ XXL-JOB Admin → 固定 Handler → Shadow 执行证据
 | S3c | 受控失败与历史补跑 | 已完成 |
 | S3d | 连续周期观察 | 按本次实践决策视为通过 |
 | S4 | 在 GitOps 中暂停原 CronJob | 已完成切换与人工回滚演练 |
-| S5 | 观察后决定是否删除 CronJob | 未开始 |
+| S5 | 观察后决定是否删除 CronJob | 本地加速门槛已通过，待移除与恢复演练 |
 
 ## 为什么 S3 要拆成两层
 
@@ -222,3 +222,40 @@ cron_suspend=true   xxl_production=1  xxl_shadow=0
 演练期间先关闭 Argo 自动同步，避免期望状态在中途把 CronJob 重新暂停；恢复到 XXL 后，
 重新开启 `automated.enabled=true` 和 `selfHeal=true`。两次转换都先停旧的正式调度器，
 再开启新的正式调度器，没有出现双正式执行者窗口。
+
+## S5：何时可以退休 CronJob
+
+暂停 CronJob 只是切换；删除 CronJob 是撤掉快速回滚通道，两者不能合并成一次操作。
+S5 使用只读检查器核对：
+
+- CronJob 仍处于暂停状态；
+- XXL 正式调度开启、Shadow 调度停止，而且正式 Cron 表达式已经恢复为每小时第 5 分钟；
+- 只统计 `executor_param={}` 的自然 Cron 触发，不用人工触发凑数；
+- 最近若干自然周期全部成功且没有业务失败 Run；
+- 最新业务 Run 没有过期；XXL 的本地 `DATETIME` 只用于展示，不承担跨时区新鲜度计算；
+- 最新业务 Run 已完成。
+
+本地实验默认至少观察三个自然周期：
+
+```bash
+make verify-xxl-job-retirement-readiness
+```
+
+生产环境应提高门槛，例如至少 24 个连续周期，并叠加七天失败率、告警、补跑和数据库
+备份演练。检查通过只代表“可以进入删除评审”，不会自动删除 CronJob；实际移除仍需独立
+GitOps 提交和一次从 Git 历史恢复 CronJob 的演练。
+
+本地实验为避免等待三个小时，临时把 XXL 正式任务改为每分钟触发，完成三个由 Cron
+自动产生的周期后立即恢复正式表达式。验收证据为：
+
+```text
+accelerated logs     3
+successful logs      3
+failed logs          0
+business run rows    102 → 102
+latest run rows      1 → 1
+restored schedule    0 5 * * * ? *
+```
+
+这组证据验证了调度连续性和同一小时重复触发的业务幂等，但不能替代生产环境跨小时、跨天
+观察。因此本地可继续做 CronJob 移除与 Git 恢复演练；生产仍必须使用更长观察窗口。
