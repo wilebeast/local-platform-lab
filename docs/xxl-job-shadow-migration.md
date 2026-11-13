@@ -33,7 +33,7 @@ XXL-JOB Admin → 固定 Handler → Shadow 执行证据
 | S3b | 对比同一 `as_of` 的业务输出 | 单样本已通过，持续观察由 S3d 收口 |
 | S3c | 受控失败与历史补跑 | 已完成 |
 | S3d | 连续周期观察 | 按本次实践决策视为通过 |
-| S4 | 在 GitOps 中暂停原 CronJob | 已完成切换，待人工回滚演练 |
+| S4 | 在 GitOps 中暂停原 CronJob | 已完成切换与人工回滚演练 |
 | S5 | 观察后决定是否删除 CronJob | 未开始 |
 
 ## 为什么 S3 要拆成两层
@@ -208,3 +208,17 @@ dry_run            false
 后续应把故障演练资源迁出长期 GitOps 健康口径，避免历史测试证据污染应用健康状态。
 
 回滚顺序必须相反：先停止 XXL 正式任务，再把 CronJob 恢复为 `suspend=false`，最后确认下一次 `as_of` 只有一个正式执行者。
+
+本次人工回滚演练记录：
+
+```text
+XXL → CronJob
+cron_suspend=false  xxl_production=0  xxl_shadow=0
+
+CronJob → XXL
+cron_suspend=true   xxl_production=1  xxl_shadow=0
+```
+
+演练期间先关闭 Argo 自动同步，避免期望状态在中途把 CronJob 重新暂停；恢复到 XXL 后，
+重新开启 `automated.enabled=true` 和 `selfHeal=true`。两次转换都先停旧的正式调度器，
+再开启新的正式调度器，没有出现双正式执行者窗口。
