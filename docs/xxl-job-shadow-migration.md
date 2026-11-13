@@ -34,7 +34,7 @@ XXL-JOB Admin → 固定 Handler → Shadow 执行证据
 | S3c | 受控失败与历史补跑 | 已完成 |
 | S3d | 连续周期观察 | 按本次实践决策视为通过 |
 | S4 | 在 GitOps 中暂停原 CronJob | 已完成切换与人工回滚演练 |
-| S5 | 观察后决定是否删除 CronJob | 本地加速门槛已通过，待移除与恢复演练 |
+| S5 | 观察后决定是否删除 CronJob | 本地移除与 Git 恢复演练已完成 |
 
 ## 为什么 S3 要拆成两层
 
@@ -259,3 +259,21 @@ restored schedule    0 5 * * * ? *
 
 这组证据验证了调度连续性和同一小时重复触发的业务幂等，但不能替代生产环境跨小时、跨天
 观察。因此本地可继续做 CronJob 移除与 Git 恢复演练；生产仍必须使用更长观察窗口。
+
+本地最终通过 GitOps 完成了三段式恢复演练：
+
+```text
+7b3af5b  删除暂停的 CronJob → Argo prune 后资源消失
+5b8bc6a  revert 删除提交   → CronJob 以 suspend=true 安全恢复
+3e015f8  reapply 退休变更   → Argo 再次 prune，回到最终退休态
+```
+
+最终验收使用：
+
+```bash
+make verify-xxl-job-retired
+```
+
+该检查要求 CronJob 不存在、XXL 正式调度开启、Shadow 停止、正式表达式正确、最近执行成功、
+不存在任意命令或 HTTP Handler，并要求 `risk-control-lab` 与 `xxl-job-lab` 均处于 GitOps
+同步状态。
