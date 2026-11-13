@@ -29,6 +29,7 @@ risk-control-lab
 user-service
 virtual-account-lab
 webhook-lab
+xxl-job-lab
 EOF
 }
 
@@ -64,12 +65,32 @@ risk-control-lab
 risk-airflow-lab
 EOF
       ;;
+    scheduler)
+      cat <<'EOF'
+postgres
+xxl-job-lab
+EOF
+      ;;
     full)
       all_apps
       ;;
     *)
       printf 'unknown lab profile: %s\n' "${1:-}" >&2
-      printf 'available profiles: light card risk-warehouse full\n' >&2
+      printf 'available profiles: light card risk-warehouse scheduler full\n' >&2
+      return 2
+      ;;
+  esac
+}
+
+profile_preserved_apps() {
+  case "${1:-}" in
+    scheduler)
+      printf '%s\n' risk-control-lab
+      ;;
+    light|card|risk-warehouse|full)
+      ;;
+    *)
+      printf 'unknown lab profile: %s\n' "${1:-}" >&2
       return 2
       ;;
   esac
@@ -100,9 +121,11 @@ print_plan() {
   local profile="$1"
   local app
   local enabled
+  local preserved
 
   validate_profile "$profile"
   enabled="$(profile_apps "$profile")"
+  preserved="$(profile_preserved_apps "$profile")"
 
   printf 'profile %s\n' "$profile"
   while IFS= read -r app; do
@@ -110,7 +133,9 @@ print_plan() {
   done <<<"$enabled"
 
   while IFS= read -r app; do
-    if ! grep -Fqx "$app" <<<"$enabled"; then
+    if grep -Fqx "$app" <<<"$preserved"; then
+      printf 'preserved %s\n' "$app"
+    elif ! grep -Fqx "$app" <<<"$enabled"; then
       printf 'suspended %s\n' "$app"
     fi
   done < <(all_apps)
@@ -121,6 +146,7 @@ list_profiles() {
   printf '%-16s %s\n' light 'API gateway and core account services'
   printf '%-16s %s\n' card 'enterprise card practice'
   printf '%-16s %s\n' risk-warehouse 'Kafka, risk service, Flink, ClickHouse and Airflow'
+  printf '%-16s %s\n' scheduler 'XXL-JOB control plane and restricted shadow executor'
   printf '%-16s %s\n' full 'all local applications (resource intensive)'
 }
 
@@ -167,6 +193,10 @@ prepare_profile() {
 
   if grep -Fqx webhook-lab <<<"$enabled"; then
     run_prepare_script ensure-webhook-secrets.sh
+  fi
+
+  if grep -Fqx xxl-job-lab <<<"$enabled"; then
+    run_prepare_script ensure-xxl-job-secrets.sh
   fi
 }
 
@@ -224,10 +254,11 @@ apply_application() {
 
 apply_profile() {
   local profile="$1"
-  local enabled app
+  local enabled preserved app
 
   validate_profile "$profile"
   enabled="$(profile_apps "$profile")"
+  preserved="$(profile_preserved_apps "$profile")"
 
   if [ "$DRY_RUN" != "1" ]; then
     kubectl --context "$KUBE_CONTEXT" get namespace argocd >/dev/null
@@ -236,7 +267,9 @@ apply_profile() {
   prepare_profile "$profile"
 
   while IFS= read -r app; do
-    if ! grep -Fqx "$app" <<<"$enabled"; then
+    if grep -Fqx "$app" <<<"$preserved"; then
+      printf 'preserve %s\n' "$app"
+    elif ! grep -Fqx "$app" <<<"$enabled"; then
       suspend_application "$app"
     fi
   done < <(all_apps)

@@ -44,16 +44,26 @@ func main() {
 	if err := pool.Ping(ctx); err != nil {
 		log.Fatal(err)
 	}
-	result, replay, err := risk.NewOfflineScanner(risk.NewPostgresStore(pool)).Run(ctx, risk.OfflineRunCommand{
+	scanner := risk.NewOfflineScanner(risk.NewPostgresStore(pool))
+	command := risk.OfflineRunCommand{
 		RunID: runID, AsOf: asOf, PolicyKey: policyKey, PolicyVersion: policyVersion,
-	})
+	}
+	dryRun := envOr("OFFLINE_DRY_RUN", "false") == "true"
+	var result risk.OfflineRunResult
+	var replay bool
+	if dryRun {
+		result, err = scanner.Preview(ctx, command)
+	} else {
+		result, replay, err = scanner.Run(ctx, command)
+	}
 	if err != nil {
 		log.Fatal(err)
 	}
 	output := struct {
 		risk.OfflineRunResult
 		IdempotentReplay bool `json:"idempotent_replay"`
-	}{OfflineRunResult: result, IdempotentReplay: replay}
+		DryRun           bool `json:"dry_run"`
+	}{OfflineRunResult: result, IdempotentReplay: replay, DryRun: dryRun}
 	if err := json.NewEncoder(os.Stdout).Encode(output); err != nil {
 		log.Fatal(err)
 	}

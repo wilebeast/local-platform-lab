@@ -10,6 +10,7 @@ type offlineStoreStub struct {
 	events      []ActivityEvent
 	policy      OfflinePolicy
 	savedResult OfflineRunResult
+	saveCalls   int
 }
 
 func (s *offlineStoreStub) LoadActivityEvents(context.Context, time.Time, time.Time) ([]ActivityEvent, error) {
@@ -21,8 +22,34 @@ func (s *offlineStoreStub) LoadOfflinePolicy(context.Context, string, int) (Offl
 }
 
 func (s *offlineStoreStub) SaveOfflineRun(_ context.Context, result OfflineRunResult) (OfflineRunResult, bool, error) {
+	s.saveCalls++
 	s.savedResult = result
 	return result, false, nil
+}
+
+func TestOfflineScannerPreviewDoesNotPersist(t *testing.T) {
+	asOf := time.Date(2026, 10, 29, 2, 0, 0, 0, time.UTC)
+	store := &offlineStoreStub{
+		policy: OfflinePolicy{PolicyKey: "rapid_fund_movement", Version: 1, Status: "published", Window: 24 * time.Hour, MinInflow: 50_000, OutflowRatio: 0.90, Capability: "withdrawal"},
+		events: []ActivityEvent{
+			{EventID: "in-1", SubjectType: "organization", SubjectID: "org-risky", EventType: "funds_in", AmountMinor: 100_000, Currency: "USD", OccurredAt: asOf.Add(-4 * time.Hour)},
+			{EventID: "out-1", SubjectType: "organization", SubjectID: "org-risky", EventType: "funds_out", AmountMinor: 95_000, Currency: "USD", OccurredAt: asOf.Add(-time.Hour)},
+		},
+	}
+
+	result, err := NewOfflineScanner(store).Preview(context.Background(), OfflineRunCommand{
+		RunID: "shadow-run-20261029T020000Z-v1", AsOf: asOf,
+		PolicyKey: "rapid_fund_movement", PolicyVersion: 1,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if store.saveCalls != 0 {
+		t.Fatalf("preview persisted %d run(s), want 0", store.saveCalls)
+	}
+	if result.Status != "preview" || result.SubjectsEvaluated != 1 || result.Evaluations[0].Decision != "block" {
+		t.Fatalf("unexpected preview result: %+v", result)
+	}
 }
 
 func TestOfflineScannerCreatesFindingAndWithdrawalRestriction(t *testing.T) {

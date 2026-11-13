@@ -104,6 +104,15 @@ type OfflineScanner struct{ store OfflineStore }
 func NewOfflineScanner(store OfflineStore) *OfflineScanner { return &OfflineScanner{store: store} }
 
 func (s *OfflineScanner) Run(ctx context.Context, cmd OfflineRunCommand) (OfflineRunResult, bool, error) {
+	return s.execute(ctx, cmd, true)
+}
+
+func (s *OfflineScanner) Preview(ctx context.Context, cmd OfflineRunCommand) (OfflineRunResult, error) {
+	result, _, err := s.execute(ctx, cmd, false)
+	return result, err
+}
+
+func (s *OfflineScanner) execute(ctx context.Context, cmd OfflineRunCommand, persist bool) (OfflineRunResult, bool, error) {
 	if cmd.RunID == "" || cmd.AsOf.IsZero() || cmd.PolicyKey == "" || cmd.PolicyVersion <= 0 {
 		return OfflineRunResult{}, false, fmt.Errorf("run_id, as_of, policy_key and policy_version are required")
 	}
@@ -195,6 +204,10 @@ func (s *OfflineScanner) Run(ctx context.Context, cmd OfflineRunCommand) (Offlin
 		result.Evaluations = append(result.Evaluations, evaluation)
 	}
 	result.SubjectsEvaluated = len(result.Evaluations)
+	if !persist {
+		result.Status = "preview"
+		return result, false, nil
+	}
 	return s.store.SaveOfflineRun(ctx, result)
 }
 
