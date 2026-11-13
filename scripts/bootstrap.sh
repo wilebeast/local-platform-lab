@@ -9,6 +9,7 @@ KUBE_CONTEXT="kind-$CLUSTER_NAME"
 COLIMA_DNS_PRIMARY="${COLIMA_DNS_PRIMARY:-1.1.1.1}"
 COLIMA_DNS_SECONDARY="${COLIMA_DNS_SECONDARY:-8.8.8.8}"
 LOCAL_HTTP_PROXY="${LOCAL_HTTP_PROXY:-}"
+PROFILE="${PROFILE:-light}"
 
 "$ROOT_DIR/scripts/doctor.sh"
 
@@ -82,9 +83,6 @@ if ! kubectl --context "$KUBE_CONTEXT" -n git-system exec "$git_pod" -- test -d 
 fi
 
 "$ROOT_DIR/scripts/push-gitops.sh" --seed
-"$ROOT_DIR/scripts/ensure-auth-secrets.sh"
-"$ROOT_DIR/scripts/ensure-postgres-secrets.sh"
-"$ROOT_DIR/scripts/ensure-webhook-secrets.sh"
-kubectl --context "$KUBE_CONTEXT" apply -f "$GITOPS_DIR/argocd"
+"$ROOT_DIR/scripts/lab-profile.sh" apply "$PROFILE"
 
-echo "Bootstrap complete. Run: make deploy && make verify"
+echo "Bootstrap complete with profile '$PROFILE'. Run: make lab-status"

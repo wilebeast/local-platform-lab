@@ -2,7 +2,7 @@
 set -euo pipefail
 
 missing=0
-for tool in colima docker kind kubectl helm git curl; do
+for tool in colima docker kind kubectl helm git curl jq openssl; do
   if command -v "$tool" >/dev/null 2>&1; then
     printf 'OK      %s\n' "$tool"
   else

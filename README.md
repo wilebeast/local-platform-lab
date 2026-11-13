@@ -198,6 +198,53 @@ https://localhost:18443 -> local-alb (Nginx TLS) -> APISIX -> api-bff
 
 > 安全约束：所有集群命令都显式使用 `kind-local-platform`，不会依赖当前 kubectl context，也不会操作远端 EKS。
 
+## 资源档位
+
+本地实验环境按资源档位运行，Mac 不再需要同时启动所有实验服务。`lab-up` 会保留
+Kubernetes PVC 和 Secret，暂停档位以外的 Argo CD Application，并将其
+Deployment 和 StatefulSet 缩容为 0。
+
+只查看档位及其执行计划，不修改集群：
+
+```bash
+make lab-profiles
+make lab-plan PROFILE=light
+make lab-plan PROFILE=card
+make lab-plan PROFILE=risk-warehouse
+```
+
+启动一个档位：
+
+```bash
+make lab-up PROFILE=light
+make lab-up PROFILE=card
+make lab-up PROFILE=risk-warehouse
+```
+
+| 档位 | 实践范围 | 主要组件 |
+| --- | --- | --- |
+| `light` | 网关和核心账户 API | PostgreSQL、Redis、etcd、Nacos、APISIX、BFF、用户和账户服务 |
+| `card` | 企业卡实践 | PostgreSQL、APISIX、本地 ALB 和企业卡实验服务 |
+| `risk-warehouse` | 风控数据与任务编排 | PostgreSQL、Kafka、风控服务、MinIO、ClickHouse、Flink 和 Airflow |
+| `full` | 全平台兼容性检查 | 所有 Argo CD Application，资源消耗较高 |
+
+查看状态或停止实验环境：
+
+```bash
+make lab-status
+make lab-down
+```
+
+`lab-down` 会先暂停受管应用，把活跃的 Deployment 和 StatefulSet 缩容为 0，
+再停止 Colima；它不会删除 PVC。下一次执行 `lab-up` 时，会重新应用所选档位的
+GitOps Application 清单，由 Argo CD 恢复声明的副本数。
+
+新建集群时，`make bootstrap` 默认使用 `PROFILE=light`。需要其他初始档位时应显式指定：
+
+```bash
+make bootstrap PROFILE=risk-warehouse
+```
+
 打开 Argo CD：
 
 ```bash

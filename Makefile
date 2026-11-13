@@ -1,18 +1,37 @@
 SHELL := /bin/bash
+PROFILE ?= light
 
-.PHONY: doctor bootstrap deploy verify deploy-api-bff verify-api-bff deploy-user-service verify-user-service deploy-account-service verify-account-service deploy-local-gateway verify-local-gateway deploy-service-discovery verify-service-discovery verify-service-registration deploy-auth verify-auth verify-bff-session auth-ui rollback argocd-ui destroy generate-user-descriptor generate-account-descriptor ensure-postgres-secrets deploy-webhook-lab verify-webhook-lab deploy-notification-lab verify-notification-lab notification-ui deploy-inbound-webhook-lab verify-inbound-webhook-lab deploy-enterprise-card-lab verify-enterprise-card-lab
+.PHONY: doctor bootstrap deploy verify lab-profiles lab-plan lab-up lab-down lab-status test-lab-profiles deploy-api-bff verify-api-bff deploy-user-service verify-user-service deploy-account-service verify-account-service deploy-local-gateway verify-local-gateway deploy-service-discovery verify-service-discovery verify-service-registration deploy-auth verify-auth verify-bff-session auth-ui rollback argocd-ui destroy generate-user-descriptor generate-account-descriptor ensure-postgres-secrets deploy-webhook-lab verify-webhook-lab deploy-notification-lab verify-notification-lab notification-ui deploy-inbound-webhook-lab verify-inbound-webhook-lab deploy-enterprise-card-lab verify-enterprise-card-lab
 
 doctor:
 	@./scripts/doctor.sh
 
 bootstrap:
-	@./scripts/bootstrap.sh
+	@PROFILE="$(PROFILE)" ./scripts/bootstrap.sh
 
 deploy:
 	@./scripts/deploy.sh
 
 verify:
 	@./scripts/verify.sh
+
+lab-profiles:
+	@./scripts/lab-profile.sh list
+
+lab-plan:
+	@./scripts/lab-profile.sh plan "$(PROFILE)"
+
+lab-up:
+	@./scripts/lab-up.sh "$(PROFILE)"
+
+lab-down:
+	@./scripts/lab-profile.sh down
+
+lab-status:
+	@./scripts/lab-profile.sh status
+
+test-lab-profiles:
+	@bash ./scripts/tests/lab-profile-test.sh
 
 deploy-api-bff:
 	@./scripts/deploy-api-bff.sh
