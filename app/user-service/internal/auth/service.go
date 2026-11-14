@@ -60,9 +60,6 @@ type Config struct {
 	Audience           string
 	AccessTTL          time.Duration
 	RefreshTTL         time.Duration
-	DemoEmail          string
-	DemoPassword       string
-	DemoUserID         string
 	TOTPEncryptionKey  string
 	RecoveryCodePepper string
 	PasskeyRPID        string
@@ -74,6 +71,8 @@ type TokenPair struct {
 	AccessToken  string
 	RefreshToken string
 	ExpiresIn    int64
+	UserID       string
+	SessionID    string
 }
 
 type Service struct {
@@ -83,14 +82,15 @@ type Service struct {
 	factors      FactorStore
 	passkeyStore PasskeyStore
 	passkey      passkeyProvider
+	credentials  CredentialStore
 	now          func() time.Time
 }
 
-func NewService(config Config, store RefreshStore) (*Service, error) {
+func NewService(config Config, store RefreshStore, credentials CredentialStore) (*Service, error) {
 	if len(config.JWTPrivateKey) != ed25519.PrivateKeySize || config.JWTKeyID == "" {
 		return nil, errors.New("valid Ed25519 private key and key id are required")
 	}
-	if config.AccessTTL <= 0 || config.RefreshTTL <= 0 || store == nil {
+	if config.AccessTTL <= 0 || config.RefreshTTL <= 0 || store == nil || credentials == nil {
 		return nil, errors.New("invalid auth configuration")
 	}
 	factors, ok := store.(FactorStore)
@@ -109,7 +109,7 @@ func NewService(config Config, store RefreshStore) (*Service, error) {
 	if passkey != nil && !ok {
 		return nil, errors.New("passkey store is required")
 	}
-	return &Service{config: config, store: store, sessions: sessions, factors: factors, passkeyStore: passkeyStore, passkey: passkey, now: time.Now}, nil
+	return &Service{config: config, store: store, sessions: sessions, factors: factors, passkeyStore: passkeyStore, passkey: passkey, credentials: credentials, now: time.Now}, nil
 }
 
 func (s *Service) Login(ctx context.Context, email, password string) (TokenPair, error) {
@@ -213,7 +213,10 @@ func (s *Service) issueForSession(ctx context.Context, session Session) (TokenPa
 	if err := s.store.Put(ctx, tokenHash(refreshToken), session.UserID+"|"+session.ID, s.config.RefreshTTL); err != nil {
 		return TokenPair{}, err
 	}
-	return TokenPair{AccessToken: accessToken, RefreshToken: refreshToken, ExpiresIn: int64(s.config.AccessTTL.Seconds())}, nil
+	return TokenPair{
+		AccessToken: accessToken, RefreshToken: refreshToken, ExpiresIn: int64(s.config.AccessTTL.Seconds()),
+		UserID: session.UserID, SessionID: session.ID,
+	}, nil
 }
 
 func randomToken() (string, error) {

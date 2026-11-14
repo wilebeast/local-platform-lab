@@ -24,10 +24,9 @@ func TestBeginPasskeyRegistrationReturnsBrowserOptions(t *testing.T) {
 	service, err := NewService(Config{
 		JWTPrivateKey: privateKey, JWTKeyID: "test-key-1", Issuer: "local-platform-lab", Audience: "api-bff",
 		AccessTTL: 30 * time.Minute, RefreshTTL: 7 * 24 * time.Hour,
-		DemoEmail: "demo@local.test", DemoPassword: "local-demo-password", DemoUserID: "local-user",
 		TOTPEncryptionKey: "01234567890123456789012345678901", RecoveryCodePepper: "abcdefghijklmnopqrstuvwxyz123456",
 		PasskeyRPID: "localhost", PasskeyRPName: "Local Platform Lab", PasskeyOrigins: []string{"https://localhost:18443"},
-	}, store)
+	}, store, newMemoryCredentialStore(t))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -84,10 +83,9 @@ func TestFinishPasskeyRegistrationStoresCredentialAndRejectsReplay(t *testing.T)
 	service, err := NewService(Config{
 		JWTPrivateKey: privateKey, JWTKeyID: "test-key-1", Issuer: "local-platform-lab", Audience: "api-bff",
 		AccessTTL: 30 * time.Minute, RefreshTTL: 7 * 24 * time.Hour,
-		DemoEmail: "demo@local.test", DemoPassword: "local-demo-password", DemoUserID: "local-user",
 		TOTPEncryptionKey: "01234567890123456789012345678901", RecoveryCodePepper: "abcdefghijklmnopqrstuvwxyz123456",
 		PasskeyRPID: "example.org", PasskeyRPName: "Local Platform Lab", PasskeyOrigins: []string{"https://example.org"},
-	}, store)
+	}, store, newMemoryCredentialStore(t))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -121,10 +119,9 @@ func TestBeginPasskeyLoginReturnsDiscoverableOptions(t *testing.T) {
 	service, err := NewService(Config{
 		JWTPrivateKey: privateKey, JWTKeyID: "test-key-1", Issuer: "local-platform-lab", Audience: "api-bff",
 		AccessTTL: 30 * time.Minute, RefreshTTL: 7 * 24 * time.Hour,
-		DemoEmail: "demo@local.test", DemoPassword: "local-demo-password", DemoUserID: "local-user",
 		TOTPEncryptionKey: "01234567890123456789012345678901", RecoveryCodePepper: "abcdefghijklmnopqrstuvwxyz123456",
 		PasskeyRPID: "localhost", PasskeyRPName: "Local Platform Lab", PasskeyOrigins: []string{"https://localhost:18443"},
-	}, store)
+	}, store, newMemoryCredentialStore(t))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -163,10 +160,9 @@ func TestFinishPasskeyLoginIssuesPasskeySessionAndRejectsReplay(t *testing.T) {
 	service, err := NewService(Config{
 		JWTPrivateKey: privateKey, JWTKeyID: "test-key-1", Issuer: "local-platform-lab", Audience: "api-bff",
 		AccessTTL: 30 * time.Minute, RefreshTTL: 7 * 24 * time.Hour,
-		DemoEmail: "demo@local.test", DemoPassword: "local-demo-password", DemoUserID: "local-user",
 		TOTPEncryptionKey: "01234567890123456789012345678901", RecoveryCodePepper: "abcdefghijklmnopqrstuvwxyz123456",
 		PasskeyRPID: "example.org", PasskeyRPName: "Local Platform Lab", PasskeyOrigins: []string{"https://example.org"},
-	}, store)
+	}, store, newMemoryCredentialStore(t))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -4,6 +4,7 @@ go 1.26
 
 require (
 	github.com/wilebeast/local-platform-lab/api/account v0.0.0
+	github.com/wilebeast/local-platform-lab/pkg/accountcontext v0.0.0
 	github.com/wilebeast/local-platform-lab/pkg/serviceregistry v0.0.0
 	github.com/zeromicro/go-zero v1.10.3
 	google.golang.org/grpc v1.80.0
@@ -133,5 +134,7 @@ require (
 )
 
 replace github.com/wilebeast/local-platform-lab/api/account => ../../api/account
+
+replace github.com/wilebeast/local-platform-lab/pkg/accountcontext => ../../pkg/accountcontext
 
 replace github.com/wilebeast/local-platform-lab/pkg/serviceregistry => ../../pkg/serviceregistry

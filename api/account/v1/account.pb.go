@@ -21,6 +21,194 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type ListAccessesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListAccessesRequest) Reset() {
+	*x = ListAccessesRequest{}
+	mi := &file_account_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListAccessesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListAccessesRequest) ProtoMessage() {}
+
+func (x *ListAccessesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_account_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListAccessesRequest.ProtoReflect.Descriptor instead.
+func (*ListAccessesRequest) Descriptor() ([]byte, []int) {
+	return file_account_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *ListAccessesRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type AccountAccess struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	AccountId      string                 `protobuf:"bytes,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	AccountUid     string                 `protobuf:"bytes,2,opt,name=account_uid,json=accountUid,proto3" json:"account_uid,omitempty"`
+	AccountType    string                 `protobuf:"bytes,3,opt,name=account_type,json=accountType,proto3" json:"account_type,omitempty"`
+	OrganizationId string                 `protobuf:"bytes,4,opt,name=organization_id,json=organizationId,proto3" json:"organization_id,omitempty"`
+	MemberId       string                 `protobuf:"bytes,5,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
+	RoleIds        []string               `protobuf:"bytes,6,rep,name=role_ids,json=roleIds,proto3" json:"role_ids,omitempty"`
+	Relationship   string                 `protobuf:"bytes,7,opt,name=relationship,proto3" json:"relationship,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *AccountAccess) Reset() {
+	*x = AccountAccess{}
+	mi := &file_account_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AccountAccess) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AccountAccess) ProtoMessage() {}
+
+func (x *AccountAccess) ProtoReflect() protoreflect.Message {
+	mi := &file_account_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AccountAccess.ProtoReflect.Descriptor instead.
+func (*AccountAccess) Descriptor() ([]byte, []int) {
+	return file_account_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *AccountAccess) GetAccountId() string {
+	if x != nil {
+		return x.AccountId
+	}
+	return ""
+}
+
+func (x *AccountAccess) GetAccountUid() string {
+	if x != nil {
+		return x.AccountUid
+	}
+	return ""
+}
+
+func (x *AccountAccess) GetAccountType() string {
+	if x != nil {
+		return x.AccountType
+	}
+	return ""
+}
+
+func (x *AccountAccess) GetOrganizationId() string {
+	if x != nil {
+		return x.OrganizationId
+	}
+	return ""
+}
+
+func (x *AccountAccess) GetMemberId() string {
+	if x != nil {
+		return x.MemberId
+	}
+	return ""
+}
+
+func (x *AccountAccess) GetRoleIds() []string {
+	if x != nil {
+		return x.RoleIds
+	}
+	return nil
+}
+
+func (x *AccountAccess) GetRelationship() string {
+	if x != nil {
+		return x.Relationship
+	}
+	return ""
+}
+
+type ListAccessesResponse struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	PermissionVersion int64                  `protobuf:"varint,1,opt,name=permission_version,json=permissionVersion,proto3" json:"permission_version,omitempty"`
+	Accesses          []*AccountAccess       `protobuf:"bytes,2,rep,name=accesses,proto3" json:"accesses,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *ListAccessesResponse) Reset() {
+	*x = ListAccessesResponse{}
+	mi := &file_account_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListAccessesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListAccessesResponse) ProtoMessage() {}
+
+func (x *ListAccessesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_account_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListAccessesResponse.ProtoReflect.Descriptor instead.
+func (*ListAccessesResponse) Descriptor() ([]byte, []int) {
+	return file_account_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ListAccessesResponse) GetPermissionVersion() int64 {
+	if x != nil {
+		return x.PermissionVersion
+	}
+	return 0
+}
+
+func (x *ListAccessesResponse) GetAccesses() []*AccountAccess {
+	if x != nil {
+		return x.Accesses
+	}
+	return nil
+}
+
 type GetSummaryRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
@@ -30,7 +218,7 @@ type GetSummaryRequest struct {
 
 func (x *GetSummaryRequest) Reset() {
 	*x = GetSummaryRequest{}
-	mi := &file_account_proto_msgTypes[0]
+	mi := &file_account_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -42,7 +230,7 @@ func (x *GetSummaryRequest) String() string {
 func (*GetSummaryRequest) ProtoMessage() {}
 
 func (x *GetSummaryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[0]
+	mi := &file_account_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -55,7 +243,7 @@ func (x *GetSummaryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSummaryRequest.ProtoReflect.Descriptor instead.
 func (*GetSummaryRequest) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{0}
+	return file_account_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *GetSummaryRequest) GetUserId() string {
@@ -76,7 +264,7 @@ type GetSummaryResponse struct {
 
 func (x *GetSummaryResponse) Reset() {
 	*x = GetSummaryResponse{}
-	mi := &file_account_proto_msgTypes[1]
+	mi := &file_account_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -88,7 +276,7 @@ func (x *GetSummaryResponse) String() string {
 func (*GetSummaryResponse) ProtoMessage() {}
 
 func (x *GetSummaryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[1]
+	mi := &file_account_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -101,7 +289,7 @@ func (x *GetSummaryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSummaryResponse.ProtoReflect.Descriptor instead.
 func (*GetSummaryResponse) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{1}
+	return file_account_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *GetSummaryResponse) GetAccountId() string {
@@ -134,7 +322,7 @@ type GetLimitsRequest struct {
 
 func (x *GetLimitsRequest) Reset() {
 	*x = GetLimitsRequest{}
-	mi := &file_account_proto_msgTypes[2]
+	mi := &file_account_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -146,7 +334,7 @@ func (x *GetLimitsRequest) String() string {
 func (*GetLimitsRequest) ProtoMessage() {}
 
 func (x *GetLimitsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[2]
+	mi := &file_account_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -159,7 +347,7 @@ func (x *GetLimitsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetLimitsRequest.ProtoReflect.Descriptor instead.
 func (*GetLimitsRequest) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{2}
+	return file_account_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *GetLimitsRequest) GetUserId() string {
@@ -179,7 +367,7 @@ type GetLimitsResponse struct {
 
 func (x *GetLimitsResponse) Reset() {
 	*x = GetLimitsResponse{}
-	mi := &file_account_proto_msgTypes[3]
+	mi := &file_account_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -191,7 +379,7 @@ func (x *GetLimitsResponse) String() string {
 func (*GetLimitsResponse) ProtoMessage() {}
 
 func (x *GetLimitsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[3]
+	mi := &file_account_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -204,7 +392,7 @@ func (x *GetLimitsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetLimitsResponse.ProtoReflect.Descriptor instead.
 func (*GetLimitsResponse) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{3}
+	return file_account_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GetLimitsResponse) GetDailyLimitCents() int64 {
@@ -226,7 +414,22 @@ var File_account_proto protoreflect.FileDescriptor
 const file_account_proto_rawDesc = "" +
 	"\n" +
 	"\raccount.proto\x12\n" +
-	"account.v1\",\n" +
+	"account.v1\".\n" +
+	"\x13ListAccessesRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\"\xf7\x01\n" +
+	"\rAccountAccess\x12\x1d\n" +
+	"\n" +
+	"account_id\x18\x01 \x01(\tR\taccountId\x12\x1f\n" +
+	"\vaccount_uid\x18\x02 \x01(\tR\n" +
+	"accountUid\x12!\n" +
+	"\faccount_type\x18\x03 \x01(\tR\vaccountType\x12'\n" +
+	"\x0forganization_id\x18\x04 \x01(\tR\x0eorganizationId\x12\x1b\n" +
+	"\tmember_id\x18\x05 \x01(\tR\bmemberId\x12\x19\n" +
+	"\brole_ids\x18\x06 \x03(\tR\aroleIds\x12\"\n" +
+	"\frelationship\x18\a \x01(\tR\frelationship\"|\n" +
+	"\x14ListAccessesResponse\x12-\n" +
+	"\x12permission_version\x18\x01 \x01(\x03R\x11permissionVersion\x125\n" +
+	"\baccesses\x18\x02 \x03(\v2\x19.account.v1.AccountAccessR\baccesses\",\n" +
 	"\x11GetSummaryRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\"n\n" +
 	"\x12GetSummaryResponse\x12\x1d\n" +
@@ -238,8 +441,9 @@ const file_account_proto_rawDesc = "" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\"[\n" +
 	"\x11GetLimitsResponse\x12*\n" +
 	"\x11daily_limit_cents\x18\x01 \x01(\x03R\x0fdailyLimitCents\x12\x1a\n" +
-	"\bcurrency\x18\x02 \x01(\tR\bcurrency2\xa7\x01\n" +
-	"\x0eAccountService\x12K\n" +
+	"\bcurrency\x18\x02 \x01(\tR\bcurrency2\xfa\x01\n" +
+	"\x0eAccountService\x12Q\n" +
+	"\fListAccesses\x12\x1f.account.v1.ListAccessesRequest\x1a .account.v1.ListAccessesResponse\x12K\n" +
 	"\n" +
 	"GetSummary\x12\x1d.account.v1.GetSummaryRequest\x1a\x1e.account.v1.GetSummaryResponse\x12H\n" +
 	"\tGetLimits\x12\x1c.account.v1.GetLimitsRequest\x1a\x1d.account.v1.GetLimitsResponseBBZ@github.com/wilebeast/local-platform-lab/api/account/v1;accountv1b\x06proto3"
@@ -256,23 +460,29 @@ func file_account_proto_rawDescGZIP() []byte {
 	return file_account_proto_rawDescData
 }
 
-var file_account_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_account_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_account_proto_goTypes = []any{
-	(*GetSummaryRequest)(nil),  // 0: account.v1.GetSummaryRequest
-	(*GetSummaryResponse)(nil), // 1: account.v1.GetSummaryResponse
-	(*GetLimitsRequest)(nil),   // 2: account.v1.GetLimitsRequest
-	(*GetLimitsResponse)(nil),  // 3: account.v1.GetLimitsResponse
+	(*ListAccessesRequest)(nil),  // 0: account.v1.ListAccessesRequest
+	(*AccountAccess)(nil),        // 1: account.v1.AccountAccess
+	(*ListAccessesResponse)(nil), // 2: account.v1.ListAccessesResponse
+	(*GetSummaryRequest)(nil),    // 3: account.v1.GetSummaryRequest
+	(*GetSummaryResponse)(nil),   // 4: account.v1.GetSummaryResponse
+	(*GetLimitsRequest)(nil),     // 5: account.v1.GetLimitsRequest
+	(*GetLimitsResponse)(nil),    // 6: account.v1.GetLimitsResponse
 }
 var file_account_proto_depIdxs = []int32{
-	0, // 0: account.v1.AccountService.GetSummary:input_type -> account.v1.GetSummaryRequest
-	2, // 1: account.v1.AccountService.GetLimits:input_type -> account.v1.GetLimitsRequest
-	1, // 2: account.v1.AccountService.GetSummary:output_type -> account.v1.GetSummaryResponse
-	3, // 3: account.v1.AccountService.GetLimits:output_type -> account.v1.GetLimitsResponse
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	1, // 0: account.v1.ListAccessesResponse.accesses:type_name -> account.v1.AccountAccess
+	0, // 1: account.v1.AccountService.ListAccesses:input_type -> account.v1.ListAccessesRequest
+	3, // 2: account.v1.AccountService.GetSummary:input_type -> account.v1.GetSummaryRequest
+	5, // 3: account.v1.AccountService.GetLimits:input_type -> account.v1.GetLimitsRequest
+	2, // 4: account.v1.AccountService.ListAccesses:output_type -> account.v1.ListAccessesResponse
+	4, // 5: account.v1.AccountService.GetSummary:output_type -> account.v1.GetSummaryResponse
+	6, // 6: account.v1.AccountService.GetLimits:output_type -> account.v1.GetLimitsResponse
+	4, // [4:7] is the sub-list for method output_type
+	1, // [1:4] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_account_proto_init() }
@@ -286,7 +496,7 @@ func file_account_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_account_proto_rawDesc), len(file_account_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

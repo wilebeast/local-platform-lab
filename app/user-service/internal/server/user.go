@@ -8,18 +8,50 @@ import (
 	userv1 "github.com/wilebeast/local-platform-lab/api/user/v1"
 	"github.com/wilebeast/local-platform-lab/app/user-service/internal/auth"
 	"github.com/wilebeast/local-platform-lab/app/user-service/internal/rbac"
+	"github.com/wilebeast/local-platform-lab/app/user-service/internal/registration"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type UserServer struct {
 	userv1.UnimplementedUserServiceServer
-	auth *auth.Service
-	rbac *rbac.Service
+	auth         *auth.Service
+	rbac         *rbac.Service
+	registration *registration.CodeService
 }
 
-func NewUserServer(authService *auth.Service, authorizationService *rbac.Service) *UserServer {
-	return &UserServer{auth: authService, rbac: authorizationService}
+func NewUserServer(authService *auth.Service, authorizationService *rbac.Service, registrationServices ...*registration.CodeService) *UserServer {
+	server := &UserServer{auth: authService, rbac: authorizationService}
+	if len(registrationServices) > 0 {
+		server.registration = registrationServices[0]
+	}
+	return server
+}
+
+func (s *UserServer) SendRegistrationCode(ctx context.Context, request *userv1.SendRegistrationCodeRequest) (*userv1.SendRegistrationCodeResponse, error) {
+	if s.registration == nil {
+		return nil, status.Error(codes.Unavailable, "registration is not configured")
+	}
+	result, err := s.registration.Issue(ctx, registration.IssueCodeRequest{
+		Email: request.GetEmail(), CodeType: request.GetCodeType(), Locale: request.GetLocale(),
+	})
+	if err != nil {
+		return nil, registrationStatus(err)
+	}
+	return &userv1.SendRegistrationCodeResponse{VerifyToken: result.VerifyToken}, nil
+}
+
+func registrationStatus(err error) error {
+	switch {
+	case errors.Is(err, registration.ErrInvalidRegistrationRequest):
+		return status.Error(codes.InvalidArgument, err.Error())
+	case errors.Is(err, registration.ErrEmailAlreadyRegistered):
+		return status.Error(codes.AlreadyExists, err.Error())
+	}
+	if code := status.Code(err); code != codes.Unknown {
+		return status.Error(code, "registration code request failed")
+	}
+	return status.Error(codes.Internal, "registration code request failed")
 }
 
 func (s *UserServer) CheckPermission(ctx context.Context, request *userv1.CheckPermissionRequest) (*userv1.CheckPermissionResponse, error) {
@@ -166,7 +198,7 @@ func (s *UserServer) Logout(ctx context.Context, request *userv1.LogoutRequest) 
 func toProto(pair auth.TokenPair) *userv1.TokenPair {
 	return &userv1.TokenPair{
 		AccessToken: pair.AccessToken, RefreshToken: pair.RefreshToken,
-		ExpiresIn: pair.ExpiresIn, TokenType: "Bearer",
+		ExpiresIn: pair.ExpiresIn, TokenType: "Bearer", UserId: pair.UserID, SessionId: pair.SessionID,
 	}
 }
 

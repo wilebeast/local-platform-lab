@@ -86,7 +86,11 @@ func (s *RedisStore) GetPasskeyCredential(ctx context.Context, credentialID []by
 }
 
 func NewRedisStore(address string) *RedisStore {
-	return &RedisStore{client: redis.NewClient(&redis.Options{Addr: address})}
+	return NewRedisStoreWithClient(redis.NewClient(&redis.Options{Addr: address}))
+}
+
+func NewRedisStoreWithClient(client *redis.Client) *RedisStore {
+	return &RedisStore{client: client}
 }
 
 func (s *RedisStore) Ping(ctx context.Context) error {

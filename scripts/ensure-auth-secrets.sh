@@ -3,7 +3,7 @@ set -euo pipefail
 
 KUBE_CONTEXT="kind-local-platform"
 
-for namespace in api-bff user-service apisix redis local-alb; do
+for namespace in api-bff user-service account-service apisix redis local-alb; do
   kubectl --context "$KUBE_CONTEXT" create namespace "$namespace" --dry-run=client -o yaml | kubectl --context "$KUBE_CONTEXT" apply -f - >/dev/null
 done
 
@@ -15,6 +15,11 @@ if ! kubectl --context "$KUBE_CONTEXT" -n local-alb get secret local-platform-tl
     -subj "/CN=localhost" -addext "subjectAltName=DNS:localhost,IP:127.0.0.1" >/dev/null 2>&1
   kubectl --context "$KUBE_CONTEXT" -n local-alb create secret tls local-platform-tls \
     --cert="$cert_dir/tls.crt" --key="$cert_dir/tls.key" >/dev/null
+fi
+
+internal_context_key="$(kubectl --context "$KUBE_CONTEXT" -n api-bff get secret platform-auth -o jsonpath='{.data.internal-context-signature-key}' 2>/dev/null | base64 --decode || true)"
+if [ -z "$internal_context_key" ]; then
+  internal_context_key="$(openssl rand -hex 32)"
 fi
 
 if kubectl --context "$KUBE_CONTEXT" -n api-bff get secret platform-auth >/dev/null 2>&1; then
@@ -63,6 +68,11 @@ kubectl --context "$KUBE_CONTEXT" -n api-bff create secret generic platform-auth
   --from-literal="jwt-public-key-b64=$jwt_public_key_b64" \
   --from-literal="jwt-key-id=$jwt_key_id" \
   --from-literal="gateway-signature-key=$gateway_key" \
+  --from-literal="internal-context-signature-key=$internal_context_key" \
+  --dry-run=client -o yaml | kubectl --context "$KUBE_CONTEXT" apply -f - >/dev/null
+
+kubectl --context "$KUBE_CONTEXT" -n account-service create secret generic platform-auth \
+  --from-literal="internal-context-signature-key=$internal_context_key" \
   --dry-run=client -o yaml | kubectl --context "$KUBE_CONTEXT" apply -f - >/dev/null
 
 kubectl --context "$KUBE_CONTEXT" -n apisix create secret generic platform-auth \

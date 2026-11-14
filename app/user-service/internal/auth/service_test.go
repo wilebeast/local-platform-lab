@@ -189,10 +189,9 @@ func testService(t *testing.T) *Service {
 	service, err := NewService(Config{
 		JWTPrivateKey: privateKey, JWTKeyID: "test-key-1", Issuer: "local-platform-lab",
 		Audience: "api-bff", AccessTTL: 30 * time.Minute, RefreshTTL: 7 * 24 * time.Hour,
-		DemoEmail: "demo@local.test", DemoPassword: "local-demo-password", DemoUserID: "local-user",
 		TOTPEncryptionKey:  "01234567890123456789012345678901",
 		RecoveryCodePepper: "abcdefghijklmnopqrstuvwxyz123456",
-	}, newMemoryStore())
+	}, newMemoryStore(), newMemoryCredentialStore(t))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -217,6 +216,9 @@ func TestLoginIssuesValidAccessToken(t *testing.T) {
 	}
 	if pair.ExpiresIn != 1800 || pair.RefreshToken == "" {
 		t.Fatalf("unexpected token pair: %+v", pair)
+	}
+	if pair.UserID != "local-user" || pair.SessionID == "" {
+		t.Fatalf("token pair is missing internal identity context: %+v", pair)
 	}
 	claims := token.Claims.(jwt.MapClaims)
 	if claims["sub"] != "local-user" || claims["sid"] == "" || claims["jti"] == "" || claims["ver"] != float64(1) {
@@ -253,9 +255,8 @@ func TestLogoutRevokesDeviceSession(t *testing.T) {
 	service, err := NewService(Config{
 		JWTPrivateKey: privateKey, JWTKeyID: "test-key-1", Issuer: "local-platform-lab", Audience: "api-bff",
 		AccessTTL: 30 * time.Minute, RefreshTTL: 7 * 24 * time.Hour,
-		DemoEmail: "demo@local.test", DemoPassword: "local-demo-password", DemoUserID: "local-user",
 		TOTPEncryptionKey: "01234567890123456789012345678901", RecoveryCodePepper: "abcdefghijklmnopqrstuvwxyz123456",
-	}, store)
+	}, store, newMemoryCredentialStore(t))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -288,9 +289,8 @@ func TestRefreshRejectsOutdatedUserVersion(t *testing.T) {
 	service, err := NewService(Config{
 		JWTPrivateKey: privateKey, JWTKeyID: "test-key-1", Issuer: "local-platform-lab", Audience: "api-bff",
 		AccessTTL: 30 * time.Minute, RefreshTTL: 7 * 24 * time.Hour,
-		DemoEmail: "demo@local.test", DemoPassword: "local-demo-password", DemoUserID: "local-user",
 		TOTPEncryptionKey: "01234567890123456789012345678901", RecoveryCodePepper: "abcdefghijklmnopqrstuvwxyz123456",
-	}, store)
+	}, store, newMemoryCredentialStore(t))
 	if err != nil {
 		t.Fatal(err)
 	}

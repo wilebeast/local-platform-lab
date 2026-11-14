@@ -10,8 +10,8 @@ import (
 	"time"
 
 	userv1 "github.com/wilebeast/local-platform-lab/api/user/v1"
+	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/accountctx"
 	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/svc"
-	"github.com/zeromicro/go-zero/rest/httpx"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -34,10 +34,10 @@ func LoginHandler(serviceContext *svc.ServiceContext) http.HandlerFunc {
 			return
 		}
 		if result.GetSecondFactorRequired() {
-			httpx.OkJson(w, map[string]any{"secondFactorRequired": true, "authSessionToken": result.GetAuthSessionToken()})
+			writeJSON(w, http.StatusOK, map[string]any{"secondFactorRequired": true, "authSessionToken": result.GetAuthSessionToken()})
 			return
 		}
-		writeTokenResult(w, r, result.GetTokenPair(), nil)
+		writeLoginTokenResult(w, r, serviceContext, result.GetTokenPair(), nil)
 	}
 }
 
@@ -69,7 +69,7 @@ func VerifyLogin2FAHandler(serviceContext *svc.ServiceContext) http.HandlerFunc 
 			return
 		}
 		pair, err := serviceContext.UserClient.VerifyLogin2FA(r.Context(), &userv1.VerifyLogin2FARequest{AuthSessionToken: request.AuthSessionToken, Code: request.Code})
-		writeTokenResult(w, r, pair, err)
+		writeLoginTokenResult(w, r, serviceContext, pair, err)
 	}
 }
 
@@ -85,7 +85,7 @@ func TOTPOptionsHandler(serviceContext *svc.ServiceContext) http.HandlerFunc {
 			writeRPCError(w, err)
 			return
 		}
-		httpx.OkJson(w, map[string]any{"setupToken": result.GetSetupToken(), "otpauthUri": result.GetOtpauthUri()})
+		writeJSON(w, http.StatusOK, map[string]any{"setupToken": result.GetSetupToken(), "otpauthUri": result.GetOtpauthUri()})
 	}
 }
 
@@ -123,7 +123,7 @@ func UnbindTOTPHandler(serviceContext *svc.ServiceContext) http.HandlerFunc {
 			writeRPCError(w, err)
 			return
 		}
-		httpx.OkJson(w, map[string]any{"unbound": result.GetUnbound()})
+		writeJSON(w, http.StatusOK, map[string]any{"unbound": result.GetUnbound()})
 	}
 }
 
@@ -176,7 +176,7 @@ func FinishPasskeyRegistrationHandler(serviceContext *svc.ServiceContext) http.H
 			writeRPCError(w, err)
 			return
 		}
-		httpx.OkJson(w, map[string]any{"registered": result.GetRegistered(), "credentialId": result.GetCredentialId()})
+		writeJSON(w, http.StatusOK, map[string]any{"registered": result.GetRegistered(), "credentialId": result.GetCredentialId()})
 	}
 }
 
@@ -197,7 +197,7 @@ func FinishPasskeyLoginHandler(serviceContext *svc.ServiceContext) http.HandlerF
 		pair, err := serviceContext.UserClient.FinishPasskeyLogin(r.Context(), &userv1.FinishPasskeyLoginRequest{
 			CeremonyId: request.CeremonyID, ResponseJson: request.Credential,
 		})
-		writeTokenResult(w, r, pair, err)
+		writeLoginTokenResult(w, r, serviceContext, pair, err)
 	}
 }
 
@@ -215,7 +215,7 @@ func writePasskeyOptions(w http.ResponseWriter, result *userv1.PasskeyOptionsRes
 		writeError(w, http.StatusBadGateway, "user service returned invalid passkey options")
 		return
 	}
-	httpx.OkJson(w, map[string]any{"ceremonyId": result.GetCeremonyId(), "options": options})
+	writeJSON(w, http.StatusOK, map[string]any{"ceremonyId": result.GetCeremonyId(), "options": options})
 }
 
 func writeRecoveryCodes(w http.ResponseWriter, result *userv1.RecoveryCodesResponse, err error) {
@@ -223,7 +223,7 @@ func writeRecoveryCodes(w http.ResponseWriter, result *userv1.RecoveryCodesRespo
 		writeRPCError(w, err)
 		return
 	}
-	httpx.OkJson(w, map[string]any{"recoveryCodes": result.GetRecoveryCodes()})
+	writeJSON(w, http.StatusOK, map[string]any{"recoveryCodes": result.GetRecoveryCodes()})
 }
 
 func RefreshHandler(serviceContext *svc.ServiceContext) http.HandlerFunc {
@@ -243,7 +243,7 @@ func LogoutHandler(serviceContext *svc.ServiceContext) http.HandlerFunc {
 			return
 		}
 		clearAuthCookies(w)
-		httpx.OkJson(w, map[string]bool{"revoked": response.GetRevoked()})
+		writeJSON(w, http.StatusOK, map[string]bool{"revoked": response.GetRevoked()})
 	}
 }
 
@@ -264,8 +264,32 @@ func writeTokenResult(w http.ResponseWriter, r *http.Request, pair *userv1.Token
 		return
 	}
 	setAuthCookies(w, pair)
-	httpx.OkJson(w, map[string]any{
+	writeJSON(w, http.StatusOK, map[string]any{
 		"authenticated": true, "expiresIn": pair.GetExpiresIn(), "tokenType": pair.GetTokenType(),
+	})
+}
+
+func writeLoginTokenResult(w http.ResponseWriter, r *http.Request, serviceContext *svc.ServiceContext, pair *userv1.TokenPair, err error) {
+	if err != nil {
+		writeRPCError(w, err)
+		return
+	}
+	if pair == nil || pair.GetAccessToken() == "" || pair.GetRefreshToken() == "" || pair.GetUserId() == "" || pair.GetSessionId() == "" {
+		writeError(w, http.StatusBadGateway, "user service returned incomplete login context")
+		return
+	}
+	var accesses []accountctx.Access
+	if serviceContext != nil && serviceContext.AccountLogin != nil {
+		projection, initializeErr := serviceContext.AccountLogin.Initialize(r.Context(), accountctx.Actor{UserID: pair.GetUserId(), SessionID: pair.GetSessionId()})
+		if initializeErr != nil {
+			writeError(w, http.StatusBadGateway, "account context initialization failed")
+			return
+		}
+		accesses = projection.Accesses
+	}
+	setAuthCookies(w, pair)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"authenticated": true, "expiresIn": pair.GetExpiresIn(), "tokenType": pair.GetTokenType(), "accountAccesses": accesses,
 	})
 }
 

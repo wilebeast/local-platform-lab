@@ -2,6 +2,7 @@ FROM golang:1.26-alpine AS builder
 WORKDIR /src
 ENV GOPROXY=https://goproxy.cn,direct
 COPY api/user ./api/user
+COPY pkg/accountcontext ./pkg/accountcontext
 COPY pkg/serviceregistry ./pkg/serviceregistry
 COPY app/api-bff/go.mod app/api-bff/go.sum ./app/api-bff/
 WORKDIR /src/app/api-bff

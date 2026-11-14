@@ -43,22 +43,23 @@ type TOTPSetup struct {
 }
 
 func (s *Service) PrepareLogin(ctx context.Context, email, password string) (LoginPreparation, error) {
-	if !s.validCredentials(email, password) {
-		return LoginPreparation{}, ErrInvalidCredentials
+	identity, err := s.authenticatePassword(ctx, email, password)
+	if err != nil {
+		return LoginPreparation{}, err
 	}
-	secret, err := s.loadTOTPSecret(ctx, s.config.DemoUserID)
+	secret, err := s.loadTOTPSecret(ctx, identity.UserID)
 	if err != nil {
 		return LoginPreparation{}, err
 	}
 	if secret == "" {
-		pair, err := s.issue(ctx, s.config.DemoUserID)
+		pair, err := s.issue(ctx, identity.UserID)
 		return LoginPreparation{TokenPair: pair}, err
 	}
 	token, err := randomToken()
 	if err != nil {
 		return LoginPreparation{}, err
 	}
-	if err := s.factors.PutLoginSession(ctx, tokenHash(token), s.config.DemoUserID, loginSessionTTL); err != nil {
+	if err := s.factors.PutLoginSession(ctx, tokenHash(token), identity.UserID, loginSessionTTL); err != nil {
 		return LoginPreparation{}, err
 	}
 	return LoginPreparation{SecondFactorRequired: true, AuthSessionToken: token}, nil
@@ -80,8 +81,9 @@ func (s *Service) VerifyLogin2FA(ctx context.Context, sessionToken, code string)
 }
 
 func (s *Service) TOTPOptions(ctx context.Context, userID string) (TOTPSetup, error) {
-	if userID != s.config.DemoUserID {
-		return TOTPSetup{}, ErrInvalidCredentials
+	identity, err := s.activePasswordIdentity(ctx, userID)
+	if err != nil {
+		return TOTPSetup{}, err
 	}
 	existing, err := s.loadTOTPSecret(ctx, userID)
 	if err != nil {
@@ -90,7 +92,7 @@ func (s *Service) TOTPOptions(ctx context.Context, userID string) (TOTPSetup, er
 	if existing != "" {
 		return TOTPSetup{}, ErrTOTPAlreadyBound
 	}
-	key, err := totp.Generate(totp.GenerateOpts{Issuer: "Wildbeast Local", AccountName: s.config.DemoEmail})
+	key, err := totp.Generate(totp.GenerateOpts{Issuer: "Wildbeast Local", AccountName: identity.NormalizedEmail})
 	if err != nil {
 		return TOTPSetup{}, err
 	}
@@ -109,8 +111,8 @@ func (s *Service) TOTPOptions(ctx context.Context, userID string) (TOTPSetup, er
 }
 
 func (s *Service) ConfirmTOTP(ctx context.Context, userID, setupToken, code string) ([]string, error) {
-	if userID != s.config.DemoUserID {
-		return nil, ErrInvalidCredentials
+	if _, err := s.activePasswordIdentity(ctx, userID); err != nil {
+		return nil, err
 	}
 	encrypted, err := s.factors.ConsumeTOTPSetup(ctx, tokenHash(setupToken))
 	if err != nil || encrypted == "" {
@@ -137,7 +139,8 @@ func (s *Service) ConfirmTOTP(ctx context.Context, userID, setupToken, code stri
 }
 
 func (s *Service) UnbindTOTP(ctx context.Context, userID, password, code string) error {
-	if userID != s.config.DemoUserID || !s.validCredentials(s.config.DemoEmail, password) {
+	identity, err := s.activePasswordIdentity(ctx, userID)
+	if err != nil || !VerifyPassword(identity.PasswordHash, password) {
 		return ErrInvalidCredentials
 	}
 	valid, err := s.verifySecondFactor(ctx, userID, code)
@@ -166,10 +169,6 @@ func (s *Service) RegenerateRecoveryCodes(ctx context.Context, userID, code stri
 		return nil, err
 	}
 	return codes, nil
-}
-
-func (s *Service) validCredentials(email, password string) bool {
-	return hmac.Equal([]byte(email), []byte(s.config.DemoEmail)) && hmac.Equal([]byte(password), []byte(s.config.DemoPassword))
 }
 
 func (s *Service) verifySecondFactor(ctx context.Context, userID, code string) (bool, error) {

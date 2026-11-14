@@ -5,8 +5,28 @@ package account.v1;
 option go_package = "github.com/wilebeast/local-platform-lab/api/account/v1;accountv1";
 
 service AccountService {
+  rpc ListAccesses(ListAccessesRequest) returns (ListAccessesResponse);
   rpc GetSummary(GetSummaryRequest) returns (GetSummaryResponse);
   rpc GetLimits(GetLimitsRequest) returns (GetLimitsResponse);
+}
+
+message ListAccessesRequest {
+  string user_id = 1;
+}
+
+message AccountAccess {
+  string account_id = 1;
+  string account_uid = 2;
+  string account_type = 3;
+  string organization_id = 4;
+  string member_id = 5;
+  repeated string role_ids = 6;
+  string relationship = 7;
+}
+
+message ListAccessesResponse {
+  int64 permission_version = 1;
+  repeated AccountAccess accesses = 2;
 }
 
 message GetSummaryRequest {

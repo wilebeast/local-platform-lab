@@ -102,7 +102,7 @@ func TestInvokerPollsMetadataAndAtomicallyReloadsDescriptor(t *testing.T) {
 		t.Fatal("expected the original descriptor to reject tenantId")
 	}
 
-	updated := protodesc.ToFileDescriptorProto(userv1.File_v1_user_proto)
+	updated := protodesc.ToFileDescriptorProto(userv1.File_user_proto)
 	for _, message := range updated.MessageType {
 		if message.GetName() != "GetProfileRequest" {
 			continue
@@ -195,8 +195,12 @@ func TestReloadRejectsIncompatibleRequiredMethodAndKeepsSnapshot(t *testing.T) {
 		t.Fatalf("new invoker: %v", err)
 	}
 
-	incompatible := protodesc.ToFileDescriptorProto(userv1.File_v1_user_proto)
-	incompatible.Service[0].Method[0].ServerStreaming = proto.Bool(true)
+	incompatible := protodesc.ToFileDescriptorProto(userv1.File_user_proto)
+	for _, method := range incompatible.Service[0].Method {
+		if method.GetName() == "GetProfile" {
+			method.ServerStreaming = proto.Bool(true)
+		}
+	}
 	incompatibleDigest := writeDescriptorFile(t, descriptorPath, incompatible)
 	writeMetadata(t, metadataPath, incompatibleDigest)
 	if err := invoker.reloadIfChanged(); err == nil {
@@ -209,7 +213,7 @@ func TestReloadRejectsIncompatibleRequiredMethodAndKeepsSnapshot(t *testing.T) {
 
 func TestNewRejectsRequiredFieldTypeMismatch(t *testing.T) {
 	descriptorPath, _ := writeDescriptorSet(t)
-	incompatible := protodesc.ToFileDescriptorProto(userv1.File_v1_user_proto)
+	incompatible := protodesc.ToFileDescriptorProto(userv1.File_user_proto)
 	fieldType := descriptorpb.FieldDescriptorProto_TYPE_INT64
 	for _, message := range incompatible.MessageType {
 		if message.GetName() == "GetProfileRequest" {
@@ -242,7 +246,7 @@ func profileMethodContract() MethodContract {
 
 func writeDescriptorSet(t *testing.T) (string, string) {
 	t.Helper()
-	file := protodesc.ToFileDescriptorProto(userv1.File_v1_user_proto)
+	file := protodesc.ToFileDescriptorProto(userv1.File_user_proto)
 	path := filepath.Join(t.TempDir(), "user-service-v1.pb")
 	return path, writeDescriptorFile(t, path, file)
 }

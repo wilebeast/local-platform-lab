@@ -6,13 +6,18 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
 
 	userv1 "github.com/wilebeast/local-platform-lab/api/user/v1"
+	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/accountctx"
 	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/apikey"
 	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/config"
 	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/svc"
+	shared "github.com/wilebeast/local-platform-lab/pkg/accountcontext"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 type fakeAPIKeyValidator struct {
@@ -32,8 +37,18 @@ type fakeUserClient struct {
 	recoveryCodes       []string
 	passkeyOptions      *userv1.PasskeyOptionsResponse
 	passkeyRegistration *userv1.FinishPasskeyRegistrationResponse
+	registrationCode    *userv1.SendRegistrationCodeResponse
+	registrationError   error
+	registrationCall    func(*userv1.SendRegistrationCodeRequest)
 	permissionAllowed   bool
 	checkPermission     func(*userv1.CheckPermissionRequest)
+}
+
+func (f fakeUserClient) SendRegistrationCode(_ context.Context, request *userv1.SendRegistrationCodeRequest, _ ...grpc.CallOption) (*userv1.SendRegistrationCodeResponse, error) {
+	if f.registrationCall != nil {
+		f.registrationCall(request)
+	}
+	return f.registrationCode, f.registrationError
 }
 
 func (f fakeUserClient) CheckPermission(_ context.Context, request *userv1.CheckPermissionRequest, _ ...grpc.CallOption) (*userv1.CheckPermissionResponse, error) {
@@ -44,6 +59,44 @@ func (f fakeUserClient) CheckPermission(_ context.Context, request *userv1.Check
 }
 
 type fakeGenericCaller struct{}
+
+type capturingGenericCaller struct {
+	metadata metadata.MD
+}
+
+func (f *capturingGenericCaller) CallRoute(ctx context.Context, _ string, _ map[string]any) (map[string]any, error) {
+	f.metadata, _ = metadata.FromOutgoingContext(ctx)
+	return map[string]any{"accountId": "account-enterprise", "status": "active"}, nil
+}
+
+type fakeAccountContextManager struct {
+	selectedActor accountctx.Actor
+	selectedUID   string
+	value         shared.Context
+}
+
+func (f *fakeAccountContextManager) Select(_ context.Context, actor accountctx.Actor, accountUID string) (shared.Context, error) {
+	f.selectedActor, f.selectedUID = actor, accountUID
+	value := f.value
+	value.UserID, value.SessionID, value.AccountUID = actor.UserID, actor.SessionID, accountUID
+	return value, nil
+}
+
+func (f *fakeAccountContextManager) Resolve(_ context.Context, _ accountctx.Actor) (shared.Context, error) {
+	return f.value, nil
+}
+
+type fakeLoginInitializer struct {
+	actor accountctx.Actor
+}
+
+func (f *fakeLoginInitializer) Initialize(_ context.Context, actor accountctx.Actor) (accountctx.Projection, error) {
+	f.actor = actor
+	return accountctx.Projection{UserID: actor.UserID, PermissionVersion: 1, Accesses: []accountctx.Access{
+		{AccountID: "account-personal", AccountUID: "personal", AccountType: "personal", Relationship: "owner"},
+		{AccountID: "account-enterprise", AccountUID: "enterprise", AccountType: "enterprise", Relationship: "member"},
+	}}, nil
+}
 
 func (fakeGenericCaller) CallRoute(_ context.Context, route string, request map[string]any) (map[string]any, error) {
 	switch route {
@@ -106,7 +159,7 @@ func (f fakeUserClient) FinishPasskeyLogin(_ context.Context, _ *userv1.FinishPa
 
 func testServiceContextWithTokens() *svc.ServiceContext {
 	return &svc.ServiceContext{UserClient: fakeUserClient{tokenPair: &userv1.TokenPair{
-		AccessToken: "access-value", RefreshToken: "refresh-value", ExpiresIn: 1800, TokenType: "Bearer",
+		AccessToken: "access-value", RefreshToken: "refresh-value", ExpiresIn: 1800, TokenType: "Bearer", UserId: "user-1", SessionId: "session-1",
 	}}}
 }
 func (fakeUserClient) Refresh(_ context.Context, _ *userv1.RefreshRequest, _ ...grpc.CallOption) (*userv1.TokenPair, error) {
@@ -229,15 +282,24 @@ func TestProfileHandlerRejectsRawUserHeader(t *testing.T) {
 }
 
 func TestAccountHandlersUseAuthenticatedActor(t *testing.T) {
+	manager := &fakeAccountContextManager{value: shared.Context{
+		UserID: "user-123", SessionID: "session-123", AccountID: "account-user-123", AccountUID: "personal-user-123",
+		AccountType: "personal", PermissionVersion: 1, SelectedAt: time.Now().Unix(),
+	}}
+	signer, err := shared.NewSigner("01234567890123456789012345678901")
+	if err != nil {
+		t.Fatal(err)
+	}
+	serviceContext := &svc.ServiceContext{GenericRPC: fakeGenericCaller{}, AccountContexts: manager, AccountContextSigner: signer}
 	tests := []struct {
 		name    string
 		handler http.Handler
 		assert  func(map[string]any) bool
 	}{
-		{"summary", AccountSummaryHandler(&svc.ServiceContext{GenericRPC: fakeGenericCaller{}}), func(body map[string]any) bool {
+		{"summary", AccountSummaryHandler(serviceContext), func(body map[string]any) bool {
 			return body["accountId"] == "account-user-123" && body["status"] == "active"
 		}},
-		{"limits", AccountLimitsHandler(&svc.ServiceContext{GenericRPC: fakeGenericCaller{}}), func(body map[string]any) bool {
+		{"limits", AccountLimitsHandler(serviceContext), func(body map[string]any) bool {
 			return body["dailyLimitCents"] == float64(100000) && body["currency"] == "USD"
 		}},
 	}
@@ -245,7 +307,7 @@ func TestAccountHandlersUseAuthenticatedActor(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			recorder := httptest.NewRecorder()
 			request := httptest.NewRequest(http.MethodGet, "/api/v3/account/"+test.name, nil)
-			request = request.WithContext(context.WithValue(request.Context(), actorContextKey{}, Actor{UserID: "user-123"}))
+			request = request.WithContext(context.WithValue(request.Context(), actorContextKey{}, Actor{UserID: "user-123", SessionID: "session-123"}))
 			test.handler.ServeHTTP(recorder, request)
 			var body map[string]any
 			if err := json.Unmarshal(recorder.Body.Bytes(), &body); err != nil {
@@ -255,5 +317,42 @@ func TestAccountHandlersUseAuthenticatedActor(t *testing.T) {
 				t.Fatalf("unexpected response: status=%d body=%#v", recorder.Code, body)
 			}
 		})
+	}
+}
+
+func TestSelectAccountContextStoresSelectionForAuthenticatedSession(t *testing.T) {
+	manager := &fakeAccountContextManager{value: shared.Context{AccountID: "account-enterprise", AccountType: "enterprise", PermissionVersion: 3, SelectedAt: 100}}
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/api/v3/auth/account-context/select", strings.NewReader(`{"accountUid":"enterprise"}`))
+	request = request.WithContext(context.WithValue(request.Context(), actorContextKey{}, Actor{UserID: "user-1", SessionID: "session-phone"}))
+
+	SelectAccountContextHandler(&svc.ServiceContext{AccountContexts: manager}).ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK || manager.selectedActor.SessionID != "session-phone" || manager.selectedUID != "enterprise" {
+		t.Fatalf("unexpected selection: status=%d actor=%#v uid=%q body=%s", recorder.Code, manager.selectedActor, manager.selectedUID, recorder.Body.String())
+	}
+}
+
+func TestAccountHandlerSignsResolvedAccountContextIntoOutgoingRPCMetadata(t *testing.T) {
+	manager := &fakeAccountContextManager{value: shared.Context{
+		UserID: "user-1", SessionID: "session-phone", AccountID: "account-enterprise", AccountUID: "enterprise",
+		AccountType: "enterprise", PermissionVersion: 3, SelectedAt: time.Now().Unix(),
+	}}
+	signer, err := shared.NewSigner("01234567890123456789012345678901")
+	if err != nil {
+		t.Fatal(err)
+	}
+	caller := &capturingGenericCaller{}
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/api/v3/account/summary", nil)
+	request = request.WithContext(context.WithValue(request.Context(), actorContextKey{}, Actor{UserID: "user-1", SessionID: "session-phone"}))
+
+	AccountSummaryHandler(&svc.ServiceContext{GenericRPC: caller, AccountContexts: manager, AccountContextSigner: signer}).ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("unexpected response: %d %s", recorder.Code, recorder.Body.String())
+	}
+	if len(caller.metadata.Get("x-account-context")) != 1 || len(caller.metadata.Get("x-account-context-signature")) != 1 {
+		t.Fatalf("signed account context was not propagated: %#v", caller.metadata)
 	}
 }

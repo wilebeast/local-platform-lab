@@ -9,9 +9,11 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	accountv1 "github.com/wilebeast/local-platform-lab/api/account/v1"
 	accountserver "github.com/wilebeast/local-platform-lab/app/account-service/internal/server"
+	shared "github.com/wilebeast/local-platform-lab/pkg/accountcontext"
 	"github.com/wilebeast/local-platform-lab/pkg/serviceregistry"
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/zrpc"
@@ -28,6 +30,16 @@ func main() {
 	server := zrpc.MustNewServer(c, func(grpcServer *grpc.Server) {
 		accountv1.RegisterAccountServiceServer(grpcServer, accountserver.NewAccountServer())
 	})
+	interceptor, err := shared.UnaryServerInterceptor(
+		os.Getenv("INTERNAL_CONTEXT_SIGNATURE_KEY"),
+		30*time.Second,
+		accountv1.AccountService_ListAccesses_FullMethodName,
+		"/grpc.health.v1.Health/Check",
+	)
+	if err != nil {
+		log.Fatalf("configure account context interceptor: %v", err)
+	}
+	server.AddUnaryInterceptors(interceptor)
 	defer server.Stop()
 
 	podIP := os.Getenv("POD_IP")

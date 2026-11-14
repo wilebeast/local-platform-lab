@@ -3,16 +3,13 @@ package main
 import (
 	"testing"
 
-	"github.com/zeromicro/go-zero/core/conf"
-	"github.com/zeromicro/go-zero/zrpc"
+	userconfig "github.com/wilebeast/local-platform-lab/app/user-service/internal/config"
 )
 
 func TestSensitiveRPCPayloadsAreNotLogged(t *testing.T) {
-	var config zrpc.RpcServerConf
-	conf.MustLoad("../../etc/user-service.yaml", &config)
-	ignored := make(map[string]bool, len(config.Middlewares.StatConf.IgnoreContentMethods))
-	for _, method := range config.Middlewares.StatConf.IgnoreContentMethods {
-		ignored[method] = true
+	config, err := userconfig.Load("../../etc/user-service.yaml")
+	if err != nil {
+		t.Fatal(err)
 	}
 	for _, method := range []string{
 		"/user.v1.UserService/Login",
@@ -26,8 +23,36 @@ func TestSensitiveRPCPayloadsAreNotLogged(t *testing.T) {
 		"/user.v1.UserService/Refresh",
 		"/user.v1.UserService/Logout",
 	} {
-		if !ignored[method] {
+		if !config.IsSensitiveMethod(method) {
 			t.Errorf("sensitive RPC payload is still logged: %s", method)
+		}
+	}
+}
+
+func TestKubernetesDNSModeCanSkipExternalRegistryRegistration(t *testing.T) {
+	if registrationEnabled("disabled") {
+		t.Fatal("disabled registration mode must not contact Nacos or Etcd")
+	}
+	if !registrationEnabled("") || !registrationEnabled("both") {
+		t.Fatal("existing dual-registration behavior must remain the default")
+	}
+}
+
+func TestBootstrapIdentityRequiresExplicitOptIn(t *testing.T) {
+	tests := []struct {
+		value string
+		want  bool
+	}{
+		{value: "", want: false},
+		{value: "false", want: false},
+		{value: "disabled", want: false},
+		{value: "true", want: true},
+		{value: "1", want: true},
+		{value: " ENABLED ", want: true},
+	}
+	for _, test := range tests {
+		if got := bootstrapIdentityEnabled(test.value); got != test.want {
+			t.Fatalf("bootstrapIdentityEnabled(%q)=%v, want %v", test.value, got, test.want)
 		}
 	}
 }

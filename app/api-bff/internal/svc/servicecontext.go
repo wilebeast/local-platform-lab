@@ -9,11 +9,15 @@ import (
 	"strings"
 	"time"
 
+	kratosgrpc "github.com/go-kratos/kratos/v3/transport/grpc"
+	"github.com/redis/go-redis/v9"
 	"github.com/wilebeast/local-platform-lab/api/user/v1"
+	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/accountctx"
 	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/apikey"
 	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/authn"
 	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/config"
 	"github.com/wilebeast/local-platform-lab/app/api-bff/internal/genericrpc"
+	shared "github.com/wilebeast/local-platform-lab/pkg/accountcontext"
 	"github.com/wilebeast/local-platform-lab/pkg/serviceregistry"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -37,8 +41,25 @@ type ServiceContext struct {
 	RBACOrganizationID   string
 	APIKeyValidator      apikey.Validator
 	Ed25519Authenticator apikey.Ed25519RequestAuthenticator
+	AccountLogin         AccountLoginInitializer
+	AccountContexts      AccountContextManager
+	AccountContextSigner AccountContextAttacher
 	apiKeyDB             *sql.DB
 	apiKeyNonceStore     *apikey.RedisNonceStore
+	accountContextRedis  *redis.Client
+}
+
+type AccountLoginInitializer interface {
+	Initialize(context.Context, accountctx.Actor) (accountctx.Projection, error)
+}
+
+type AccountContextManager interface {
+	Select(context.Context, accountctx.Actor, string) (shared.Context, error)
+	Resolve(context.Context, accountctx.Actor) (shared.Context, error)
+}
+
+type AccountContextAttacher interface {
+	Attach(context.Context, shared.Context) (context.Context, error)
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -101,7 +122,11 @@ func NewServiceContext(c config.Config) *ServiceContext {
 			target = builder.Target()
 		}
 
-		conn, err := grpc.NewClient(target, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithDefaultServiceConfig(`{"loadBalancingConfig":[{"round_robin":{}}]}`))
+		conn, err := kratosgrpc.NewClient(context.Background(),
+			kratosgrpc.WithEndpoint(target),
+			kratosgrpc.WithTimeout(2*time.Second),
+			kratosgrpc.WithOptions(grpc.WithDefaultServiceConfig(`{"loadBalancingConfig":[{"round_robin":{}}]}`)),
+		)
 		if err != nil {
 			panic(err)
 		}
@@ -112,6 +137,26 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		if err := ctx.configureGenericRPC(c.GenericRPC.ReloadInterval, c.GenericRPC.Schemas, c.GenericRPC.Routes); err != nil {
 			panic(err)
 		}
+		secret := os.Getenv("INTERNAL_CONTEXT_SIGNATURE_KEY")
+		if secret == "" {
+			panic("INTERNAL_CONTEXT_SIGNATURE_KEY is required when generic account RPC is configured")
+		}
+		signer, err := shared.NewSigner(secret)
+		if err != nil {
+			panic(err)
+		}
+		redisClient := redis.NewClient(&redis.Options{Addr: envOr("REDIS_ADDR", "redis.redis.svc.cluster.local:6379")})
+		pingCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		if err := redisClient.Ping(pingCtx).Err(); err != nil {
+			_ = redisClient.Close()
+			panic(fmt.Errorf("connect to account context Redis: %w", err))
+		}
+		ctx.accountContextRedis = redisClient
+		accountResolver := accountctx.NewResolver(accountctx.NewRedisStore(redisClient), 7*24*time.Hour)
+		ctx.AccountContexts = accountResolver
+		ctx.AccountContextSigner = signer
+		ctx.AccountLogin = accountctx.NewLoginInitializer(accountctx.NewGenericProvider(ctx.GenericRPC), accountResolver)
 	}
 	return ctx
 }
@@ -125,6 +170,9 @@ func (s *ServiceContext) Close() error {
 	}
 	if s.AuthValidator != nil {
 		_ = s.AuthValidator.Close()
+	}
+	if s.accountContextRedis != nil {
+		_ = s.accountContextRedis.Close()
 	}
 	for _, invoker := range s.genericInvokers {
 		invoker.Close()

@@ -52,6 +52,8 @@ func TestCSRFRequiresMatchingCookieAndHeader(t *testing.T) {
 
 func TestLoginResponseUsesSecureHttpOnlyCookiesWithoutTokensInJSON(t *testing.T) {
 	serviceContext := testServiceContextWithTokens()
+	initializer := &fakeLoginInitializer{}
+	serviceContext.AccountLogin = initializer
 	request := httptest.NewRequest(http.MethodPost, "/api/v3/auth/login", strings.NewReader(`{"email":"demo@local.test","password":"local-demo-password"}`))
 	recorder := httptest.NewRecorder()
 	LoginHandler(serviceContext)(recorder, request)
@@ -60,6 +62,12 @@ func TestLoginResponseUsesSecureHttpOnlyCookiesWithoutTokensInJSON(t *testing.T)
 	}
 	if strings.Contains(recorder.Body.String(), "access-value") || strings.Contains(recorder.Body.String(), "refresh-value") {
 		t.Fatal("tokens must not be present in JSON response")
+	}
+	if !strings.Contains(recorder.Body.String(), `"accountUid":"personal"`) || !strings.Contains(recorder.Body.String(), `"accountUid":"enterprise"`) {
+		t.Fatalf("login response must expose selectable account accesses: %s", recorder.Body.String())
+	}
+	if initializer.actor.UserID != "user-1" || initializer.actor.SessionID != "session-1" {
+		t.Fatalf("initializer received wrong actor: %#v", initializer.actor)
 	}
 	cookies := recorder.Result().Cookies()
 	if len(cookies) != 3 {

@@ -18,7 +18,7 @@ GenericRPC:
       Version: 1.0.0
       DescriptorPath: /etc/api-bff/schemas/user-service-v1.pb
       MetadataPath: /etc/api-bff/schemas/user-service-v1.yaml
-      DescriptorSHA256: e8183a0d29943b4c49153a4c9c1068dfe9f45f59b953f94ffb7657982c8b1458
+      DescriptorSHA256: 7bbd533bcbdf1811e2529721c5b4fae80d6b2d388ac34c9d7b643d2374817026
       Target: dns:///user-service.user-service.svc.cluster.local:9001
       Provider: nacos
       NacosAddress: nacos.nacos.svc.cluster.local:8848
@@ -29,12 +29,21 @@ GenericRPC:
       Version: 1.0.0
       DescriptorPath: /etc/api-bff/schemas/account-service-v1.pb
       MetadataPath: /etc/api-bff/schemas/account-service-v1.yaml
-      DescriptorSHA256: cb4db4967febb44c0d7217183e9d54fbbc70e2c3786c5a6fbffbd1cb54950623
+      DescriptorSHA256: b3bfa2668df9ee18a2e6d7e67a0e166eeffdcea4b6d03380a3320aa4428711e3
       Target: dns:///account-service.account-service.svc.cluster.local:9002
       Provider: nacos
       NacosAddress: nacos.nacos.svc.cluster.local:8848
       EtcdEndpoints: etcd-client.etcd.svc.cluster.local:2379
   Routes:
+    - Name: list-account-accesses
+      SchemaRef: account-v1
+      Method: /account.v1.AccountService/ListAccesses
+      Timeout: 2s
+      InputFields:
+        - {ProtoName: user_id, JSONName: userId, Kind: string, Repeated: false}
+      OutputFields:
+        - {ProtoName: permission_version, JSONName: permissionVersion, Kind: int64, Repeated: false}
+        - {ProtoName: accesses, JSONName: accesses, Kind: message, Repeated: true}
     - Name: get-profile
       SchemaRef: user-v1
       Method: /user.v1.UserService/GetProfile
