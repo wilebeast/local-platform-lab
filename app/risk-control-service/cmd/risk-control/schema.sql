@@ -100,22 +100,53 @@ CREATE TABLE IF NOT EXISTS risk_decision_factor_definitions (
     policy_key TEXT NOT NULL,
     policy_version INTEGER NOT NULL,
     factor_key TEXT NOT NULL,
-    factor_type TEXT NOT NULL CHECK (factor_type IN ('value', 'expression', 'rpc', 'warehouse_feature')),
+    factor_type TEXT NOT NULL CHECK (factor_type IN ('value', 'expression', 'rpc', 'feature', 'warehouse_feature')),
     value_type TEXT NOT NULL CHECK (value_type IN ('int', 'double', 'string', 'bool', 'list<string>')),
     param_key TEXT NOT NULL DEFAULT '',
     expression TEXT NOT NULL DEFAULT '',
     resolver_key TEXT NOT NULL DEFAULT '',
     timeout_ms BIGINT NOT NULL DEFAULT 0 CHECK (timeout_ms >= 0),
+    feature_set_key TEXT NOT NULL DEFAULT '',
+    feature_set_version INTEGER NOT NULL DEFAULT 0 CHECK (feature_set_version >= 0),
+    feature_key TEXT NOT NULL DEFAULT '',
     PRIMARY KEY (policy_key, policy_version, factor_key),
     FOREIGN KEY (policy_key, policy_version)
         REFERENCES risk_decision_policy_versions(policy_key, policy_version)
 );
 
 ALTER TABLE risk_decision_factor_definitions
+    ADD COLUMN IF NOT EXISTS feature_set_key TEXT NOT NULL DEFAULT '';
+ALTER TABLE risk_decision_factor_definitions
+    ADD COLUMN IF NOT EXISTS feature_set_version INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE risk_decision_factor_definitions
+    ADD COLUMN IF NOT EXISTS feature_key TEXT NOT NULL DEFAULT '';
+
+ALTER TABLE risk_decision_factor_definitions
     DROP CONSTRAINT IF EXISTS risk_decision_factor_definitions_factor_type_check;
 ALTER TABLE risk_decision_factor_definitions
     ADD CONSTRAINT risk_decision_factor_definitions_factor_type_check
-    CHECK (factor_type IN ('value', 'expression', 'rpc', 'warehouse_feature'));
+    CHECK (factor_type IN ('value', 'expression', 'rpc', 'feature', 'warehouse_feature'));
+
+ALTER TABLE risk_decision_factor_definitions
+    DROP CONSTRAINT IF EXISTS risk_decision_feature_factor_reference_check;
+ALTER TABLE risk_decision_factor_definitions
+    ADD CONSTRAINT risk_decision_feature_factor_reference_check CHECK (
+        (
+            factor_type = 'feature'
+            AND length(feature_set_key) > 0
+            AND feature_set_version > 0
+            AND length(feature_key) > 0
+            AND param_key = ''
+            AND expression = ''
+            AND resolver_key = ''
+            AND timeout_ms = 0
+        ) OR (
+            factor_type <> 'feature'
+            AND feature_set_key = ''
+            AND feature_set_version = 0
+            AND feature_key = ''
+        )
+    );
 
 CREATE TABLE IF NOT EXISTS risk_decision_rules (
     policy_key TEXT NOT NULL,

@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package feature.v1;
+
+option go_package = "github.com/wilebeast/local-platform-lab/app/risk-control-service/api/feature/v1;featurev1";
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+service FeatureServingService {
+  rpc BatchGetLatestBefore(BatchGetLatestBeforeRequest) returns (BatchGetResponse);
+  rpc BatchGetAt(BatchGetAtRequest) returns (BatchGetResponse);
+}
+
+message Subject {
+  string type = 1;
+  map<string, string> keys = 2;
+}
+
+message FeatureRef {
+  string feature_set_key = 1;
+  int32 feature_set_version = 2;
+  string feature_key = 3;
+}
+
+message BatchGetLatestBeforeRequest {
+  string request_id = 1;
+  repeated Subject subjects = 2;
+  repeated FeatureRef features = 3;
+  google.protobuf.Timestamp cutoff = 4;
+  google.protobuf.Duration max_age = 5;
+}
+
+message BatchGetAtRequest {
+  string request_id = 1;
+  repeated Subject subjects = 2;
+  repeated FeatureRef features = 3;
+  google.protobuf.Timestamp as_of = 4;
+}
+
+enum ValueStatus {
+  VALUE_STATUS_UNSPECIFIED = 0;
+  VALUE_STATUS_SUCCESS = 1;
+  VALUE_STATUS_MISSING = 2;
+  VALUE_STATUS_UNDEFINED = 3;
+  VALUE_STATUS_STALE = 4;
+  VALUE_STATUS_ERROR = 5;
+}
+
+message FeatureValue {
+  Subject subject = 1;
+  FeatureRef feature = 2;
+  string value_type = 3;
+  ValueStatus status = 4;
+  oneof value {
+    bool bool_value = 5;
+    int64 int_value = 6;
+    double double_value = 7;
+    string string_value = 8;
+    google.protobuf.Timestamp timestamp_value = 9;
+    google.protobuf.Duration duration_value = 10;
+    string json_value = 11;
+  }
+  google.protobuf.Timestamp snapshot_as_of = 12;
+  google.protobuf.Timestamp computed_at = 13;
+  string source_run_id = 14;
+  string content_fingerprint = 15;
+  string error_code = 16;
+}
+
+message BatchGetResponse {
+  string request_id = 1;
+  repeated FeatureValue values = 2;
+}

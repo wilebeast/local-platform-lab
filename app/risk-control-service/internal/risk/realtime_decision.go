@@ -97,7 +97,10 @@ func (s *RealtimeDecisionService) Decide(
 	}
 
 	reasonCodes, _ := json.Marshal(evaluation.ReasonCodes)
-	factors, _ := json.Marshal(evaluation.Factors.Values())
+	factors, err := marshalFactorSnapshot(evaluation.Factors)
+	if err != nil {
+		return DurableRealtimeDecision{}, false, err
+	}
 	strategyResults, _ := json.Marshal(evaluation.StrategyResults)
 	evaluatedAt := time.Now().UTC()
 	_, err = tx.Exec(ctx, `
@@ -191,13 +194,10 @@ func loadDurableRealtimeDecision(
 		result.MatchedRuleKey = *matchedRule
 	}
 	_ = json.Unmarshal(strategyResultsJSON, &result.StrategyResults)
-	var values map[string]any
-	_ = json.Unmarshal(factorSnapshotJSON, &values)
-	results := make(map[string]FactorResult, len(values))
-	for key, value := range values {
-		results[key] = FactorResult{Key: key, Status: FactorStatusSuccess, Value: value}
+	result.Factors, err = unmarshalFactorSnapshot(factorSnapshotJSON)
+	if err != nil {
+		return result, "", fmt.Errorf("decode factor snapshot: %w", err)
 	}
-	result.Factors = FactorSnapshot{results: results}
 
 	rows, err := query.Query(ctx, `
 		SELECT action_id,evaluation_id,sequence_no,action_code,params,status,attempt_count,last_error
@@ -222,4 +222,31 @@ func loadDurableRealtimeDecision(
 		result.Actions = append(result.Actions, PolicyAction{ActionCode: job.ActionCode, Params: clonePolicyActionParams(job.Params)})
 	}
 	return result, fingerprint, rows.Err()
+}
+
+func marshalFactorSnapshot(snapshot FactorSnapshot) ([]byte, error) {
+	return json.Marshal(snapshot.Results())
+}
+
+func unmarshalFactorSnapshot(encoded []byte) (FactorSnapshot, error) {
+	var rawValues map[string]json.RawMessage
+	if err := json.Unmarshal(encoded, &rawValues); err != nil {
+		return FactorSnapshot{}, err
+	}
+	results := make(map[string]FactorResult, len(rawValues))
+	for key, raw := range rawValues {
+		var result FactorResult
+		if len(raw) > 0 && raw[0] == '{' {
+			if err := json.Unmarshal(raw, &result); err == nil && result.Key != "" && result.Status != "" {
+				results[key] = result
+				continue
+			}
+		}
+		var value any
+		if err := json.Unmarshal(raw, &value); err != nil {
+			return FactorSnapshot{}, fmt.Errorf("decode legacy factor %q: %w", key, err)
+		}
+		results[key] = FactorResult{Key: key, Status: FactorStatusSuccess, Value: value}
+	}
+	return FactorSnapshot{results: results}, nil
 }

@@ -149,7 +149,8 @@ func (p *WarehouseFeatureFactorProvider) NewFactor(definition risk.FactorDefinit
 	if definition.ValueType != adapter.ValueType() {
 		return nil, fmt.Errorf("warehouse feature %q expects %s, got %s", definition.Key, adapter.ValueType(), definition.ValueType)
 	}
-	if definition.ParamKey != "" || definition.Expression != "" || definition.Timeout != 0 {
+	if definition.ParamKey != "" || definition.Expression != "" || definition.Timeout != 0 ||
+		definition.FeatureSetKey != "" || definition.FeatureSetVersion != 0 || definition.FeatureKey != "" {
 		return nil, fmt.Errorf("warehouse feature factor %q must define only resolver_key", definition.Key)
 	}
 	return &warehouseFeatureFactor{key: definition.Key, reader: p.reader, adapter: adapter}, nil

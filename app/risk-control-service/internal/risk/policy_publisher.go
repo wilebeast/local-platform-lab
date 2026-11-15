@@ -19,8 +19,20 @@ type PolicyPublication struct {
 }
 
 type PolicyPublisher struct {
-	store       *PostgresStore
-	rpcAdapters *RPCFactorAdapterRegistry
+	store               *PostgresStore
+	rpcAdapters         *RPCFactorAdapterRegistry
+	additionalProviders []FactorProvider
+}
+
+func NewPolicyPublisherWithProviders(
+	store *PostgresStore,
+	rpcAdapters *RPCFactorAdapterRegistry,
+	additionalProviders []FactorProvider,
+) *PolicyPublisher {
+	return &PolicyPublisher{
+		store: store, rpcAdapters: rpcAdapters,
+		additionalProviders: append([]FactorProvider(nil), additionalProviders...),
+	}
 }
 
 func NewPolicyPublisher(
@@ -64,7 +76,9 @@ func (p *PolicyPublisher) Publish(
 	if err != nil {
 		return PolicyPublication{}, err
 	}
-	snapshot, err := CompilePolicySnapshot(definition.Policy, definition.Factors, p.rpcAdapters)
+	snapshot, err := CompilePolicySnapshotWithProviders(
+		definition.Policy, definition.Factors, p.rpcAdapters, p.additionalProviders,
+	)
 	if err != nil {
 		return PolicyPublication{}, fmt.Errorf("compile policy before publication: %w", err)
 	}

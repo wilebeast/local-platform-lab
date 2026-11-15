@@ -29,4 +29,30 @@ if ! kubectl --context "$KUBE_CONTEXT" -n risk-control-lab get secret risk-wareh
     >/dev/null
 fi
 
-echo "Risk control database, object-storage and warehouse credentials are stored only in Kubernetes Secrets."
+if ! kubectl --context "$KUBE_CONTEXT" -n risk-control-lab get secret risk-feature-admin-runtime >/dev/null 2>&1; then
+  operator_token="$(openssl rand -hex 32)"
+  reviewer_token="$(openssl rand -hex 32)"
+  emergency_token="$(openssl rand -hex 32)"
+  operator_digest="$(printf '%s' "$operator_token" | shasum -a 256 | awk '{print $1}')"
+  reviewer_digest="$(printf '%s' "$reviewer_token" | shasum -a 256 | awk '{print $1}')"
+  emergency_digest="$(printf '%s' "$emergency_token" | shasum -a 256 | awk '{print $1}')"
+  credentials_json="$(
+    jq -cn \
+      --arg operator "$operator_digest" \
+      --arg reviewer "$reviewer_digest" \
+      --arg emergency "$emergency_digest" \
+      '[
+        {subject:"feature-operator",token_sha256:$operator,roles:["feature_operator"]},
+        {subject:"feature-reviewer",token_sha256:$reviewer,roles:["feature_reviewer"]},
+        {subject:"feature-incident-commander",token_sha256:$emergency,roles:["feature_emergency_operator"]}
+      ]'
+  )"
+  kubectl --context "$KUBE_CONTEXT" -n risk-control-lab create secret generic risk-feature-admin-runtime \
+    --from-literal=credentials-json="$credentials_json" \
+    --from-literal=operator-token="$operator_token" \
+    --from-literal=reviewer-token="$reviewer_token" \
+    --from-literal=emergency-token="$emergency_token" \
+    >/dev/null
+fi
+
+echo "Risk control database, object-storage, warehouse and Feature Admin credentials are stored only in Kubernetes Secrets."

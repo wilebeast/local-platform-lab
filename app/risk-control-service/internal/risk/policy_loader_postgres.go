@@ -47,7 +47,8 @@ func loadPolicyDefinition(
 	}
 
 	factorRows, err := q.Query(ctx, `
-		SELECT factor_key, factor_type, value_type, param_key, expression, resolver_key, timeout_ms
+		SELECT factor_key, factor_type, value_type, param_key, expression, resolver_key, timeout_ms,
+		       feature_set_key, feature_set_version, feature_key
 		FROM risk_decision_factor_definitions
 		WHERE policy_key=$1 AND policy_version=$2
 		ORDER BY factor_key`, policyKey, version)
@@ -65,6 +66,9 @@ func loadPolicyDefinition(
 			&factor.Expression,
 			&factor.ResolverKey,
 			&timeoutMilliseconds,
+			&factor.FeatureSetKey,
+			&factor.FeatureSetVersion,
+			&factor.FeatureKey,
 		); err != nil {
 			factorRows.Close()
 			return StoredPolicyDefinition{}, err

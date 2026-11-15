@@ -3,7 +3,42 @@ package risk
 import (
 	"context"
 	"testing"
+	"time"
 )
+
+func TestFactorSnapshotPersistencePreservesEvidenceAndReadsLegacyValues(t *testing.T) {
+	asOf := time.Date(2026, 11, 15, 14, 0, 0, 0, time.UTC)
+	snapshot := FactorSnapshot{results: map[string]FactorResult{
+		"outflow_ratio_24h": {
+			Key: "outflow_ratio_24h", Status: FactorStatusSuccess, Value: float64(0.95),
+			Evidence: &FactorEvidence{
+				SourceType: "feature", SourceRef: "subject_fund_activity:1:outflow_ratio",
+				SnapshotAsOf: asOf, SourceRunID: "feature-run-001", ContentFingerprint: "fingerprint",
+			},
+		},
+	}}
+	encoded, err := marshalFactorSnapshot(snapshot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	decoded, err := unmarshalFactorSnapshot(encoded)
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, found := decoded.Result("outflow_ratio_24h")
+	if !found || result.Evidence == nil || result.Evidence.SourceRunID != "feature-run-001" || result.Value != float64(0.95) {
+		t.Fatalf("factor evidence was not preserved: %+v", result)
+	}
+
+	legacy, err := unmarshalFactorSnapshot([]byte(`{"amount_minor":150000}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	legacyResult, found := legacy.Result("amount_minor")
+	if !found || legacyResult.Status != FactorStatusSuccess || legacyResult.Value != float64(150000) {
+		t.Fatalf("legacy factor snapshot was not preserved: %+v", legacyResult)
+	}
+}
 
 func TestRealtimeDecisionServicePersistsOneEvaluationAndActionForExactRetries(t *testing.T) {
 	ctx := context.Background()

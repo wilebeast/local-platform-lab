@@ -74,6 +74,29 @@ func TestPolicyPublisherLeavesInvalidDraftUnpublished(t *testing.T) {
 	}
 }
 
+func TestPolicyPublisherPublishesFeatureFactorWithRegisteredProvider(t *testing.T) {
+	ctx := context.Background()
+	pool := newPolicyPublisherTestPool(t, ctx)
+	insertPolicyPublisherFeatureFixture(t, ctx, pool, "feature_policy")
+
+	publisher := NewPolicyPublisherWithProviders(
+		NewPostgresStore(pool),
+		NewRPCFactorAdapterRegistry(),
+		[]FactorProvider{publisherTestFeatureProvider{}},
+	)
+	publication, err := publisher.Publish(ctx, "feature_policy", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	evaluation, err := publication.Snapshot.Evaluate(ctx, map[string]any{"__feature_inflow_minor": int64(100_000)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if evaluation.Decision != "block" {
+		t.Fatalf("decision=%q, want block", evaluation.Decision)
+	}
+}
+
 func TestPublishedPolicyDefinitionIsImmutable(t *testing.T) {
 	ctx := context.Background()
 	pool := newPolicyPublisherTestPool(t, ctx)
@@ -185,4 +208,39 @@ func insertPolicyPublisherFixture(
 			t.Fatal(err)
 		}
 	}
+}
+
+func insertPolicyPublisherFeatureFixture(t *testing.T, ctx context.Context, pool *pgxpool.Pool, policyKey string) {
+	t.Helper()
+	statements := []struct {
+		query string
+		args  []any
+	}{
+		{`INSERT INTO risk_decision_policy_versions(
+			policy_key, policy_version, status, default_decision, default_reason_codes)
+		 VALUES ($1, 1, 'draft', 'pass', '[]')`, []any{policyKey}},
+		{`INSERT INTO risk_decision_factor_definitions(
+			policy_key, policy_version, factor_key, factor_type, value_type,
+			feature_set_key, feature_set_version, feature_key)
+		 VALUES ($1, 1, 'inflow_minor_24h', 'feature', 'int',
+			'subject_fund_activity', 1, 'inflow_minor')`, []any{policyKey}},
+		{`INSERT INTO risk_decision_rules(policy_key, policy_version, rule_key, rule_version, expression)
+		 VALUES ($1, 1, 'high_inflow', 1, 'inflow_minor_24h >= 50000')`, []any{policyKey}},
+		{`INSERT INTO risk_decision_strategies(
+			policy_key, policy_version, strategy_key, rule_key, priority, decision, reason_codes)
+		 VALUES ($1, 1, 'block_high_inflow', 'high_inflow', 100, 'block', '[]')`, []any{policyKey}},
+	}
+	for _, statement := range statements {
+		if _, err := pool.Exec(ctx, statement.query, statement.args...); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+type publisherTestFeatureProvider struct{}
+
+func (publisherTestFeatureProvider) Type() FactorType { return FactorTypeFeature }
+
+func (publisherTestFeatureProvider) NewFactor(definition FactorDefinition) (Factor, error) {
+	return &valueFactor{key: definition.Key, paramKey: "__feature_inflow_minor", valueType: definition.ValueType}, nil
 }

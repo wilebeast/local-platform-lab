@@ -18,6 +18,7 @@ const (
 	FactorTypeValue            FactorType = "value"
 	FactorTypeExpression       FactorType = "expression"
 	FactorTypeRPC              FactorType = "rpc"
+	FactorTypeFeature          FactorType = "feature"
 	FactorTypeWarehouseFeature FactorType = "warehouse_feature"
 )
 
@@ -34,13 +35,16 @@ const (
 // FactorDefinition is consumed while compiling a policy snapshot. Runtime
 // evaluation uses the immutable Factor returned by a FactorProvider instead.
 type FactorDefinition struct {
-	Key         string
-	Type        FactorType
-	ValueType   FactorValueType
-	ParamKey    string
-	Expression  string
-	ResolverKey string
-	Timeout     time.Duration
+	Key               string
+	Type              FactorType
+	ValueType         FactorValueType
+	ParamKey          string
+	Expression        string
+	ResolverKey       string
+	Timeout           time.Duration
+	FeatureSetKey     string
+	FeatureSetVersion int
+	FeatureKey        string
 }
 
 type FactorStatus string
@@ -57,6 +61,18 @@ type FactorResult struct {
 	Value        any
 	ErrorCode    string
 	ErrorMessage string
+	Evidence     *FactorEvidence
+}
+
+// FactorEvidence records where one resolved factor value came from. It is
+// immutable evaluation evidence, not a cache or a live data handle.
+type FactorEvidence struct {
+	SourceType         string
+	SourceRef          string
+	SnapshotAsOf       time.Time
+	ComputedAt         time.Time
+	SourceRunID        string
+	ContentFingerprint string
 }
 
 // FactorRuntime contains mutable values for exactly one policy evaluation.
@@ -114,7 +130,7 @@ func (*ValueFactorProvider) NewFactor(definition FactorDefinition) (Factor, erro
 	if err := validateFactorDefinitionBase(definition); err != nil {
 		return nil, err
 	}
-	if definition.ParamKey == "" || definition.Expression != "" || definition.ResolverKey != "" {
+	if definition.ParamKey == "" || definition.Expression != "" || definition.ResolverKey != "" || hasFeatureReference(definition) {
 		return nil, fmt.Errorf("value factor %q must define only param_key", definition.Key)
 	}
 	return &valueFactor{key: definition.Key, paramKey: definition.ParamKey, valueType: definition.ValueType}, nil
@@ -175,7 +191,7 @@ func (p *ExpressionFactorProvider) NewFactor(definition FactorDefinition) (Facto
 	if err := validateFactorDefinitionBase(definition); err != nil {
 		return nil, err
 	}
-	if definition.Expression == "" || definition.ParamKey != "" || definition.ResolverKey != "" {
+	if definition.Expression == "" || definition.ParamKey != "" || definition.ResolverKey != "" || hasFeatureReference(definition) {
 		return nil, fmt.Errorf("expression factor %q must define only expression", definition.Key)
 	}
 	ast, issues := p.environment.Compile(definition.Expression)
@@ -331,7 +347,7 @@ func (p *RPCFactorProvider) NewFactor(definition FactorDefinition) (Factor, erro
 	if err := validateFactorDefinitionBase(definition); err != nil {
 		return nil, err
 	}
-	if definition.ResolverKey == "" || definition.ParamKey != "" || definition.Expression != "" {
+	if definition.ResolverKey == "" || definition.ParamKey != "" || definition.Expression != "" || hasFeatureReference(definition) {
 		return nil, fmt.Errorf("RPC factor %q must define only resolver_key", definition.Key)
 	}
 	if definition.Timeout <= 0 {
@@ -386,6 +402,10 @@ func validateFactorDefinitionBase(definition FactorDefinition) error {
 	}
 	_, err := celFactorType(string(definition.ValueType))
 	return err
+}
+
+func hasFeatureReference(definition FactorDefinition) bool {
+	return definition.FeatureSetKey != "" || definition.FeatureSetVersion != 0 || definition.FeatureKey != ""
 }
 
 func convertFactorValue(value any, valueType FactorValueType) (any, error) {

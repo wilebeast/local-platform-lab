@@ -154,6 +154,94 @@ _Avoid_: Block Decision, Finding
 The operational container for human investigation, evidence, assignment, review, and resolution.
 _Avoid_: Evaluation, Finding
 
+**Feature Platform**:
+The governed capability that defines, computes, versions, materializes, serves, and audits reusable feature data across real-time, nearline, and offline consumers.
+_Avoid_: Feature Store, Risk Engine, Data Warehouse
+
+**Feature Subject Type**:
+The stable business kind and join-key shape for which feature values are computed, such as organization, user, merchant, account, card, or provider channel.
+_Avoid_: Tenant, Source Domain, Subject Instance
+
+**Feature Source**:
+A governed reference to facts from which features may be computed, with an explicit owner, schema, business-time meaning, and subject mapping.
+_Avoid_: Arbitrary SQL, Temporary File, Feature Snapshot
+
+**Feature Set Version**:
+An immutable published version of related feature definitions that share a subject key, window or snapshot grain, materialization lifecycle, owner, and quality boundary.
+_Avoid_: Database Table, Feature Bundle, Policy Version
+
+**Feature Set Key**:
+The stable identity of a related group of Features that share subject, grain, computation, materialization, ownership, and quality lifecycle, such as `subject_fund_activity`.
+_Avoid_: Feature Key, Physical Table Name, Factor Key
+
+**Feature Key**:
+The stable identity of one typed value inside a Feature Set Version, such as `outflow_ratio` inside `subject_fund_activity` version 2.
+_Avoid_: Feature Set Key, Factor Key, Column Position
+
+**Feature Definition**:
+The governed meaning, type, unit, defined-when condition, freshness, and availability contract of one reusable feature within a Feature Set Version.
+_Avoid_: Factor Value, Rule Condition, Table Column
+
+**Feature Computation**:
+The versioned contract that describes how a Feature Set is derived from governed Feature Sources in batch, streaming, or externally managed computation.
+_Avoid_: Rule Expression, Arbitrary Online Script, Materialization Run
+
+**Feature Reference**:
+The complete, immutable identity of one Feature: Feature Set Key + Feature Set Version + Feature Key.
+_Avoid_: Factor Key, Latest Feature, Database Column
+
+**Feature Factor Binding**:
+The governed dependency from one versioned Feature Factor Definition to one published Feature Reference. Rules and Strategies are not part of this binding.
+_Avoid_: Policy Feature Bundle, Runtime Read Log, Feature Value
+
+**Feature Fetch Plan**:
+A transient runtime optimization compiled from the Feature Factor Definitions actually used by one policy snapshot, grouping Feature References into batch reads. It is not persisted as a Policy or Strategy domain object.
+_Avoid_: Feature Bundle, Policy Definition, Feature Snapshot
+
+**Feature Materialization**:
+The production of versioned Feature Snapshots from a published Feature Computation for a business-time cutoff or event-time progression.
+_Avoid_: Policy Evaluation, Feature Read, Current Projection
+
+**Feature History**:
+The immutable sequence of point-in-time Feature Snapshots retained for replay, audit, batch analysis, and historical retrieval.
+_Avoid_: Current Projection, Evaluation Evidence
+
+**Feature Current Projection**:
+A rebuildable, low-latency view of the latest eligible Feature Snapshot for each feature-set version and subject key.
+_Avoid_: Feature History, Source of Truth, In-Process Cache
+
+**Online Feature Store**:
+The low-latency storage adapter that serves the Current Projection for LatestBefore reads. It is rebuildable from governed snapshots and does not replace immutable Feature History.
+_Avoid_: Feature History, Policy Cache, Source of Truth
+
+**Feature Serving Shadow Comparison**:
+A persisted comparison between a candidate Online Store result and the current reference result for the same request, feature-set version, subject, and cutoff. Shadow mismatches create evidence but do not change the returned business value.
+_Avoid_: Feature Reconciliation Run, Risk Decision, Silent Fallback
+
+**Feature Serving Promotion Assessment**:
+An immutable evaluation of whether a Feature Set Version has enough time coverage, consistency, availability, freshness, and latency evidence to move from shadow to online serving.
+_Avoid_: Feature Publication, Policy Publication, Automatic Source Switch
+
+**Feature Serving Route**:
+The versioned operational choice between shadow and online LatestBefore reading for one Feature Set Version. It does not change Feature or Factor meaning, and historical reads remain on Feature History.
+_Avoid_: Policy Route, Traffic Route, Feature Factor Binding
+
+**Feature Serving Change Request**:
+An audited request to change one Feature Set Version's Serving Route, created by an operator and independently approved or rejected by a reviewer after current evidence is reassessed.
+_Avoid_: Direct Route Update, Feature Publication, Policy Approval
+
+**Feature Serving Health Alert**:
+A durable observation that an online Feature Serving Route exceeded its consistency, availability, freshness, or latency contract for an explicit evidence window and route generation. It may recommend rollback but never performs it automatically.
+_Avoid_: Automatic Rollback, Risk Finding, Feature Quality Result
+
+**Emergency Feature Serving Rollback**:
+An explicitly authorized and audited Route change from online back to shadow after an operational incident. It restores the reference read path without changing Feature, Factor, Rule, or Policy meaning.
+_Avoid_: Silent Fallback, Delete Candidate, Policy Rollback
+
+**Feature Serving Service**:
+The read boundary that resolves versioned Feature references against current or historical snapshots while enforcing time, freshness, type, and access semantics.
+_Avoid_: Feature Bundle, Risk Decision Service, Database Client
+
 **Feature Snapshot**:
 An immutable, point-in-time set of warehouse-derived feature values identified by feature-set version, subject, `as_of`, and source run.
 _Avoid_: Factor Value, Current Projection
