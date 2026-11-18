@@ -91,7 +91,16 @@ Point-in-time Correctness
 Freshness / Quality / Lineage / Monitoring
 ```
 
-## 3. 核心学习资料
+## 3. 学习资料与行业案例
+
+本章区分两类来源，避免把商业产品文档误当成可完整复现的学习教材：
+
+| 类型 | 定位 | 本文中的资料 |
+| --- | --- | --- |
+| 核心学习资料 | 可以系统阅读、查看源码或亲自运行 | Fraud Detection Handbook、AutoGluon、Chronon、Feathr、Feast、Google Rules of ML |
+| 行业案例资料 | 用于观察产品边界和架构取舍，不能据此复现完整内部系统 | Stripe Radar、Amazon Fraud Detector历史文档、SageMaker Feature Store、Uber Palette/Michelangelo |
+
+商业产品的公开文档仍有参考价值，但不作为本学习路径的实践前提，也不要求购买或开通相应服务。
 
 ### 3.1 风控业务与特征设计
 
@@ -113,7 +122,27 @@ Freshness / Quality / Lineage / Monitoring
 
 建议产物：独立实现一组账户与支付工具的 `1h/24h/7d` 窗口特征，并解释每个特征对应的风险假设。
 
-#### 资料 B：Stripe Radar
+#### 资料 B：AutoGluon与开源欺诈检测实践
+
+- [AutoGluon官方文档](https://auto.gluon.ai/)
+- [AutoGluon Tabular教程](https://auto.gluon.ai/stable/tutorials/tabular/index.html)
+- [AWS开源欺诈检测示例](https://github.com/aws-solutions-library-samples/fraud-detection-using-machine-learning)
+
+重点学习：
+
+- 欺诈检测如何建模为表格数据分类问题；
+- 数值、类别、文本与时间字段的预处理；
+- 类别不平衡、训练验证切分与指标选择；
+- 从离线训练到批量或在线预测的基本边界；
+- Feature工程、模型分数与规则Decision如何分工。
+
+AutoGluon本身是开源项目，可以在本地运行。AWS示例的代码可以公开阅读，但如果部署其云资源可能产生费用，不作为本学习路径的必做步骤。
+
+建议产物：使用公开欺诈数据在本地训练一个基线分类模型，输出特征重要性、Precision、Recall和阈值变化结果；不要把模型训练与Feature Platform建设混成同一个模块。
+
+#### 行业案例 A：Stripe Radar
+
+> Stripe Radar是收费商业风控产品。下面的公开文章只用于理解真实支付风控可能使用的信号与产品取舍，不是可复现的实现教程。
 
 - [Stripe Radar Technical Guide](https://stripe.com/guides/primer-on-machine-learning-for-fraud-protection)
 - [How we built Stripe Radar](https://stripe.com/blog/how-we-built-it-stripe-radar)
@@ -130,8 +159,11 @@ Freshness / Quality / Lineage / Monitoring
 
 建议产物：整理一张“当前事件、主体画像、速度、关系网络、反馈标签”的风险信号矩阵。
 
-#### 资料 C：Amazon Fraud Detector
+#### 行业案例 B：Amazon Fraud Detector历史文档
 
+> Amazon Fraud Detector是AWS托管商业产品，并已从2025年11月7日起停止接受新客户。这里只把历史文档作为事件、变量、实体、标签和Outcome等领域对象的参考，不再把它列入推荐实践路径。
+
+- [产品可用性变更通知](https://docs.aws.amazon.com/frauddetector/latest/ug/frauddetector-availability-change.html)
 - [Variables 与变量类型](https://docs.aws.amazon.com/frauddetector/latest/ug/variables.html)
 - [Transaction Fraud Insights](https://docs.aws.amazon.com/frauddetector/latest/ug/transaction-fraud-insights.html)
 - [Fraud Prediction](https://docs.aws.amazon.com/frauddetector/latest/ug/getting-fraud-predictions.html)
@@ -148,7 +180,7 @@ Freshness / Quality / Lineage / Monitoring
 
 ### 3.2 特征计算与流批一致
 
-#### 资料 D：Airbnb Chronon
+#### 资料 C：Airbnb Chronon
 
 - [Chronon GitHub](https://github.com/airbnb/chronon)
 - [Airbnb Chronon 介绍](https://airbnb.tech/opensource/chronon/)
@@ -181,7 +213,7 @@ Online / Offline Consumer
 
 建议产物：为同一个 `subject_fund_activity_24h` 分别实现批计算和流计算，并在固定 `as_of` 下比较结果。
 
-#### 资料 E：Feathr
+#### 资料 D：Feathr
 
 - [Feathr GitHub](https://github.com/feathr-ai/feathr)
 - [Feathr 架构介绍](https://feathr-ai.github.io/feathr/talks/Feathr%20Feature%20Store%20Talk.pdf)
@@ -201,11 +233,11 @@ Online / Offline Consumer
 
 ### 3.3 Registry、Serving 与在线/离线存储
 
-#### 资料 F：Feast
+#### 资料 E：Feast
 
-- [Feast Architecture](https://docs.feast.dev/v0.58-branch/getting-started/architecture/overview)
+- [Feast Architecture](https://docs.feast.dev/getting-started/architecture/overview)
 - [Feast Quickstart](https://docs.feast.dev/getting-started/quickstart)
-- [Feast Online Store](https://docs.feast.dev/v0.58-branch/getting-started/components/online-store)
+- [Feast Online Store](https://docs.feast.dev/getting-started/components/online-store)
 
 重点学习以下边界：
 
@@ -222,7 +254,9 @@ Feature Service   组织消费者所需 Feature 集合
 
 建议产物：实现一个最小 `BatchGetLatestBefore` 接口，同时从 History 和 Current Projection 读取相同 Feature。
 
-#### 资料 G：AWS SageMaker Feature Store
+#### 行业案例 C：AWS SageMaker Feature Store
+
+> SageMaker Feature Store是收费云产品。其文档适合帮助理解Online/Offline Store、Event Time和Point-in-time Query，但本文的实践使用本地存储与开源组件完成，不要求开通AWS服务。
 
 - [Feature Store Concepts](https://docs.aws.amazon.com/sagemaker/latest/dg/feature-store-concepts.html)
 - [Online 与 Offline Store](https://docs.aws.amazon.com/sagemaker/latest/dg/feature-store.html)
@@ -242,7 +276,9 @@ Online Store 通常保存主体最新值，Offline Store 保存追加式历史�
 
 ### 3.4 元数据、治理与生产工程
 
-#### 资料 H：Uber Palette / Michelangelo
+#### 行业案例 D：Uber Palette / Michelangelo
+
+> Palette与Michelangelo的公开内容是企业工程案例，用于理解元数据和治理目标；其完整内部平台并未开源，不能当作可直接部署的学习项目。
 
 - [Palette Meta Store Journey](https://www.uber.com/us/en/blog/palette-meta-store-journey/)
 - [Michelangelo Machine Learning Platform](https://www.uber.com/us/en/blog/michelangelo-machine-learning-platform/)
@@ -258,7 +294,7 @@ Online Store 通常保存主体最新值，Offline Store 保存追加式历史�
 
 建议产物：为 Feature Definition 增加 Owner、版本、数据分类、新鲜度、来源、消费者和废弃状态。
 
-#### 资料 I：Google Rules of ML
+#### 资料 F：Google Rules of ML
 
 - [Rules of Machine Learning](https://developers.google.com/machine-learning/guides/rules-of-ml)
 - [何时执行数据转换](https://developers.google.com/machine-learning/crash-course/production-ml-systems/transforming-data)
@@ -277,7 +313,7 @@ Online Store 通常保存主体最新值，Offline Store 保存追加式历史�
 
 ### 阶段一：理解风险信号
 
-推荐资料：Fraud Detection Handbook、Stripe Radar、Amazon Fraud Detector。
+推荐资料：Fraud Detection Handbook、AutoGluon。Stripe Radar只作为行业信号案例阅读；Amazon Fraud Detector只保留历史领域模型参考，不作为实践对象。
 
 需要回答的问题：
 
@@ -298,7 +334,7 @@ Online Store 通常保存主体最新值，Offline Store 保存追加式历史�
 
 ### 阶段二：掌握时间窗口和点时正确
 
-推荐资料：Chronon、Feathr、AWS Point-in-time Query。
+推荐资料：Chronon、Feathr。AWS Point-in-time Query只作为云产品实现案例阅读，不要求开通服务。
 
 需要回答的问题：
 
@@ -319,7 +355,7 @@ Online Store 通常保存主体最新值，Offline Store 保存追加式历史�
 
 ### 阶段三：建设 Registry 与 Serving
 
-推荐资料：Feast、AWS Feature Store、Uber Palette。
+推荐资料：Feast。AWS Feature Store与Uber Palette只作为产品边界和治理案例阅读。
 
 需要回答的问题：
 
@@ -384,9 +420,7 @@ Online Store 通常保存主体最新值，Offline Store 保存追加式历史�
 ```text
 Fraud Detection Handbook
         ↓
-Stripe Radar
-        ↓
-Amazon Fraud Detector
+AutoGluon基线实践
         ↓
 Chronon
         ↓
@@ -396,7 +430,7 @@ Feast
         ↓
 AWS Point-in-time
         ↓
-Uber Feature Governance
+Uber Feature Governance（行业案例）
         ↓
 Google Rules of ML
 ```
@@ -404,7 +438,7 @@ Google Rules of ML
 如果时间有限，优先精读四份：
 
 1. Fraud Detection Handbook：理解风险特征如何产生；
-2. Stripe Radar：理解真实生产风控需要什么信号；
+2. AutoGluon：亲自完成一个可运行的欺诈分类基线；
 3. Chronon：理解窗口、回算和流批一致；
 4. Feast：理解 Registry、Serving 和 Materialization 边界。
 
