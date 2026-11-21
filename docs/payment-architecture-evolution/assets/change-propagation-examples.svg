@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" role="img" aria-labelledby="title desc">
+  <title id="title">四类变化的传播范围</title>
+  <desc id="desc">通过支付案例展示接口、流程、业务规则和外部技术变化主要传播到哪一层。</desc>
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fbfcff"/><stop offset="1" stop-color="#f4f8f5"/></linearGradient>
+    <filter id="s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#20345c" flood-opacity=".13"/></filter>
+    <style>
+      .title{font:700 33px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;fill:#17233c}
+      .sub{font:400 16px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;fill:#62708a}
+      .h{font:700 20px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;fill:#1d2a47}
+      .b{font:400 15px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;fill:#536078}
+      .hit{font:700 14px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;fill:#fff}
+      .dim{font:500 14px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;fill:#70809b}
+    </style>
+  </defs>
+  <rect width="1200" height="700" rx="28" fill="url(#bg2)"/>
+  <text x="55" y="66" class="title">同一个支付用例，四种变化，四个主要落点</text>
+  <text x="55" y="98" class="sub">颜色最深的位置表示变化的主要承接层；跨层能力变化则需要沿链路协同修改</text>
+
+  <g filter="url(#s)">
+    <rect x="55" y="145" width="1090" height="102" rx="18" fill="#fff" stroke="#d5deed"/>
+    <rect x="55" y="265" width="1090" height="102" rx="18" fill="#fff" stroke="#d5deed"/>
+    <rect x="55" y="385" width="1090" height="102" rx="18" fill="#fff" stroke="#d5deed"/>
+    <rect x="55" y="505" width="1090" height="102" rx="18" fill="#fff" stroke="#d5deed"/>
+  </g>
+
+  <text x="82" y="181" class="h">接口字段改名</text><text x="82" y="214" class="b">amount → amountMinor；业务含义不变</text>
+  <rect x="595" y="170" width="115" height="42" rx="21" fill="#4f70bd"/><text x="624" y="197" class="hit">接入层</text>
+  <text x="735" y="197" class="dim">应用层</text><text x="835" y="197" class="dim">领域层</text><text x="935" y="197" class="dim">适配层</text>
+
+  <text x="82" y="301" class="h">增加风控步骤</text><text x="82" y="334" class="b">调用渠道前先 Evaluate；支付规则不变</text>
+  <text x="615" y="317" class="dim">接入层</text><rect x="710" y="290" width="115" height="42" rx="21" fill="#2f9d78"/><text x="739" y="317" class="hit">应用层</text>
+  <text x="850" y="317" class="dim">领域层</text><text x="950" y="317" class="dim">适配层</text>
+
+  <text x="82" y="421" class="h">手续费规则改变</text><text x="82" y="454" class="b">固定 200 分 → 2.5%；Journal 金额改变</text>
+  <text x="615" y="437" class="dim">接入层</text><text x="735" y="437" class="dim">应用层</text><rect x="825" y="410" width="115" height="42" rx="21" fill="#d98a2b"/><text x="854" y="437" class="hit">领域层</text>
+  <text x="965" y="437" class="dim">适配层</text>
+
+  <text x="82" y="541" class="h">渠道签名升级</text><text x="82" y="574" class="b">HMAC → Ed25519；统一渠道结果不变</text>
+  <text x="615" y="557" class="dim">接入层</text><text x="735" y="557" class="dim">应用层</text><text x="835" y="557" class="dim">领域层</text><rect x="930" y="530" width="115" height="42" rx="21" fill="#8459b8"/><text x="959" y="557" class="hit">适配层</text>
+
+  <rect x="55" y="635" width="1090" height="38" rx="11" fill="#273c6d"/>
+  <text x="78" y="660" style="font:500 15px -apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;fill:#fff">“主要影响某层”不等于“永远只改某层”：部分退款等新业务能力会贯穿接口、用例、领域、账本与渠道。</text>
+</svg>

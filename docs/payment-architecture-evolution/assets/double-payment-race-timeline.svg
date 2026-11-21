@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">两次支付竞态时间线</title>
+  <desc id="desc">银行卡支付结果未知，钱包支付先成功，银行卡迟到成功，系统保留两笔支付并退款多收款。</desc>
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fbfcff"/><stop offset="1" stop-color="#fff7ef"/></linearGradient>
+    <filter id="s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#20345c" flood-opacity=".13"/></filter>
+    <marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#5270b5"/></marker>
+    <style>
+      .title{font:700 33px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;fill:#17233c}
+      .sub{font:400 16px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;fill:#62708a}
+      .h{font:700 19px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;fill:#1d2a47}
+      .b{font:400 15px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;fill:#536078}
+      .time{font:700 14px ui-monospace,SFMono-Regular,Menlo,monospace;fill:#4261a4}
+      .result{font:700 15px -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;fill:#fff}
+    </style>
+  </defs>
+  <rect width="1200" height="760" rx="28" fill="url(#bg2)"/>
+  <text x="55" y="65" class="title">超时不是失败：一次重复收款是怎样发生的？</text>
+  <text x="55" y="98" class="sub">两个渠道结果并发到达时，数据库原子占位决定哪笔 Payment 用于订单履约</text>
+
+  <line x1="135" y1="150" x2="135" y2="665" stroke="#9bb0d6" stroke-width="4"/>
+  <g filter="url(#s)">
+    <rect x="190" y="135" width="910" height="92" rx="18" fill="#fff" stroke="#d6deec"/>
+    <rect x="190" y="245" width="910" height="92" rx="18" fill="#fff" stroke="#d6deec"/>
+    <rect x="190" y="355" width="910" height="92" rx="18" fill="#fff" stroke="#d6deec"/>
+    <rect x="190" y="465" width="910" height="92" rx="18" fill="#fff" stroke="#d6deec"/>
+    <rect x="190" y="575" width="910" height="92" rx="18" fill="#fff" stroke="#d6deec"/>
+  </g>
+
+  <circle cx="135" cy="181" r="14" fill="#5270b5"/><text x="68" y="186" class="time">T1</text>
+  <text x="220" y="174" class="h">银行卡尝试 A1 提交，但响应超时</text>
+  <text x="220" y="204" class="b">状态只能记为 unknown / pending，不能因为本地超时就断言渠道失败。</text>
+
+  <circle cx="135" cy="291" r="14" fill="#2f9d78"/><text x="68" y="296" class="time">T2</text>
+  <text x="220" y="284" class="h">用户改用钱包，创建尝试 A2</text>
+  <text x="220" y="314" class="b">A1 仍然存在；一个 Order 拥有两次独立 Attempt。</text>
+
+  <circle cx="135" cy="401" r="14" fill="#d98a2b"/><text x="68" y="406" class="time">T3</text>
+  <text x="220" y="394" class="h">钱包先成功，生成 Payment P2</text>
+  <text x="220" y="424" class="b">P2 原子占用 Order 的 fulfillment slot，订单进入 fulfilled。</text>
+  <rect x="815" y="379" width="250" height="40" rx="20" fill="#2f9d78"/><text x="853" y="405" class="result">P2 = fulfillment payment</text>
+
+  <circle cx="135" cy="511" r="14" fill="#bd5d6a"/><text x="68" y="516" class="time">T4</text>
+  <text x="220" y="504" class="h">迟到的银行卡回调也成功，生成 Payment P1</text>
+  <text x="220" y="534" class="b">P1 是真实收款，必须入账；占位失败后标记为 surplus / unallocated。</text>
+  <rect x="815" y="489" width="250" height="40" rx="20" fill="#bd5d6a"/><text x="854" y="515" class="result">P1 = surplus payment</text>
+
+  <circle cx="135" cy="621" r="14" fill="#8459b8"/><text x="68" y="626" class="time">T5</text>
+  <text x="220" y="614" class="h">针对 P1 创建独立 Refund R1</text>
+  <text x="220" y="644" class="b">退款拥有自己的编号、幂等键、渠道操作、状态与账本凭证。</text>
+
+  <path d="M135 196V237" stroke="#5270b5" stroke-width="3" marker-end="url(#a)"/>
+  <path d="M135 306V347" stroke="#5270b5" stroke-width="3" marker-end="url(#a)"/>
+  <path d="M135 416V457" stroke="#5270b5" stroke-width="3" marker-end="url(#a)"/>
+  <path d="M135 526V567" stroke="#5270b5" stroke-width="3" marker-end="url(#a)"/>
+
+  <rect x="55" y="700" width="1090" height="34" rx="10" fill="#273c6d"/>
+  <text x="78" y="723" style="font:500 15px -apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;fill:#fff">正确做法不是覆盖 paid 状态，而是保留两次 Attempt、两笔 Payment、一条唯一履约关系和一笔补偿 Refund。</text>
+</svg>

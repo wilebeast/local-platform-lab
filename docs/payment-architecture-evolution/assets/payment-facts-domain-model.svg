@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">支付事实领域模型</title>
+  <desc id="desc">PaymentOrder、PaymentAttempt、Payment、Refund 以及履约关系的区别。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f8faff"/><stop offset="1" stop-color="#eef6f3"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="7" stdDeviation="8" flood-color="#26395e" flood-opacity=".14"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#5572b5"/></marker>
+    <style>
+      .title{font:700 34px -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;fill:#17233c}
+      .sub{font:400 16px -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;fill:#61708b}
+      .h{font:700 22px -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;fill:#1c2945}
+      .b{font:400 15px -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;fill:#536078}
+      .rel{font:700 14px -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;fill:#4261a4}
+      .count{font:700 16px ui-monospace,SFMono-Regular,Menlo,monospace;fill:#31466f}
+    </style>
+  </defs>
+  <rect width="1200" height="720" rx="28" fill="url(#bg)"/>
+  <text x="55" y="67" class="title">一个“订单”里混进了四种不同事实</text>
+  <text x="55" y="100" class="sub">收款意图、支付尝试、真实收款和资金退回拥有不同身份、生命周期与不变量</text>
+
+  <g filter="url(#shadow)">
+    <rect x="55" y="165" width="245" height="300" rx="23" fill="#fff" stroke="#d2dced"/>
+    <rect x="340" y="165" width="245" height="300" rx="23" fill="#fff" stroke="#d2dced"/>
+    <rect x="625" y="165" width="245" height="300" rx="23" fill="#fff" stroke="#d2dced"/>
+    <rect x="910" y="165" width="235" height="300" rx="23" fill="#fff" stroke="#d2dced"/>
+  </g>
+
+  <rect x="55" y="165" width="245" height="68" rx="23" fill="#e8f0ff"/>
+  <text x="84" y="207" class="h">PaymentOrder</text>
+  <text x="83" y="274" class="b">商户的一次收款意图</text>
+  <text x="83" y="307" class="b">金额、币种、商户引用</text>
+  <text x="83" y="340" class="b">履约状态</text>
+  <text x="83" y="390" class="rel">回答：要收什么钱？</text>
+  <text x="83" y="430" class="count">1 Order</text>
+
+  <rect x="340" y="165" width="245" height="68" rx="23" fill="#e7f8f2"/>
+  <text x="367" y="207" class="h">PaymentAttempt</text>
+  <text x="368" y="274" class="b">用户的一次支付尝试</text>
+  <text x="368" y="307" class="b">支付方式、渠道、状态</text>
+  <text x="368" y="340" class="b">submitted / unknown / ...</text>
+  <text x="368" y="390" class="rel">回答：尝试了哪一次？</text>
+  <text x="368" y="430" class="count">0..N Attempts</text>
+
+  <rect x="625" y="165" width="245" height="68" rx="23" fill="#fff1df"/>
+  <text x="682" y="207" class="h">Payment</text>
+  <text x="653" y="274" class="b">渠道确认的真实收款</text>
+  <text x="653" y="307" class="b">每笔成功都必须保留</text>
+  <text x="653" y="340" class="b">可履约或成为多收款</text>
+  <text x="653" y="390" class="rel">回答：钱真的收到了吗？</text>
+  <text x="653" y="430" class="count">0..N Payments</text>
+
+  <rect x="910" y="165" width="235" height="68" rx="23" fill="#f4eaff"/>
+  <text x="981" y="207" class="h">Refund</text>
+  <text x="938" y="274" class="b">针对某笔真实收款退款</text>
+  <text x="938" y="307" class="b">拥有独立编号与状态</text>
+  <text x="938" y="340" class="b">不能只修改订单 paid</text>
+  <text x="938" y="390" class="rel">回答：退的是哪笔钱？</text>
+  <text x="938" y="430" class="count">0..N Refunds</text>
+
+  <path d="M300 310H332" stroke="#5572b5" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M585 310H617" stroke="#5572b5" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M870 310H902" stroke="#5572b5" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <rect x="55" y="515" width="1090" height="145" rx="20" fill="#263c6d"/>
+  <text x="85" y="555" style="font:700 20px -apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;fill:#fff">履约是 Payment 与 Order 之间的关系，不等于 Payment 本身</text>
+  <text x="85" y="590" style="font:400 16px -apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;fill:#dfe8ff">同一个 Order 可以产生多笔真实 Payment，但最多只有一笔占用 fulfillment slot。</text>
+  <text x="85" y="622" style="font:400 16px -apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;fill:#dfe8ff">其他成功 Payment 仍是真实资金事实，必须保留并进入独立退款处理，不能删除或假装失败。</text>
+</svg>

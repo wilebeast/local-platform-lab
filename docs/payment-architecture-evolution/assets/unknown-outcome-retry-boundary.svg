@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1060" viewBox="0 0 1400 1060" role="img" aria-labelledby="title desc">
+  <title id="title">未知结果与新支付尝试的边界</title>
+  <desc id="desc">AT1绑定渠道A和OP1后发生网络超时，旧操作仍可能成功。应使用原账户和请求身份查询或在合同允许时安全重放，不得直接改选B再次扣款。只有确认旧操作不会完成且业务与授权允许后，才能创建AT2并重新选路。</desc>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9Z" fill="#526fa9"/></marker>
+    <style>
+      text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+      .title{font-size:35px;font-weight:700;fill:#17233c}.sub{font-size:18px;fill:#60718b}.head{font-size:24px;font-weight:700;fill:#263956}.body{font-size:20px;fill:#53627b}.small{font-size:17px;fill:#60718b}.red{font-size:21px;font-weight:700;fill:#af4052}.link{fill:none;stroke:#526fa9;stroke-width:3;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1400" height="1060" rx="28" fill="#f4f7fd"/>
+  <text x="52" y="67" class="title">恢复原请求，和创建下一次支付，是两件事</text>
+  <text x="52" y="104" class="sub">异常恢复视图 · 单次全额支付场景 · 自动重试不得绕过业务授权与原操作确认</text>
+  <rect x="50" y="148" width="1300" height="111" rx="18" fill="#fff1df" stroke="#e5ccaa"/>
+  <text x="77" y="190" class="head">AT1 → 渠道 A / 原账户 → OP1：已经提交，但本地超时</text>
+  <text x="77" y="231" class="body">本地状态 unknown · A 可能已经执行成功 · 传输失败不能证明未扣款</text>
+  <path d="M360 259V315" class="link"/>
+  <path d="M1040 259V315" class="link"/>
+  <rect x="50" y="315" width="620" height="324" rx="19" fill="#fff" stroke="#b6d8c7" stroke-width="2"/>
+  <text x="78" y="359" class="head">沿原 Operation 恢复</text>
+  <text x="78" y="407" class="body">原渠道 A + 原账户 + OP1</text>
+  <text x="78" y="454" class="body">可查询 → 查询原请求</text>
+  <text x="78" y="497" class="body">可安全重放 → 同键、同参数、有效期内</text>
+  <text x="78" y="540" class="body">两者均不可用 → 等待证据、核对、调查</text>
+  <text x="78" y="593" class="small">查询暂时无记录，也不自动等于从未执行</text>
+  <rect x="730" y="315" width="620" height="324" rx="19" fill="#fff2f3" stroke="#dfb0b9" stroke-width="2"/>
+  <text x="758" y="359" class="head">不能伪装成“自动重试”</text>
+  <text x="758" y="407" class="red">重新跑 Router，改选 B 扣款</text>
+  <text x="758" y="454" class="red">为 OP1 生成新请求号再提交</text>
+  <text x="758" y="501" class="red">到达重试次数后直接记为未扣款</text>
+  <text x="758" y="554" class="body">这些动作不能消除 A 已扣款的可能性</text>
+  <text x="758" y="593" class="small">可能同时出现 A 成功与 B 成功</text>
+  <path d="M360 639V691" class="link"/>
+  <rect x="50" y="691" width="1300" height="183" rx="19" fill="#eaf7f0" stroke="#b6d8c7"/>
+  <text x="78" y="735" class="head">什么时候才能创建 AT2 并重新选路？</text>
+  <text x="78" y="780" class="body">确认尚未发送，或旧操作按合同已经最终失败且不会继续完成</text>
+  <text x="78" y="821" class="body">并且：业务允许 + 拒绝原因允许 + 支付凭据可用 + 用户授权覆盖</text>
+  <text x="78" y="853" class="small">AT2 是新的业务尝试；AT1 / OP1 的历史仍然完整保留</text>
+  <rect x="50" y="915" width="1300" height="94" rx="18" fill="#263c6d"/>
+  <text x="77" y="954" style="font-size:22px;font-weight:700;fill:#fff">若产品允许用户在 unknown 时主动换一种支付方式</text>
+  <text x="77" y="989" style="font-size:19px;fill:#e0e8ff">明确它是新尝试，控制重复收款风险；两笔都成功时，仍要承接上一阶段的多收款退款机制</text>
+</svg>

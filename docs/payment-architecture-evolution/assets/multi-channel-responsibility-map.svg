@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1020" viewBox="0 0 1400 1020" role="img" aria-labelledby="title desc">
+  <title id="title">支付与渠道域的职责结构</title>
+  <desc id="desc">支付模块拥有订单、尝试、收款和退款。渠道域包含路由、操作编排以及具体渠道适配器。路由决定选谁，操作模块执行已经绑定的请求，适配器翻译协议，标准化结果返回支付模块。模块不等于独立服务。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f8faff"/><stop offset="1" stop-color="#eef4ff"/></linearGradient>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9Z" fill="#526fa9"/></marker>
+    <style>
+      text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+      .title{font-size:36px;font-weight:700;fill:#17233c}.sub{font-size:18px;fill:#5d6c85}.head{font-size:24px;font-weight:700;fill:#233655}.body{font-size:19px;fill:#4e5e78}.small{font-size:16px;fill:#60718b}.label{font-size:16px;font-weight:600;fill:#4261a4}.link{fill:none;stroke:#526fa9;stroke-width:2.5;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1400" height="1020" rx="28" fill="url(#bg)"/>
+  <text x="52" y="66" class="title">支付决定业务归属，渠道域解决外部交互</text>
+  <text x="52" y="102" class="sub">第三阶段 · 目标逻辑结构 / 架构评审视图 · 框表示职责，不表示进程或数据库</text>
+  <rect x="50" y="150" width="350" height="650" rx="22" fill="#fff" stroke="#b9cbea" stroke-width="2"/>
+  <rect x="50" y="150" width="350" height="76" rx="22" fill="#e6efff"/>
+  <text x="78" y="198" class="head">支付模块</text>
+  <text x="78" y="270" class="body">PaymentOrder：收款意图</text>
+  <text x="78" y="311" class="body">PaymentAttempt：支付尝试</text>
+  <text x="78" y="352" class="body">Payment：真实收款事实</text>
+  <text x="78" y="393" class="body">Refund：退款业务</text>
+  <line x1="78" y1="455" x2="370" y2="455" stroke="#d7e1f0"/>
+  <text x="78" y="499" class="label">拥有业务判断权</text>
+  <text x="78" y="540" class="body">订单是否允许新尝试？</text>
+  <text x="78" y="581" class="body">哪笔收款用于订单履约？</text>
+  <text x="78" y="622" class="body">多收款如何退款补偿？</text>
+  <text x="78" y="750" class="small">最终状态还受业务与账务契约约束</text>
+  <rect x="450" y="150" width="900" height="650" rx="22" fill="#fff" stroke="#bfdacc" stroke-width="2"/>
+  <text x="480" y="193" class="head">渠道域：不同职责可以部署在同一个程序中</text>
+  <rect x="480" y="225" width="360" height="160" rx="16" fill="#eaf7f0" stroke="#b9dccc"/>
+  <text x="505" y="263" class="head">Routing · 选谁</text>
+  <text x="505" y="304" class="body">资格过滤 → 策略择优</text>
+  <text x="505" y="340" class="body">保存渠道账户和决定依据</text>
+  <text x="505" y="366" class="small">RouteDecision / 能力契约</text>
+  <rect x="900" y="225" width="410" height="160" rx="16" fill="#fff3e4" stroke="#ecd4b4"/>
+  <text x="925" y="263" class="head">Operations · 怎样完成</text>
+  <text x="925" y="304" class="body">持久化意图、领取与恢复</text>
+  <text x="925" y="340" class="body">原请求查单 / 安全重放</text>
+  <text x="925" y="366" class="small">固定请求身份，只调用已绑定的适配器</text>
+  <path d="M400 250H480" class="link"/>
+  <path d="M400 430H866V300H900" class="link"/>
+  <text x="478" y="417" class="label">提交已经绑定渠道账户的操作</text>
+  <path d="M1105 385V455H605V490" class="link"/>
+  <path d="M1105 455H900V490" class="link"/>
+  <path d="M1105 455H1195V490" class="link"/>
+  <g>
+    <rect x="480" y="490" width="250" height="155" rx="16" fill="#f2ebfc" stroke="#d6c5ec"/>
+    <rect x="775" y="490" width="250" height="155" rx="16" fill="#f2ebfc" stroke="#d6c5ec"/>
+    <rect x="1070" y="490" width="250" height="155" rx="16" fill="#f2ebfc" stroke="#d6c5ec"/>
+    <text x="505" y="532" class="head">Adapter A</text><text x="800" y="532" class="head">Adapter B</text><text x="1095" y="532" class="head">Adapter C</text>
+    <text x="505" y="573" class="body">字段与签名</text><text x="800" y="573" class="body">字段与签名</text><text x="1095" y="573" class="body">字段与签名</text>
+    <text x="505" y="609" class="body">协议结果映射</text><text x="800" y="609" class="body">协议结果映射</text><text x="1095" y="609" class="body">协议结果映射</text>
+  </g>
+  <rect x="480" y="690" width="840" height="70" rx="14" fill="#edf2f9"/>
+  <text x="505" y="719" class="body">标准结果：accepted / processing / succeeded / rejected / unknown</text>
+  <text x="505" y="746" class="small">外部事实返回支付模块；适配器不直接写订单终态或余额</text>
+  <path d="M480 725H400" class="link" stroke-dasharray="7 6"/>
+  <g>
+    <rect x="480" y="850" width="250" height="57" rx="13" fill="#fff" stroke="#b9cbea"/>
+    <rect x="775" y="850" width="250" height="57" rx="13" fill="#fff" stroke="#b9cbea"/>
+    <rect x="1070" y="850" width="250" height="57" rx="13" fill="#fff" stroke="#b9cbea"/>
+    <text x="548" y="886" class="body">模拟渠道 A</text><text x="843" y="886" class="body">模拟渠道 B</text><text x="1138" y="886" class="body">模拟渠道 C</text>
+    <path d="M605 645V681M605 800V850" class="link"/>
+    <path d="M900 645V681M900 800V850" class="link"/>
+    <path d="M1195 645V681M1195 800V850" class="link"/>
+  </g>
+  <text x="52" y="868" class="small">实线：能力调用</text>
+  <text x="52" y="898" class="small">虚线：确认结果回传</text>
+  <rect x="50" y="943" width="1300" height="47" rx="13" fill="#263c6d"/>
+  <text x="74" y="974" style="font-size:18px;fill:#fff">边界检验：新增渠道协议时，支付履约规则是否仍然无需认识它的原始字段与返回码？</text>
+</svg>

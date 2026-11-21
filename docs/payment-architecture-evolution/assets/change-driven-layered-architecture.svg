@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">变化驱动的四层架构</title>
+  <desc id="desc">接入层、应用层、领域层和适配层分别吸收不同类型的变化。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f8faff"/><stop offset="1" stop-color="#eef4ff"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="7" stdDeviation="8" flood-color="#24345c" flood-opacity=".14"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#5572b5"/></marker>
+    <style>
+      .title{font:700 34px -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;fill:#17233c}
+      .sub{font:400 16px -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;fill:#61708b}
+      .layer{font:700 23px -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;fill:#1c2945}
+      .body{font:400 15px -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;fill:#536078}
+      .tag{font:700 14px -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;fill:#4261a4}
+    </style>
+  </defs>
+  <rect width="1200" height="720" rx="28" fill="url(#bg)"/>
+  <text x="55" y="68" class="title">让变化停在它应该停下的地方</text>
+  <text x="55" y="101" class="sub">分层不是为了目录整齐，而是让不同变化拥有不同的承接边界</text>
+
+  <g filter="url(#shadow)">
+    <rect x="60" y="155" width="245" height="380" rx="24" fill="#fff" stroke="#d1dcf0"/>
+    <rect x="340" y="155" width="245" height="380" rx="24" fill="#fff" stroke="#d1dcf0"/>
+    <rect x="620" y="155" width="245" height="380" rx="24" fill="#fff" stroke="#d1dcf0"/>
+    <rect x="900" y="155" width="245" height="380" rx="24" fill="#fff" stroke="#d1dcf0"/>
+  </g>
+
+  <rect x="60" y="155" width="245" height="75" rx="24" fill="#e8f0ff"/>
+  <text x="104" y="201" class="layer">接入层</text>
+  <text x="88" y="271" class="body">HTTP / JSON / Header</text>
+  <text x="88" y="303" class="body">参数校验与协议转换</text>
+  <text x="88" y="335" class="body">DTO → Command</text>
+  <rect x="87" y="377" width="190" height="38" rx="19" fill="#edf3ff"/><text x="107" y="402" class="tag">吸收接口形态变化</text>
+  <text x="88" y="454" class="body">例：amount 改为</text>
+  <text x="88" y="482" class="body">amountMinor</text>
+
+  <rect x="340" y="155" width="245" height="75" rx="24" fill="#e7f8f2"/>
+  <text x="384" y="201" class="layer">应用层</text>
+  <text x="368" y="271" class="body">用例步骤与事务边界</text>
+  <text x="368" y="303" class="body">协调仓储、风控、渠道</text>
+  <text x="368" y="335" class="body">不承载核心业务公式</text>
+  <rect x="367" y="377" width="190" height="38" rx="19" fill="#e9f9f4"/><text x="387" y="402" class="tag">吸收流程顺序变化</text>
+  <text x="368" y="454" class="body">例：渠道调用前</text>
+  <text x="368" y="482" class="body">增加实时风控</text>
+
+  <rect x="620" y="155" width="245" height="75" rx="24" fill="#fff1df"/>
+  <text x="664" y="201" class="layer">领域层</text>
+  <text x="648" y="271" class="body">业务规则与结果语义</text>
+  <text x="648" y="303" class="body">Account / Journal</text>
+  <text x="648" y="335" class="body">Posting / 借贷平衡</text>
+  <rect x="647" y="377" width="190" height="38" rx="19" fill="#fff5e8"/><text x="667" y="402" class="tag">吸收业务含义变化</text>
+  <text x="648" y="454" class="body">例：固定手续费</text>
+  <text x="648" y="482" class="body">改为比例手续费</text>
+
+  <rect x="900" y="155" width="245" height="75" rx="24" fill="#f3eaff"/>
+  <text x="944" y="201" class="layer">适配层</text>
+  <text x="928" y="271" class="body">渠道、数据库、消息协议</text>
+  <text x="928" y="303" class="body">外部错误映射</text>
+  <text x="928" y="335" class="body">Repository 实现</text>
+  <rect x="927" y="377" width="190" height="38" rx="19" fill="#f7efff"/><text x="947" y="402" class="tag">吸收外部技术变化</text>
+  <text x="928" y="454" class="body">例：HMAC 改为</text>
+  <text x="928" y="482" class="body">Ed25519</text>
+
+  <path d="M305 345H332" stroke="#5572b5" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M585 345H612" stroke="#5572b5" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M865 345H892" stroke="#5572b5" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <rect x="60" y="580" width="1085" height="88" rx="18" fill="#263c6d"/>
+  <text x="90" y="617" style="font:700 18px -apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;fill:#fff">判断问题</text>
+  <text x="90" y="647" style="font:400 17px -apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;fill:#dfe8ff">它改变的是输入表现、执行顺序、业务含义，还是外部技术细节？答案决定主要修改哪一层。</text>
+</svg>

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="980" viewBox="0 0 1400 980" role="img" aria-labelledby="title desc">
+  <title id="title">路由先检查资格，再比较评分</title>
+  <desc id="desc">本次要求USD100、银行卡及部分退款。模拟渠道B虽然成本评分最低，但不支持部分退款，因此先被排除。合格的A和C分别评分30和45，选择A。路由决定保存渠道账户、版本及解释。</desc>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9Z" fill="#526fa9"/></marker>
+    <style>
+      text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+      .title{font-size:36px;font-weight:700;fill:#17233c}.sub{font-size:18px;fill:#60718b}.head{font-size:25px;font-weight:700;fill:#263956}.body{font-size:20px;fill:#53627b}.small{font-size:17px;fill:#60718b}.ok{font-size:22px;font-weight:700;fill:#237451}.bad{font-size:21px;font-weight:700;fill:#ad4050}.link{fill:none;stroke:#526fa9;stroke-width:3;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1400" height="980" rx="28" fill="#f4f7fd"/>
+  <text x="52" y="66" class="title">先回答“能不能做”，再回答“选谁更好”</text>
+  <text x="52" y="102" class="sub">一次路由的推导视图 · 模拟 Profile 与评分 · 用于人工验算和契约测试</text>
+  <rect x="50" y="145" width="1300" height="100" rx="18" fill="#e6efff" stroke="#bdcfea"/>
+  <text x="77" y="184" class="head">本次要求</text>
+  <text x="77" y="220" class="body">USD 100.00（10000 minor） · card · 必须支持部分退款 · 商户与凭据均已具备资格</text>
+  <text x="52" y="293" class="head">① 硬条件过滤</text>
+  <rect x="50" y="320" width="400" height="258" rx="19" fill="#fff" stroke="#b6d8c7" stroke-width="2"/>
+  <rect x="500" y="320" width="400" height="258" rx="19" fill="#fff4f4" stroke="#e0b1ba" stroke-width="2"/>
+  <rect x="950" y="320" width="400" height="258" rx="19" fill="#fff" stroke="#b6d8c7" stroke-width="2"/>
+  <text x="78" y="363" class="head">模拟渠道 A</text>
+  <text x="78" y="408" class="body">USD / card / 金额符合</text>
+  <text x="78" y="446" class="body">支持部分退款</text>
+  <text x="78" y="493" class="ok">通过资格检查</text>
+  <text x="78" y="542" class="body">模拟评分：30</text>
+  <text x="528" y="363" class="head">模拟渠道 B</text>
+  <text x="528" y="408" class="body">USD / card / 金额符合</text>
+  <text x="528" y="446" class="bad">不支持部分退款</text>
+  <text x="528" y="493" class="bad">排除，不进入评分竞争</text>
+  <text x="528" y="542" class="body">即使模拟评分只有 10</text>
+  <text x="978" y="363" class="head">模拟渠道 C</text>
+  <text x="978" y="408" class="body">USD / card / 金额符合</text>
+  <text x="978" y="446" class="body">支持部分退款</text>
+  <text x="978" y="493" class="ok">通过资格检查</text>
+  <text x="978" y="542" class="body">模拟评分：45</text>
+  <path d="M250 578V626H520V675" class="link"/>
+  <path d="M1150 578V626H880V675" class="link"/>
+  <text x="539" y="626" class="small">只有合格候选参与比较</text>
+  <rect x="300" y="675" width="800" height="111" rx="19" fill="#eaf7f0" stroke="#b6d8c7"/>
+  <text x="328" y="716" class="head">② 在 A 与 C 中择优</text>
+  <text x="328" y="758" class="body">评分越低越优先：30 ＜ 45 → 选择 A / channel-account-a</text>
+  <path d="M700 786V825" class="link"/>
+  <rect x="50" y="825" width="1300" height="110" rx="19" fill="#263c6d"/>
+  <text x="77" y="864" style="font-size:24px;font-weight:700;fill:#fff">保存本次 RouteDecision</text>
+  <text x="77" y="903" style="font-size:19px;fill:#e0e8ff">Attempt + 渠道账户 + 策略版本 + 能力版本 + 候选与排除原因；选中不等于已预留额度</text>
+</svg>
