@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1140" viewBox="0 0 1400 1140" role="img" aria-labelledby="title desc">
+  <title id="title">从规则引用到因子执行计划</title>
+  <desc id="desc">按Event找到策略规则，编译CEL并从AST提取因子引用，递归展开依赖，形成拓扑计划。请求级运行状态依序读取必要因子，再执行规则和决策聚合。特征数据是取值来源，不默认触发业务规则。</desc>
+  <defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9Z" fill="#5873a9"/></marker>
+    <style>text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}.title{font-size:35px;font-weight:700;fill:#17233c}.sub{font-size:18px;fill:#60718b}.head{font-size:25px;font-weight:700;fill:#253855}.body{font-size:21px;fill:#52617b}.small{font-size:18px;fill:#60718b}.link{fill:none;stroke:#5873a9;stroke-width:3;marker-end:url(#arrow)}</style>
+  </defs>
+  <rect width="1400" height="1140" rx="28" fill="#f4f7fd"/>
+  <text x="50" y="65" class="title">先解析规则，再决定需要哪些因子</text>
+  <text x="50" y="104" class="sub">第七阶段 · 编译与执行视图 · 依赖由定义和 AST 反推；不让 Event 维护第二份人工因子清单</text>
+  <rect x="50" y="148" width="1300" height="93" rx="18" fill="#e6efff" stroke="#bbcee9"/>
+  <text x="78" y="187" class="head">Event → Strategies → Rule / Decision 条件 / Action 条件</text>
+  <text x="78" y="222" class="small">校验未知引用、类型与循环依赖；创建不可变 Factor，缓存可复用的编译程序。</text>
+  <path d="M700 241V292" class="link"/>
+  <rect x="50" y="292" width="1300" height="112" rx="18" fill="#eaf7f0" stroke="#afd6c2"/>
+  <text x="78" y="337" class="head">从 CEL AST 找直接引用 → 展开依赖 → 生成拓扑执行计划</text>
+  <text x="78" y="379" class="body">提现示例：organization_id → inflow_24h / outflow_24h → outflow_ratio_24h</text>
+  <path d="M700 404V457" class="link"/>
+  <rect x="50" y="457" width="840" height="252" rx="20" fill="#fff" stroke="#bbcee9" stroke-width="2"/>
+  <text x="78" y="503" class="head">每次 Evaluation 独立创建 RuntimeState</text>
+  <text x="78" y="551" class="body">校验后的 Params / 固定运行时间 / 本次 FactorResult</text>
+  <text x="78" y="599" class="body">Factor 只读 FactorContext；Engine 写入求值结果</text>
+  <text x="78" y="647" class="body">同次求值复用值；不同请求不共享可变参数或结果</text>
+  <text x="78" y="685" class="small">只执行该场景需要的因子，保留来源、版本与状态。</text>
+  <rect x="970" y="457" width="380" height="252" rx="20" fill="#fff3e4" stroke="#e4c8a3"/>
+  <text x="998" y="503" class="head">因子数据来源</text>
+  <text x="998" y="551" class="body">Value / Expression</text>
+  <text x="998" y="599" class="body">RPC / Counter / List</text>
+  <text x="998" y="647" class="body">Feature Service</text>
+  <text x="998" y="685" class="small">不同机制，同一类型化结果契约</text>
+  <path d="M970 582H890" class="link"/>
+  <path d="M470 709V765" class="link"/>
+  <rect x="50" y="765" width="1300" height="160" rx="20" fill="#f2ebfc" stroke="#d6c5ec"/>
+  <text x="78" y="810" class="head">CEL Rule → 策略聚合 → Decision + Action Intents + Evidence</text>
+  <text x="78" y="857" class="body">Rule 只判断因子；Priority 属于 Decision；动作选择与决策冲突规则必须显式定义。</text>
+  <text x="78" y="898" class="body">缺失、过期、数据源错误分别表达，不能一律改成 0 或正常 pass。</text>
+  <rect x="50" y="979" width="1300" height="105" rx="18" fill="#263c6d"/>
+  <text x="78" y="1020" style="font-size:23px;font-weight:700;fill:#fff">特征是取值来源；普通 Feature 更新不是业务规则的默认触发器。</text>
+  <text x="78" y="1059" style="font-size:19px;fill:#dce6fc">业务显式请求求值；运行计划临时生成；必要证据持久化后，释放请求级状态。</text>
+</svg>

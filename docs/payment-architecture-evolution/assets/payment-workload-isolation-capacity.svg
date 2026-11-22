@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1100" viewBox="0 0 1400 1100" role="img" aria-labelledby="title desc">
+  <title id="title">相同并发上限下的任务隔离对比</title>
+  <desc id="desc">教学模型中100个5秒通知先到，100个20毫秒交易每10毫秒到达。共享20个并发名额时交易p95为24970毫秒；保留交易4个、通知16个时交易p95为20毫秒，但通知最后完成从25秒延后到35秒。不是生产压测。</desc>
+  <defs><style>text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}.title{font-size:35px;font-weight:700;fill:#17233c}.sub{font-size:18px;fill:#60718b}.head{font-size:25px;font-weight:700;fill:#253855}.body{font-size:21px;fill:#52617b}.small{font-size:18px;fill:#60718b}.number{font-size:41px;font-weight:700;fill:#263c6d}</style></defs>
+  <rect width="1400" height="1100" rx="28" fill="#f4f7fd"/>
+  <text x="50" y="65" class="title">隔离保护关键工作，也会重新分配等待成本</text>
+  <text x="50" y="104" class="sub">第八阶段 · 虚拟时钟演算视图 · 固定到达与服务时间，同一时点通知先入队；不是实测时延</text>
+  <rect x="50" y="148" width="1300" height="105" rx="18" fill="#e6efff" stroke="#bbcee9"/>
+  <text x="78" y="189" class="head">100 条通知：同时到达，每条 5000 ms</text>
+  <text x="78" y="231" class="body">100 个交易任务：每 10 ms 到达一个，每个本地处理 20 ms；两边总并发上限都为 20。</text>
+  <rect x="50" y="300" width="625" height="376" rx="20" fill="#fff" stroke="#e4c8a3" stroke-width="2"/>
+  <rect x="725" y="300" width="625" height="376" rx="20" fill="#fff" stroke="#afd6c2" stroke-width="2"/>
+  <text x="78" y="347" class="head">共用 FIFO · 20 个执行名额</text>
+  <rect x="78" y="384" width="569" height="58" rx="14" fill="#fff3e4"/>
+  <text x="100" y="422" class="body">慢通知占用名额，交易排在后面。</text>
+  <text x="78" y="495" class="body">交易任务响应 p95</text>
+  <text x="78" y="550" class="number">24970 ms</text>
+  <text x="78" y="608" class="body">通知全部完成：25000 ms</text>
+  <text x="78" y="648" class="small">已处理全部任务，没有丢弃交易换取指标。</text>
+  <text x="753" y="347" class="head">分开队列 · 交易 4 + 通知 16</text>
+  <rect x="753" y="384" width="569" height="58" rx="14" fill="#eaf7f0"/>
+  <text x="775" y="422" class="body">交易获得预留名额，通知仍受限执行。</text>
+  <text x="753" y="495" class="body">交易任务响应 p95</text>
+  <text x="753" y="550" class="number">20 ms</text>
+  <text x="753" y="608" class="body">通知全部完成：35000 ms</text>
+  <text x="753" y="648" class="small">交易得到保护，通知完成时间也更晚。</text>
+  <rect x="50" y="723" width="1300" height="173" rx="20" fill="#e6efff" stroke="#bbcee9"/>
+  <text x="78" y="769" class="head">通知理想完成能力：16 / 5 秒 = 3.2 条每秒</text>
+  <text x="78" y="818" class="body">持续新增 5 条每秒时，积压仍然增长；需要明确限流、资源和等待契约。</text>
+  <text x="78" y="862" class="body">实际容量还受 CPU、数据库、网络、失败和重试影响，本模型没有模拟这些因素。</text>
+  <rect x="50" y="947" width="1300" height="105" rx="18" fill="#263c6d"/>
+  <text x="78" y="989" style="font-size:23px;font-weight:700;fill:#fff">隔离没有凭空创造容量；交易名额不是 CPU 核数，也不是 Go 默认线程数。</text>
+  <text x="78" y="1029" style="font-size:19px;fill:#dce6fc">先用模型解释竞争，再在受控环境用相同工况验证尾延迟、完成速率与资金不变量。</text>
+</svg>

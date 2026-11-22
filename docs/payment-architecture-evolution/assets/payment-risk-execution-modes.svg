@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1110" viewBox="0 0 1400 1110" role="img" aria-labelledby="title desc">
+  <title id="title">实时、近线与离线共用风险语义</title>
+  <desc id="desc">实时由业务同步请求，近线由业务异步请求，离线由受控调度批次请求。三者使用共同的Factor、Rule、Policy与Evidence语义，通过特征服务按时间与新鲜度契约取值，不把Feature更新自动当作规则触发。</desc>
+  <defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9Z" fill="#5873a9"/></marker>
+    <style>text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}.title{font-size:35px;font-weight:700;fill:#17233c}.sub{font-size:18px;fill:#60718b}.head{font-size:25px;font-weight:700;fill:#253855}.body{font-size:21px;fill:#52617b}.small{font-size:18px;fill:#60718b}.link{fill:none;stroke:#5873a9;stroke-width:3;marker-end:url(#arrow)}</style>
+  </defs>
+  <rect width="1400" height="1110" rx="28" fill="#f4f7fd"/>
+  <text x="50" y="65" class="title">变化的是触发与预算，复用的是语义与契约</text>
+  <text x="50" y="104" class="sub">第七阶段 · 触发与数据读取视图 · 面向业务接入者；三种方式都需要明确的求值身份和授权范围</text>
+  <rect x="50" y="150" width="400" height="200" rx="20" fill="#fff" stroke="#bbcee9" stroke-width="2"/>
+  <rect x="500" y="150" width="400" height="200" rx="20" fill="#fff" stroke="#bbcee9" stroke-width="2"/>
+  <rect x="950" y="150" width="400" height="200" rx="20" fill="#fff" stroke="#bbcee9" stroke-width="2"/>
+  <text x="78" y="196" class="head">实时 · 业务同步请求</text>
+  <text x="78" y="244" class="body">卡授权前 / 提现提交前</text>
+  <text x="78" y="291" class="body">当前调用时限内返回结果</text>
+  <text x="528" y="196" class="head">近线 · 业务异步请求</text>
+  <text x="528" y="244" class="body">持久化请求 / Worker 求值</text>
+  <text x="528" y="291" class="body">完成后通知或供业务查询</text>
+  <text x="978" y="196" class="head">离线 · 受控批次请求</text>
+  <text x="978" y="244" class="body">目标集合 / 固定 as_of</text>
+  <text x="978" y="291" class="body">调度执行 / 回算与审计</text>
+  <path d="M250 350V410H700V466" class="link"/><path d="M700 350V466" class="link"/><path d="M1150 350V410H700" fill="none" stroke="#5873a9" stroke-width="3"/>
+  <rect x="50" y="466" width="1300" height="146" rx="20" fill="#eaf7f0" stroke="#afd6c2"/>
+  <text x="78" y="511" class="head">共同执行模型：Event → Factor → CEL Rule → Policy → Decision / Actions / Evidence</text>
+  <text x="78" y="559" class="body">因子成本、超时和缺失策略按场景配置；不同模式可以使用隔离的执行资源。</text>
+  <text x="78" y="593" class="small">不能因为离线支持更多数据，就让实时请求等待无界计算或把当前数据伪装成历史数据。</text>
+  <path d="M700 612V670" class="link"/>
+  <rect x="50" y="670" width="1300" height="174" rx="20" fill="#e6efff" stroke="#bbcee9"/>
+  <text x="78" y="715" class="head">Feature Factor → Feature Service：按语义和时间契约读取</text>
+  <text x="78" y="764" class="body">主体 / Set + Version + Feature / Window / as_of / 新鲜度 / 覆盖与质量</text>
+  <text x="78" y="811" class="body">Current 与 History 可采用不同存储；RPC、SDK 或 Adapter 的选择不由运行模式机械决定。</text>
+  <text x="78" y="898" class="small">近线请求不是普通特征更新通知；持续监测也应有独立用例、范围、身份和结果处理合同。</text>
+  <rect x="50" y="950" width="1300" height="105" rx="18" fill="#263c6d"/>
+  <text x="78" y="992" style="font-size:23px;font-weight:700;fill:#fff">Rule 通过 Factor 读取特征；不在 Policy 下维护一份持久 Feature Bundle。</text>
+  <text x="78" y="1031" style="font-size:19px;fill:#dce6fc">从规则引用反推所需特征，并以请求级 Fetch Plan 优化读取，保持同一份特征定义语义。</text>
+</svg>

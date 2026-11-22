@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1120" viewBox="0 0 1400 1120" role="img" aria-labelledby="title desc">
+  <title id="title">数据容量问题的不同演进机制</title>
+  <desc id="desc">索引优化降低查询成本，冷热分层缩小在线工作集，表分区改善单表维护和剪枝，跨库分片分散计算和容量。分片还需要稳定路由、版本化映射、单一写入所有权和迁移校验，不能自动保留跨片资金事务。</desc>
+  <defs><style>text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}.title{font-size:35px;font-weight:700;fill:#17233c}.sub{font-size:18px;fill:#60718b}.head{font-size:25px;font-weight:700;fill:#253855}.body{font-size:21px;fill:#52617b}.small{font-size:18px;fill:#60718b}</style></defs>
+  <rect width="1400" height="1120" rx="28" fill="#f4f7fd"/>
+  <text x="50" y="65" class="title">数据变多了，先识别是哪一种边界不够用</text>
+  <text x="50" y="104" class="sub">第八阶段 · 数据演进选择视图 · 面向数据设计者；机制各有用途，不是固定的扩容阶梯</text>
+  <rect x="50" y="151" width="625" height="232" rx="20" fill="#fff" stroke="#bbcee9" stroke-width="2"/>
+  <rect x="725" y="151" width="625" height="232" rx="20" fill="#fff" stroke="#afd6c2" stroke-width="2"/>
+  <text x="78" y="196" class="head">索引与查询优化</text>
+  <text x="78" y="245" class="body">问题：定位、扫描、分页与逐条关联成本。</text>
+  <text x="78" y="291" class="body">验证：执行计划、尾延迟、I/O 与写入维护。</text>
+  <text x="78" y="344" class="small">不能用无限堆索引代替容量与访问模式设计。</text>
+  <text x="753" y="196" class="head">热温冷分层与归档</text>
+  <text x="753" y="245" class="body">问题：在线工作集、历史留存与存储成本。</text>
+  <text x="753" y="291" class="body">约束：未完成工作、查询、幂等与恢复证据。</text>
+  <text x="753" y="344" class="small">总成本还包括检索、解冻、网络和恢复。</text>
+  <rect x="50" y="423" width="625" height="232" rx="20" fill="#e6efff" stroke="#bbcee9"/>
+  <rect x="725" y="423" width="625" height="232" rx="20" fill="#fff3e4" stroke="#e4c8a3"/>
+  <text x="78" y="468" class="head">表分区</text>
+  <text x="78" y="517" class="body">问题：大表生命周期、维护与查询剪枝。</text>
+  <text x="78" y="563" class="body">约束：分区键、唯一性、访问与维护锁。</text>
+  <text x="78" y="616" class="small">同一实例的分区不自动变成多台数据库。</text>
+  <text x="753" y="468" class="head">跨库分片</text>
+  <text x="753" y="517" class="body">问题：单库负载、容量或部分热点边界。</text>
+  <text x="753" y="563" class="body">约束：路由、单一写入所有者、迁移与查询。</text>
+  <text x="753" y="616" class="small">跨片事务、汇总与运维成为新增成本。</text>
+  <rect x="50" y="706" width="1300" height="176" rx="20" fill="#f2ebfc" stroke="#d6c5ec"/>
+  <text x="78" y="751" class="head">候选分片定位：稳定业务键 → Virtual Bucket → 版本化映射 → 权威 Shard</text>
+  <text x="78" y="799" class="body">相同业务重试可定位；旧路由受控失效；来源与迁移结果可核对。</text>
+  <text x="78" y="845" class="body">不同订单可以分散；同一个热门订单、资金账户或共享下游仍可能成为热点。</text>
+  <rect x="50" y="938" width="1300" height="122" rx="18" fill="#263c6d"/>
+  <text x="78" y="980" style="font-size:23px;font-weight:700;fill:#fff">支付订单怎样分片，不等于账本账户和 Journal 也能照搬同一个哈希方案。</text>
+  <text x="78" y="1021" style="font-size:20px;fill:#dce6fc">每次物理拆分，都要重新核对唯一性、原子资金约束、历史解释和恢复工具。</text>
+</svg>

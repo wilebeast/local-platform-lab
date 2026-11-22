@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1130" viewBox="0 0 1400 1130" role="img" aria-labelledby="title desc">
+  <title id="title">逻辑模块与三种物理部署选择</title>
+  <desc id="desc">同一套Payment、Ledger、Risk与Notification职责，可以放在模块化单体、独立API和Worker进程，或独立服务与数据库。不同方案具有不同资源发布隔离和一致性成本，不是必须依次升级的路线。</desc>
+  <defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9Z" fill="#5873a9"/></marker>
+    <style>text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}.title{font-size:35px;font-weight:700;fill:#17233c}.sub{font-size:18px;fill:#60718b}.head{font-size:25px;font-weight:700;fill:#253855}.body{font-size:21px;fill:#52617b}.small{font-size:18px;fill:#60718b}.link{fill:none;stroke:#5873a9;stroke-width:3;marker-end:url(#arrow)}</style>
+  </defs>
+  <rect width="1400" height="1130" rx="28" fill="#f4f7fd"/>
+  <text x="50" y="65" class="title">边界分清楚之后，部署仍然有选择</text>
+  <text x="50" y="104" class="sub">第八阶段 · 部署选择视图 · 面向技术负责人；三种候选，不是必须逐级走完的升级路线</text>
+  <rect x="50" y="148" width="1300" height="94" rx="18" fill="#e6efff" stroke="#bbcee9"/>
+  <text x="78" y="187" class="head">逻辑职责：Payment / Ledger / Risk / Notification</text>
+  <text x="78" y="223" class="small">事实所有权、业务规则、完成契约和幂等要求，不随 Pod 数量自动改变。</text>
+  <rect x="50" y="290" width="400" height="560" rx="20" fill="#fff" stroke="#bbcee9" stroke-width="2"/>
+  <rect x="500" y="290" width="400" height="560" rx="20" fill="#fff" stroke="#afd6c2" stroke-width="2"/>
+  <rect x="950" y="290" width="400" height="560" rx="20" fill="#fff" stroke="#d6c5ec" stroke-width="2"/>
+  <text x="78" y="338" class="head">选择 A · 模块化单体</text>
+  <rect x="78" y="378" width="344" height="170" rx="16" fill="#e6efff"/>
+  <text x="100" y="420" class="body">同进程内的明确模块</text>
+  <text x="100" y="464" class="body">本地调用 / 本地事务</text>
+  <text x="100" y="508" class="body">API 与后台任务共处</text>
+  <path d="M250 548V588" class="link"/>
+  <rect x="78" y="588" width="344" height="75" rx="16" fill="#eaf7f0" stroke="#afd6c2"/>
+  <text x="100" y="634" class="body">同一数据库</text>
+  <text x="78" y="717" class="body">收益：调用与事务简单</text>
+  <text x="78" y="760" class="body">代价：进程资源、发布共担</text>
+  <text x="78" y="811" class="small">仍可在进程内设并发和预算。</text>
+  <text x="528" y="338" class="head">选择 B · 隔离执行角色</text>
+  <rect x="528" y="378" width="344" height="67" rx="14" fill="#e6efff"/>
+  <text x="550" y="420" class="body">API 进程：交易模块</text>
+  <rect x="528" y="469" width="344" height="67" rx="14" fill="#fff3e4"/>
+  <text x="550" y="511" class="body">Worker 进程：后台工作</text>
+  <path d="M872 410H889V625H872" class="link"/>
+  <path d="M700 536V588" class="link"/>
+  <rect x="528" y="588" width="344" height="75" rx="16" fill="#eaf7f0" stroke="#afd6c2"/>
+  <text x="550" y="634" class="body">可保留同一数据库</text>
+  <text x="528" y="717" class="body">收益：容量、重启可隔离</text>
+  <text x="528" y="760" class="body">代价：仍需共享下游预算</text>
+  <text x="528" y="811" class="small">进程分开，不等于数据库已隔离。</text>
+  <text x="978" y="338" class="head">选择 C · 独立服务</text>
+  <rect x="978" y="378" width="344" height="90" rx="14" fill="#e6efff"/>
+  <text x="1000" y="416" class="body">Payment Service</text>
+  <text x="1000" y="449" class="small">自己的事实与数据库</text>
+  <path d="M1300 468V524" class="link"/>
+  <text x="991" y="505" class="small">Outbox / 幂等接收 / 可信确认</text>
+  <rect x="978" y="524" width="344" height="90" rx="14" fill="#f2ebfc"/>
+  <text x="1000" y="562" class="body">Ledger Service</text>
+  <text x="1000" y="595" class="small">自己的入账事务与数据库</text>
+  <text x="978" y="664" class="small">图中只展示一个跨库协作关系。</text>
+  <text x="978" y="717" class="body">收益：发布、容量与责任独立</text>
+  <text x="978" y="760" class="body">代价：部分失败与运维复杂度</text>
+  <text x="978" y="811" class="small">不能把本地事务假装跨库延续。</text>
+  <rect x="50" y="907" width="1300" height="164" rx="20" fill="#263c6d"/>
+  <text x="78" y="951" style="font-size:24px;font-weight:700;fill:#fff">先说明要隔离的压力，再选择部署与数据边界。</text>
+  <text x="78" y="997" style="font-size:21px;fill:#dce6fc">CPU、内存、连接、数据库、节点、渠道配额和团队发布，不是同一种故障域。</text>
+  <text x="78" y="1040" style="font-size:21px;fill:#dce6fc">每次变化都要比较：改善了什么，新增了什么成本，怎样验证值得。</text>
+</svg>

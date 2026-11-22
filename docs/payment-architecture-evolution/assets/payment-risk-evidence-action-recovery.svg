@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1130" viewBox="0 0 1400 1130" role="img" aria-labelledby="title desc">
+  <title id="title">风控决策证据与动作执行的独立生命周期</title>
+  <desc id="desc">同一本地事务保存Evaluation、Evidence和Action意图及Outbox。当前业务同步消费block。动作Worker独立创建案件或通知，回复丢失时按稳定Action ID恢复，不改变原Decision，也不假定Outbox自动保证远端只执行一次。</desc>
+  <defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9Z" fill="#5873a9"/></marker>
+    <style>text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}.title{font-size:35px;font-weight:700;fill:#17233c}.sub{font-size:18px;fill:#60718b}.head{font-size:25px;font-weight:700;fill:#253855}.body{font-size:21px;fill:#52617b}.small{font-size:18px;fill:#60718b}.link{fill:none;stroke:#5873a9;stroke-width:3;marker-end:url(#arrow)}</style>
+  </defs>
+  <rect width="1400" height="1130" rx="28" fill="#f4f7fd"/>
+  <text x="50" y="65" class="title">案件创建晚一点，当前请求也不能先付钱</text>
+  <text x="50" y="104" class="sub">第七阶段 · 证据与恢复视图 · 当前业务处置与异步副作用分别拥有完成点</text>
+  <rect x="50" y="149" width="1300" height="228" rx="20" fill="#e6efff" stroke="#bbcee9"/>
+  <text x="78" y="194" class="head">本地事务：保存一次求值的结果、证据和待执行动作</text>
+  <text x="78" y="244" class="body">Evaluation：Decision = block，Reason = rapid_outflow，Snapshot = v1</text>
+  <text x="78" y="291" class="body">Evidence：实际 Factor 值 / 状态 / 来源版本 / 时间 / 命中轨迹</text>
+  <text x="78" y="338" class="body">Action Intent + Outbox：create_case，固定 Action ID，等待可靠交接</text>
+  <path d="M380 377V432" class="link"/><path d="M1020 377V432" class="link"/>
+  <rect x="50" y="432" width="625" height="174" rx="20" fill="#eaf7f0" stroke="#afd6c2"/>
+  <rect x="725" y="432" width="625" height="174" rx="20" fill="#fff3e4" stroke="#e4c8a3"/>
+  <text x="78" y="476" class="head">业务同步应用结果</text>
+  <text x="78" y="524" class="body">提现保持不可执行付款的状态。</text>
+  <text x="78" y="572" class="body">不依赖名单、案件或通知先执行完。</text>
+  <text x="753" y="476" class="head">Action Worker 独立执行</text>
+  <text x="753" y="524" class="body">领取 / 调用 Handler / 记录结果</text>
+  <text x="753" y="572" class="body">失败重试 / 查证 / 异常处理</text>
+  <path d="M1020 606V662" class="link"/>
+  <rect x="50" y="662" width="1300" height="238" rx="20" fill="#fff" stroke="#bbcee9" stroke-width="2"/>
+  <text x="78" y="707" class="head">回复丢失演练：第一次已经建好案件，但 Executor 没有拿到成功</text>
+  <text x="78" y="756" class="body">第一次：Action A1 → 接收方创建 Case C1 → 回复丢失 → 执行状态仍待恢复</text>
+  <text x="78" y="805" class="body">第二次：仍用 Action A1 → 接收方按幂等合同返回 C1 → 执行状态 succeeded</text>
+  <text x="78" y="857" class="body">始终只有一份案件效果；Evaluation 的 block 与原始证据保持不变。</text>
+  <rect x="50" y="957" width="1300" height="116" rx="18" fill="#263c6d"/>
+  <text x="78" y="999" style="font-size:23px;font-weight:700;fill:#fff">Outbox 保证可靠交接；远端副作用还需要自己的幂等、查证或受控恢复。</text>
+  <text x="78" y="1040" style="font-size:19px;fill:#dce6fc">通知失败不改变 Decision；Decision 已保存也不表示 Action 已完成，更不表示提现已经履行。</text>
+</svg>

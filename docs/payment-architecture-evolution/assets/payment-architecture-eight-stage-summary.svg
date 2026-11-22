@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1220" viewBox="0 0 1400 1220" role="img" aria-labelledby="title desc">
+  <title id="title">八阶段架构演进与五个固定问题</title>
+  <desc id="desc">八阶段依次从变化分层、交易对象、多渠道、可靠交互、资金账本、清结算付款、平台共性和物理部署解释架构推演。每次固定问新增场景、旧设计不足、最小机制、事实所有者以及复杂性是否值得。</desc>
+  <defs><style>text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}.title{font-size:35px;font-weight:700;fill:#17233c}.sub{font-size:18px;fill:#60718b}.head{font-size:25px;font-weight:700;fill:#253855}.body{font-size:21px;fill:#52617b}.number{font-size:28px;font-weight:700;fill:#fff}</style></defs>
+  <rect width="1400" height="1220" rx="28" fill="#f4f7fd"/>
+  <text x="50" y="65" class="title">八次演进，都从问题与证据出发</text>
+  <text x="50" y="104" class="sub">系列回顾视图 · 这是理解设计的推演顺序，不是所有系统必须遵守的建设时间表</text>
+  <rect x="50" y="151" width="625" height="128" rx="20" fill="#fff" stroke="#bbcee9"/>
+  <rect x="725" y="151" width="625" height="128" rx="20" fill="#fff" stroke="#bbcee9"/>
+  <circle cx="100" cy="199" r="26" fill="#5873a9"/><text x="92" y="209" class="number">1</text>
+  <text x="145" y="207" class="head">不同变化 → 水平分层</text>
+  <text x="78" y="253" class="body">接口、用例、领域规则、外部协议分开。</text>
+  <circle cx="775" cy="199" r="26" fill="#5873a9"/><text x="767" y="209" class="number">2</text>
+  <text x="820" y="207" class="head">重复收款 → 拆开交易事实</text>
+  <text x="753" y="253" class="body">订单、尝试、真实收款、退款分别表达。</text>
+  <rect x="50" y="306" width="625" height="128" rx="20" fill="#fff" stroke="#bbcee9"/>
+  <rect x="725" y="306" width="625" height="128" rx="20" fill="#fff" stroke="#bbcee9"/>
+  <circle cx="100" cy="354" r="26" fill="#5873a9"/><text x="92" y="364" class="number">3</text>
+  <text x="145" y="362" class="head">多渠道 → 选择与协议分开</text>
+  <text x="78" y="408" class="body">业务许可、路由、渠道集成各自定责。</text>
+  <circle cx="775" cy="354" r="26" fill="#5873a9"/><text x="767" y="364" class="number">4</text>
+  <text x="820" y="362" class="head">不可靠交互 → 记录与恢复</text>
+  <text x="753" y="408" class="body">意图、外部事实、投递和未知状态独立。</text>
+  <rect x="50" y="461" width="625" height="128" rx="20" fill="#eaf7f0" stroke="#afd6c2"/>
+  <rect x="725" y="461" width="625" height="128" rx="20" fill="#eaf7f0" stroke="#afd6c2"/>
+  <circle cx="100" cy="509" r="26" fill="#3d8766"/><text x="92" y="519" class="number">5</text>
+  <text x="145" y="517" class="head">资金管理 → 受控账本</text>
+  <text x="78" y="563" class="body">账户、凭证、分录与余额投影分开。</text>
+  <circle cx="775" cy="509" r="26" fill="#3d8766"/><text x="767" y="519" class="number">6</text>
+  <text x="820" y="517" class="head">结给商户 → 多生命周期</text>
+  <text x="753" y="563" class="body">费用、归属、资格与实际付款分别完成。</text>
+  <rect x="50" y="616" width="625" height="128" rx="20" fill="#fff3e4" stroke="#e4c8a3"/>
+  <rect x="725" y="616" width="625" height="128" rx="20" fill="#fff3e4" stroke="#e4c8a3"/>
+  <circle cx="100" cy="664" r="26" fill="#aa753c"/><text x="92" y="674" class="number">7</text>
+  <text x="145" y="672" class="head">共同问题 → 平台能力</text>
+  <text x="78" y="718" class="body">复用稳定语义，保留业务事实所有权。</text>
+  <circle cx="775" cy="664" r="26" fill="#aa753c"/><text x="767" y="674" class="number">8</text>
+  <text x="820" y="672" class="head">质量压力 → 物理架构变化</text>
+  <text x="753" y="718" class="body">容量、发布、团队和故障范围驱动部署。</text>
+  <rect x="50" y="793" width="1300" height="370" rx="20" fill="#263c6d"/>
+  <text x="78" y="840" style="font-size:27px;font-weight:700;fill:#fff">今后推演任何模块，都固定问五个问题</text>
+  <text x="78" y="895" style="font-size:23px;fill:#fff">1. 新增了什么业务用例或质量场景？</text>
+  <text x="78" y="941" style="font-size:23px;fill:#fff">2. 原来的模型为什么表达不了，或者无法满足要求？</text>
+  <text x="78" y="987" style="font-size:23px;fill:#fff">3. 最小需要增加什么对象、边界或机制？</text>
+  <text x="78" y="1033" style="font-size:23px;fill:#fff">4. 哪些事实与不变量由谁负责？</text>
+  <text x="78" y="1079" style="font-size:23px;fill:#fff">5. 这次变化增加了什么复杂性，怎样证明值得？</text>
+  <text x="78" y="1130" style="font-size:20px;fill:#dce6fc">从场景推出设计，再用异常和变化检验设计。</text>
+</svg>

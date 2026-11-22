@@ -1,0 +1,29 @@
+{
+  "as_of": "2026-11-22T12:00:00Z",
+  "sources": {
+    "accounts": {"org-demo-01": {"blocked": false}},
+    "counters": {"org-demo-01": 2, "cardholder-demo-01": 1},
+    "lists": {
+      "restricted_merchants": ["merchant-demo-blocked"],
+      "restricted_beneficiaries": [],
+      "restricted_cardholders": []
+    },
+    "features": {
+      "org-demo-01": {
+        "inflow_minor": 100000,
+        "outflow_minor": 95000,
+        "observed_at": "2026-11-22T11:58:00Z",
+        "version": "subject_fund_activity-v2-demo-snapshot"
+      }
+    }
+  },
+  "requests": [
+    {"event_code": "acquiring.payment.submit", "event_id": "payment-demo-001",
+      "params": {"merchant_id": "merchant-demo-blocked", "amount_minor": 10000}},
+    {"event_code": "withdrawal.submit", "event_id": "withdrawal-demo-001",
+      "params": {"organization_id": "org-demo-01", "beneficiary_id": "beneficiary-demo-01", "amount_minor": 50000}},
+    {"event_code": "card.authorization.requested", "event_id": "card-auth-demo-001",
+      "params": {"cardholder_id": "cardholder-demo-01", "amount_minor": 3000}}
+  ],
+  "card_available_minor": 2500
+}
