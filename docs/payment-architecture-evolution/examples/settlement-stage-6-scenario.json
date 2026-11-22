@@ -1,0 +1,41 @@
+{
+  "book_id": "book-demo",
+  "currency": "USD",
+  "merchant_id": "M1",
+  "account_group_id": "merchant-main-usd",
+  "fee_rule": {
+    "version": "FEE-V1",
+    "rate_bps": 200,
+    "rounding": "half_up_per_payment"
+  },
+  "clearing_version": "CLEARING-V1",
+  "payments": [
+    {"id": "P1", "amount_minor": 10000, "partner_id": "R1", "partner_amount_minor": 100},
+    {"id": "P2", "amount_minor": 5000, "partner_id": null, "partner_amount_minor": 0}
+  ],
+  "settlement_rule": {
+    "version": "SETTLEMENT-V1",
+    "available_on": "2026-11-21T00:00:00Z",
+    "payout_max_minor": 8000
+  },
+  "settlement_request": {
+    "request_key": "merchant-settlement-demo-001",
+    "proposed_id": "S1",
+    "cutoff": "2026-11-21T12:00:00Z",
+    "rule_version": "SETTLEMENT-V1",
+    "merchant_id": "M1",
+    "account_group_id": "merchant-main-usd",
+    "currency": "USD",
+    "destination_version": "beneficiary-demo-v1",
+    "source_ids": ["E1", "E2"]
+  },
+  "expected": {
+    "gross_minor": 15000,
+    "fee_minor": 300,
+    "partner_minor": 100,
+    "merchant_minor": 14600,
+    "payouts_minor": [8000, 6600],
+    "cash_after_po1_minor": 7000,
+    "cash_final_minor": 400
+  }
+}

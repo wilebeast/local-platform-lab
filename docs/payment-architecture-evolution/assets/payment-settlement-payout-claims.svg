@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="961" viewBox="0 0 1400 961" role="img" aria-labelledby="title desc">
+  <title id="title">来源应付款、结算占用与两笔付款的关系</title>
+  <desc id="desc">商户P1应付9700和P2应付4900被结算单S1占用，共14600。付款PO1使用P1的8000，PO2使用P1的1700和P2的4900。来源占用防重复结算，账本预占防多业务重复使用同一预算。</desc>
+  <defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9Z" fill="#5873a9"/></marker>
+    <style>text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}.title{font-size:35px;font-weight:700;fill:#17233c}.sub{font-size:18px;fill:#60718b}.head{font-size:25px;font-weight:700;fill:#253855}.body{font-size:21px;fill:#52617b}.small{font-size:18px;fill:#60718b}.link{fill:none;stroke:#5873a9;stroke-width:3;marker-end:url(#arrow)}</style>
+  </defs>
+  <rect width="1400" height="961" rx="28" fill="#f4f7fd"/>
+  <text x="50" y="65" class="title">14600 从哪里来，又分成了哪两笔付款？</text>
+  <text x="50" y="104" class="sub">第六阶段 · 来源与履行关系视图 · 面向开发者和资金运营；本例来源全额占用，一单拆多笔付款</text>
+  <rect x="50" y="148" width="1300" height="114" rx="20" fill="#eaf7f0" stroke="#afd6c2"/>
+  <text x="78" y="194" class="head">SettlementOrder S1 · M1 / 同一 USD 资金池 / 同一收款信息版本 / 14600</text>
+  <text x="78" y="235" class="body">SI1 ← P1 的商户应付 E1：9700；SI2 ← P2 的商户应付 E2：4900</text>
+  <path d="M380 262V318" class="link"/><path d="M1020 262V318" class="link"/>
+  <rect x="50" y="318" width="625" height="147" rx="20" fill="#fff" stroke="#bbcee9" stroke-width="2"/>
+  <rect x="725" y="318" width="625" height="147" rx="20" fill="#fff" stroke="#bbcee9" stroke-width="2"/>
+  <text x="78" y="362" class="head">PayoutOrder PO1 · 8000</text>
+  <text x="78" y="405" class="body">来源映射：SI1 的 8000</text>
+  <text x="78" y="442" class="small">PA1-1 → OP1-1：一笔实际尝试及其持久化操作</text>
+  <text x="753" y="362" class="head">PayoutOrder PO2 · 6600</text>
+  <text x="753" y="405" class="body">来源映射：SI1 的 1700 + SI2 的 4900</text>
+  <text x="753" y="442" class="small">PA2-1 → OP2-1：unknown 时恢复原操作</text>
+  <text x="78" y="525" class="head">两道约束，分别防住两类重复使用</text>
+  <rect x="50" y="558" width="625" height="180" rx="20" fill="#fff3e4" stroke="#e4c8a3"/>
+  <rect x="725" y="558" width="625" height="180" rx="20" fill="#f2ebfc" stroke="#d6c5ec"/>
+  <text x="78" y="601" class="head">来源占用</text>
+  <text x="78" y="648" class="body">E1、E2 当前有效 claim → S1</text>
+  <text x="78" y="693" class="body">另一张结算单不能再占用相同应付款。</text>
+  <text x="753" y="601" class="head">权威资金预占</text>
+  <text x="753" y="648" class="body">商户可用 14600 → 结算预占 14600</text>
+  <text x="753" y="693" class="body">退款、提现、付款不能再使用同一预算。</text>
+  <rect x="50" y="785" width="1300" height="123" rx="18" fill="#263c6d"/>
+  <text x="78" y="827" style="font-size:23px;font-weight:700;fill:#fff">PO1 + PO2 是有意拆分的两笔付款义务；调度重试 OP2-1，不会再创造第三笔。</text>
+  <text x="78" y="869" style="font-size:20px;fill:#dce6fc">来源映射必须守恒；旧尝试 unknown 时，保留占用与预占，不得换渠道盲付。</text>
+</svg>

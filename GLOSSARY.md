@@ -100,6 +100,42 @@ _Avoid_: Cash Settlement, Refund, Payment Success
 The calculation and crystallization of the amount owed to a merchant. It remains distinct from the later transfer of cash to the merchant.
 _Avoid_: Merchant Payout, Channel Settlement
 
+**Fee Assessment**:
+A fee calculation result tied to a business source, fee type, stage, and fixed rule version. It does not by itself establish earned revenue or a cash movement.
+_Avoid_: Current Fee Rate, Payment Receipt
+
+**Clearing Allocation**:
+A versioned assignment of a confirmed payment amount to its beneficiaries and purposes under an explicit allocation policy. It remains distinct from choosing which payment fulfills an order.
+_Avoid_: Order Payment Allocation, Settlement Order
+
+**Clearing Item**:
+One beneficiary-specific amount and purpose within a clearing allocation. An amount payable to a merchant may form a settlement entitlement, while platform revenue has a different meaning.
+_Avoid_: Posting, Settlement Item
+
+**Merchant Settlement Order**:
+A business document that groups approved source amounts for one recipient, funds pool, currency, and beneficiary-details version. It tracks its own approved amount and fulfillment progress.
+_Avoid_: Merchant Payout, Payout Attempt
+
+**Merchant Settlement Entitlement**:
+An amount payable to a merchant derived from a confirmed clearing allocation, with eligibility and remaining-use constraints. It exists before selection into a settlement order.
+_Avoid_: Gross Payment Amount, Merchant Settlement Item
+
+**Merchant Settlement Item**:
+A source-specific amount included in one merchant settlement order, preserving its link to the underlying entitlement. It is a settlement detail, not an independently executed payout.
+_Avoid_: Merchant Settlement Entitlement, Payout Order
+
+**Payout Source Allocation**:
+The settlement-owned amount mapping from one settlement item to one payout obligation. It allows a settlement item to be split across payouts and a payout to fulfill portions of several items.
+_Avoid_: Clearing Item, Funds Reservation Allocation
+
+**Funds Reservation**:
+A ledger-authorized amount withheld from other uses until consumed or safely released under its business contract. It is independent of a worker's temporary processing lease.
+_Avoid_: Worker Lease, Payment Success
+
+**Funds Reservation Allocation**:
+A controlled portion of a funds reservation assigned to one consuming business obligation. It limits that obligation's use of the reserved budget without reserving the same funds a second time.
+_Avoid_: Payout Source Allocation, New Cash Movement
+
 **Merchant Payout**:
 The externally confirmed transfer of settled funds from platform cash to the merchant, which discharges the merchant-payable liability.
 _Avoid_: Merchant Settlement, Payment Success, API Acceptance

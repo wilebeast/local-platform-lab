@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1090" viewBox="0 0 1400 1090" role="img" aria-labelledby="title desc">
+  <title id="title">不同业务生命周期在部分付款与超时下的状态</title>
+  <desc id="desc">原支付和清分保持成功。结算从预占变为部分完成，第二笔付款未知及账务待确认时都保持已付8000、预占6600、现金7000；账务完成后结算已付14600、预占0、现金400。</desc>
+  <defs><style>text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}.title{font-size:35px;font-weight:700;fill:#17233c}.sub{font-size:18px;fill:#60718b}.head{font-size:23px;font-weight:700;fill:#253855}.body{font-size:20px;fill:#52617b}.small{font-size:17px;fill:#60718b}.number{font-size:27px;font-weight:700;fill:#263c6d}</style></defs>
+  <rect width="1400" height="1090" rx="28" fill="#f4f7fd"/>
+  <text x="50" y="65" class="title">付款局部失败，不应反转原收款事实</text>
+  <text x="50" y="104" class="sub">第六阶段 · 业务状态与资金时序视图 · 已付金额按本例账务确认口径；金额均为 USD 最小货币单位</text>
+  <rect x="50" y="145" width="1300" height="80" rx="18" fill="#eaf7f0" stroke="#afd6c2"/>
+  <text x="78" y="194" class="head">P1 / P2 一直支付成功；FEE-V1 费用与已入账清分结果也一直成立。</text>
+  <rect x="50" y="265" width="1300" height="73" rx="16" fill="#e6efff"/>
+  <text x="78" y="311" class="head">观察时间点</text><text x="480" y="311" class="head">S1 已付</text>
+  <text x="720" y="311" class="head">结算预占</text><text x="969" y="311" class="head">现金</text><text x="1168" y="311" class="head">S1 状态</text>
+  <rect x="50" y="355" width="1300" height="105" rx="16" fill="#fff" stroke="#d3dff1"/>
+  <text x="78" y="397" class="body">S1 已批准并预占</text><text x="78" y="432" class="small">PO1 8000，PO2 6600 尚未付出</text>
+  <text x="500" y="418" class="number">0</text><text x="730" y="418" class="number">14600</text><text x="970" y="418" class="number">15000</text>
+  <text x="1168" y="416" class="body">reserved</text>
+  <rect x="50" y="477" width="1300" height="105" rx="16" fill="#fff3e4" stroke="#e4c8a3"/>
+  <text x="78" y="519" class="body">PO1 已成功并入账</text><text x="78" y="554" class="small">PO2 processing，OP2-1 unknown</text>
+  <text x="480" y="540" class="number">8000</text><text x="740" y="540" class="number">6600</text><text x="980" y="540" class="number">7000</text>
+  <text x="1168" y="538" class="body">partially_paid</text>
+  <rect x="50" y="599" width="1300" height="105" rx="16" fill="#fff1f3" stroke="#e9adb7"/>
+  <text x="78" y="641" class="body">PO2 渠道成功，本地待入账</text><text x="78" y="676" class="small">PO2 accounting_pending</text>
+  <text x="480" y="662" class="number">8000</text><text x="740" y="662" class="number">6600</text><text x="980" y="662" class="number">7000</text>
+  <text x="1168" y="660" class="body">partially_paid</text>
+  <rect x="50" y="721" width="1300" height="105" rx="16" fill="#eaf7f0" stroke="#afd6c2"/>
+  <text x="78" y="763" class="body">PO2 本地账务确认</text><text x="78" y="798" class="small">两笔付款完成，来源全额履行</text>
+  <text x="470" y="784" class="number">14600</text><text x="760" y="784" class="number">0</text><text x="990" y="784" class="number">400</text>
+  <text x="1168" y="782" class="body">completed</text>
+  <text x="78" y="878" class="small">“现金”是本地账本投影；PO2 渠道成功但未入账时，外部资金可能已变化，需要尽快确认与核对。</text>
+  <text x="78" y="914" class="small">最终现金 400 = 合作方应付 100 + 本例已赚取服务费 300；未考虑其他费用与资金变化。</text>
+  <rect x="50" y="958" width="1300" height="88" rx="18" fill="#263c6d"/>
+  <text x="78" y="995" style="font-size:23px;font-weight:700;fill:#fff">恢复未完成部分，保留已完成部分；unknown 不等于失败，账务待确认不等于可以释放。</text>
+  <text x="78" y="1028" style="font-size:19px;fill:#dce6fc">资金预占保留到可信终态；网络重试、渠道事件、账本入账和业务完成各自幂等。</text>
+</svg>

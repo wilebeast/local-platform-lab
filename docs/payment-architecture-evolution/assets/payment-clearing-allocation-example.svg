@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1050" viewBox="0 0 1400 1050" role="img" aria-labelledby="title desc">
+  <title id="title">两笔收款的计费与清分示例</title>
+  <desc id="desc">P1收款10000，平台费用200，合作方100，商户9700；P2收款5000，平台费用100，商户4900。合计商户14600、合作方100和平台收入300，分配不等于现金到账或实际付款。</desc>
+  <defs><style>text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}.title{font-size:35px;font-weight:700;fill:#17233c}.sub{font-size:18px;fill:#60718b}.head{font-size:25px;font-weight:700;fill:#253855}.body{font-size:22px;fill:#52617b}.small{font-size:18px;fill:#60718b}.amount{font-size:32px;font-weight:700;fill:#263c6d}</style></defs>
+  <rect width="1400" height="1050" rx="28" fill="#f4f7fd"/>
+  <text x="50" y="65" class="title">两笔收款：费用怎么算，资金又归谁？</text>
+  <text x="50" y="104" class="sub">第六阶段 · 金额归属视图 · 平台视角，USD 最小货币单位；手续费在本例清分时已赚取</text>
+  <rect x="50" y="145" width="1300" height="92" rx="18" fill="#fff3e4" stroke="#e4c8a3"/>
+  <text x="78" y="183" class="head">固定政策：FEE-V1 = 每笔 2%，逐笔舍入</text>
+  <text x="78" y="219" class="small">P1 另给 R1 分成 100；P2 无分成；本例不含退款、税费、渠道成本、汇兑和其他资金变动。</text>
+  <rect x="50" y="279" width="1300" height="70" rx="16" fill="#e6efff"/>
+  <text x="78" y="323" class="head">来源</text><text x="300" y="323" class="head">用户实付</text>
+  <text x="560" y="323" class="head">平台服务费</text><text x="830" y="323" class="head">R1 应付</text><text x="1100" y="323" class="head">M1 应付</text>
+  <rect x="50" y="368" width="1300" height="100" rx="16" fill="#fff" stroke="#d3dff1"/>
+  <text x="78" y="429" class="head">P1</text><text x="300" y="429" class="amount">10000</text>
+  <text x="560" y="429" class="amount">200</text><text x="830" y="429" class="amount">100</text><text x="1100" y="429" class="amount">9700</text>
+  <rect x="50" y="486" width="1300" height="100" rx="16" fill="#fff" stroke="#d3dff1"/>
+  <text x="78" y="547" class="head">P2</text><text x="300" y="547" class="amount">5000</text>
+  <text x="560" y="547" class="amount">100</text><text x="830" y="547" class="amount">0</text><text x="1100" y="547" class="amount">4900</text>
+  <rect x="50" y="604" width="1300" height="108" rx="16" fill="#eaf7f0" stroke="#afd6c2"/>
+  <text x="78" y="668" class="head">合计</text><text x="300" y="668" class="amount">15000</text>
+  <text x="560" y="668" class="amount">300</text><text x="830" y="668" class="amount">100</text><text x="1100" y="668" class="amount">14600</text>
+  <text x="78" y="773" class="head">分配守恒：15000 = 14600 + 100 + 300</text>
+  <text x="78" y="819" class="body">商户和合作方的应得金额形成平台负债；已赚取服务费才进入平台收入。</text>
+  <text x="78" y="862" class="body">本次只结算 M1：合作方的 100 保留为独立应付，不混入 M1 的付款。</text>
+  <rect x="50" y="916" width="1300" height="92" rx="18" fill="#263c6d"/>
+  <text x="78" y="956" style="font-size:23px;font-weight:700;fill:#fff">资金归属已确定 ≠ 资金已经到期 ≠ 已经通过银行付出</text>
+  <text x="78" y="991" style="font-size:19px;fill:#dce6fc">收入 300 也不等于现金新增 300；现金到账、资金资格和付款完成各有独立证据。</text>
+</svg>

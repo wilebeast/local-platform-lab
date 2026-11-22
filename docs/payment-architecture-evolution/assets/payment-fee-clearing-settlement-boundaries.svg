@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1100" viewBox="0 0 1400 1100" role="img" aria-labelledby="title desc">
+  <title id="title">计费、清分、结算、付款与账本的责任边界</title>
+  <desc id="desc">支付提供有效收款事实。计费决定费用，清分决定资金归属，结算决定本轮应付款，付款执行外部资金出口。账本对各经济事件受控入账，模块边界不等于微服务部署边界。</desc>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9Z" fill="#5873a9"/></marker>
+    <style>text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}.title{font-size:35px;font-weight:700;fill:#17233c}.sub{font-size:18px;fill:#60718b}.head{font-size:26px;font-weight:700;fill:#253855}.body{font-size:21px;fill:#52617b}.small{font-size:17px;fill:#60718b}.link{fill:none;stroke:#5873a9;stroke-width:3;marker-end:url(#arrow)}</style>
+  </defs>
+  <rect width="1400" height="1100" rx="28" fill="#f4f7fd"/>
+  <text x="50" y="65" class="title">谁有权宣布哪种结果成立？</text>
+  <text x="50" y="104" class="sub">第六阶段 · 逻辑职责与结果依赖视图 · 面向系统设计者，不规定部署数量与同步方式</text>
+  <rect x="50" y="145" width="1300" height="114" rx="20" fill="#e6efff" stroke="#bbcee9"/>
+  <text x="78" y="190" class="head">Payment · 已确认的有效收款事实</text>
+  <text x="78" y="233" class="body">交易是否成功、是否归属本订单；不承诺费用已分配、资金已到期或商户已收到付款。</text>
+  <path d="M190 259V329" class="link"/><path d="M530 259V329" class="link"/>
+  <text x="210" y="302" class="small">交易事实 + 合同</text>
+  <text x="550" y="302" class="small">可分配收款</text>
+  <rect x="50" y="329" width="280" height="298" rx="20" fill="#fff3e4" stroke="#e4c8a3" stroke-width="2"/>
+  <rect x="390" y="329" width="280" height="298" rx="20" fill="#eaf7f0" stroke="#afd6c2" stroke-width="2"/>
+  <rect x="730" y="329" width="280" height="298" rx="20" fill="#fff" stroke="#bbcee9" stroke-width="2"/>
+  <rect x="1070" y="329" width="280" height="298" rx="20" fill="#f2ebfc" stroke="#d6c5ec" stroke-width="2"/>
+  <text x="78" y="376" class="head">计费 Billing</text>
+  <text x="78" y="425" class="body">应收多少费用？</text>
+  <text x="78" y="474" class="body">费率 / 基数 / 舍入</text>
+  <text x="78" y="517" class="body">承担方 / 合同版本</text>
+  <text x="78" y="579" class="small">产物：FeeAssessment</text>
+  <text x="418" y="376" class="head">清分 Clearing</text>
+  <text x="418" y="425" class="body">金额分别归谁？</text>
+  <text x="418" y="474" class="body">归属 / 分配守恒</text>
+  <text x="418" y="517" class="body">来源 / 调整关联</text>
+  <text x="418" y="579" class="small">产物：Allocation + Items</text>
+  <text x="758" y="376" class="head">结算 Settlement</text>
+  <text x="758" y="425" class="body">本次允许结多少？</text>
+  <text x="758" y="474" class="body">到期 / 资格 / 占用</text>
+  <text x="758" y="517" class="body">cutoff / 已付 / 剩余</text>
+  <text x="758" y="579" class="small">产物：SettlementOrder</text>
+  <text x="1098" y="376" class="head">付款 Payout</text>
+  <text x="1098" y="425" class="body">外部实际付多少？</text>
+  <text x="1098" y="474" class="body">义务 / 尝试 / 渠道</text>
+  <text x="1098" y="517" class="body">unknown / 恢复 / 证明</text>
+  <text x="1098" y="579" class="small">产物：PayoutOrder</text>
+  <path d="M330 447H390" class="link"/><path d="M670 447H730" class="link"/><path d="M1010 447H1070" class="link"/>
+  <path d="M530 627V722" class="link"/><path d="M870 627V722" class="link"/><path d="M1210 627V722" class="link"/>
+  <text x="550" y="679" class="small">归属入账与确认</text>
+  <text x="890" y="679" class="small">资金预占与释放</text>
+  <text x="1230" y="679" class="small">付款事实入账</text>
+  <rect x="50" y="722" width="1300" height="172" rx="20" fill="#e6efff" stroke="#bbcee9"/>
+  <text x="78" y="767" class="head">Ledger · 这些资金变化是否合法、完整、可解释？</text>
+  <text x="78" y="815" class="body">受控 PostJournal：账套 / 币种 / 借贷平衡 / 业务幂等 / 资金约束 / 原子投影</text>
+  <text x="78" y="860" class="body">业务模块决定经济含义；账本返回可信入账结果，不自行计算最新费率或结算资格。</text>
+  <rect x="50" y="945" width="1300" height="105" rx="18" fill="#263c6d"/>
+  <text x="78" y="986" style="font-size:23px;font-weight:700;fill:#fff">五种结果，五种完成条件；局部失败不应反转已经成立的其他事实。</text>
+  <text x="78" y="1024" style="font-size:19px;fill:#dce6fc">同应用可用模块接口与本地事务；拆成独立服务后，必须增加可靠交接、幂等确认与恢复机制。</text>
+</svg>
