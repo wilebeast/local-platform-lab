@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900" role="img" aria-labelledby="title desc">
+  <title id="title">业务、渠道操作与消息交接拥有独立生命周期</title>
+  <desc id="desc">以退款为例，Refund可以为processing，退款操作的外部结果可以为unknown，同时请求执行退款的Outbox已经published。这分别表示业务未完成、外部结果待确认、执行请求已交接，三者并不矛盾。</desc>
+  <style>text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}.title{font-size:35px;font-weight:700;fill:#17233c}.sub{font-size:18px;fill:#60718b}.head{font-size:25px;font-weight:700;fill:#253855}.body{font-size:21px;fill:#52617b}.small{font-size:17px;fill:#60718b}.state{font-size:34px;font-weight:700;fill:#263c6d}</style>
+  <rect width="1400" height="900" rx="28" fill="#f4f7fd"/>
+  <text x="50" y="65" class="title">消息发出去了，业务为什么还在处理中？</text>
+  <text x="50" y="104" class="sub">生命周期视图 · 用退款举例 · 三张卡回答三个不同问题，不是依次完成的三个状态</text>
+  <rect x="50" y="175" width="400" height="447" rx="22" fill="#fff" stroke="#bbcee9" stroke-width="2"/>
+  <rect x="500" y="175" width="400" height="447" rx="22" fill="#fff" stroke="#e3c9a7" stroke-width="2"/>
+  <rect x="950" y="175" width="400" height="447" rx="22" fill="#fff" stroke="#b3d9c5" stroke-width="2"/>
+  <rect x="50" y="175" width="400" height="77" rx="22" fill="#e6efff"/>
+  <rect x="500" y="175" width="400" height="77" rx="22" fill="#fff1df"/>
+  <rect x="950" y="175" width="400" height="77" rx="22" fill="#eaf7f0"/>
+  <text x="78" y="224" class="head">业务单据 · Refund RF1</text>
+  <text x="528" y="224" class="head">渠道操作 · ROP1</text>
+  <text x="978" y="224" class="head">消息交接 · Outbox</text>
+  <text x="78" y="322" class="state">processing</text>
+  <text x="528" y="322" class="state">unknown</text>
+  <text x="978" y="322" class="state">published</text>
+  <text x="78" y="386" class="body">用户要求的退款还未完成</text>
+  <text x="78" y="431" class="body">等待渠道确认与必要入账</text>
+  <text x="78" y="476" class="body">由退款业务契约决定终态</text>
+  <text x="78" y="560" class="small">它回答：对用户承诺的事完成了吗？</text>
+  <text x="528" y="386" class="body">原请求可能已经执行</text>
+  <text x="528" y="431" class="body">原身份查单、等待证据</text>
+  <text x="528" y="476" class="body">不能因超时直接宣布失败</text>
+  <text x="528" y="560" class="small">它回答：外部实际发生了什么？</text>
+  <text x="978" y="386" class="body">执行请求已交接给 Broker</text>
+  <text x="978" y="431" class="body">不是“退款成功”商户通知</text>
+  <text x="978" y="476" class="body">不代表接收方已完成业务</text>
+  <text x="978" y="560" class="small">它回答：这份消息交出去了吗？</text>
+  <rect x="50" y="680" width="1300" height="135" rx="20" fill="#263c6d"/>
+  <text x="78" y="728" style="font-size:26px;font-weight:700;fill:#fff">Broker 已确认 ≠ 渠道已确认 ≠ 业务已完成</text>
+  <text x="78" y="774" style="font-size:20px;fill:#e0e8ff">记录清楚消息用途、外部操作身份与业务完成条件，才能解释这个看似“不一致”的时刻。</text>
+</svg>

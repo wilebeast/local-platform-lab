@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1070" viewBox="0 0 1400 1070" role="img" aria-labelledby="title desc">
+  <title id="title">租约代次与外部资金幂等的不同保护范围</title>
+  <desc id="desc">W1持有epoch7后暂停，租约到期W2取得epoch8。旧Worker不能通过本地条件更新覆盖新状态。但本地代次不会自动阻止外部渠道执行迟到请求，需要原请求身份、渠道幂等合同以及查询核对。</desc>
+  <defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9Z" fill="#5873a9"/></marker>
+    <style>text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}.title{font-size:35px;font-weight:700;fill:#17233c}.sub{font-size:18px;fill:#60718b}.head{font-size:25px;font-weight:700;fill:#253855}.body{font-size:21px;fill:#52617b}.small{font-size:17px;fill:#60718b}.link{fill:none;stroke:#5873a9;stroke-width:3;marker-end:url(#arrow)}</style>
+  </defs>
+  <rect width="1400" height="1070" rx="28" fill="#f4f7fd"/>
+  <text x="50" y="65" class="title">租约决定谁推进工作，不能证明渠道没扣款</text>
+  <text x="50" y="104" class="sub">并发恢复视图 · 本地 epoch 只有被目标系统检查时，才能约束该系统的写入</text>
+  <rect x="50" y="166" width="590" height="213" rx="20" fill="#fff" stroke="#bbcee9" stroke-width="2"/>
+  <rect x="760" y="166" width="590" height="213" rx="20" fill="#fff" stroke="#b3d9c5" stroke-width="2"/>
+  <text x="78" y="212" class="head">旧 Worker W1</text>
+  <text x="78" y="260" class="body">领取 OP1，获得 epoch = 7</text>
+  <text x="78" y="306" class="body">随后暂停，处理租约到期</text>
+  <text x="78" y="348" class="small">可能仍有在途或迟到的外部请求</text>
+  <text x="788" y="212" class="head">接手 Worker W2</text>
+  <text x="788" y="260" class="body">重新领取 OP1，获得 epoch = 8</text>
+  <text x="788" y="306" class="body">依据原操作证据选择恢复动作</text>
+  <text x="788" y="348" class="small">不是重新生成一个扣款身份</text>
+  <path d="M640 267H760" class="link"/>
+  <text x="657" y="237" class="small">到期接手</text>
+  <path d="M345 379V428" class="link"/>
+  <path d="M1055 379V428" class="link"/>
+  <rect x="50" y="428" width="590" height="206" rx="20" fill="#fff1f2" stroke="#dca6b2"/>
+  <rect x="760" y="428" width="590" height="206" rx="20" fill="#eaf7f0" stroke="#afd6c2"/>
+  <text x="78" y="473" class="head">W1 恢复，写回旧调度状态</text>
+  <text x="78" y="522" class="body">WHERE owner = W1 AND epoch = 7</text>
+  <text x="78" y="568" class="body">影响行数为 0 → 停止旧调度分支</text>
+  <text x="78" y="608" class="small">但经过校验的真实成功证据仍须保存</text>
+  <text x="788" y="473" class="head">W2 在有效租约内推进</text>
+  <text x="788" y="522" class="body">原渠道账户 + 原请求身份 OP1</text>
+  <text x="788" y="568" class="body">查询 / 合同允许的安全重放 / 调查</text>
+  <text x="788" y="608" class="small">不能仅因租约过期就再次发起扣款</text>
+  <rect x="50" y="688" width="1300" height="198" rx="20" fill="#fff3e4" stroke="#e4c8a3"/>
+  <text x="78" y="734" class="head">外部资金防线：渠道必须提供相应保证，或限制恢复动作</text>
+  <text x="78" y="782" class="body">本地 CAS 不会自动取消已发出的网络请求，也不会让渠道识别过期 epoch。</text>
+  <text x="78" y="829" class="body">原请求幂等合同有范围和期限；缺少安全重放保证时，只能确认、核对或调查。</text>
+  <rect x="50" y="935" width="1300" height="89" rx="18" fill="#263c6d"/>
+  <text x="78" y="972" style="font-size:23px;font-weight:700;fill:#fff">本地防过期写入 + 外部副作用约束，是两类不同保证</text>
+  <text x="78" y="1005" style="font-size:18px;fill:#e0e8ff">旧 Worker 失去调度权，不意味着它带回的真实渠道事实可以被丢弃。</text>
+</svg>

@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1130" viewBox="0 0 1400 1130" role="img" aria-labelledby="title desc">
+  <title id="title">跨服务 Outbox、Inbox 与本地事务边界</title>
+  <desc id="desc">支付事务保存收款事实、待入账状态和LedgerRequested Outbox。账本事务幂等应用消息、入账并写LedgerPosted Outbox。支付再次幂等应用入账确认后完成业务和通知。中间消息交接可以重复，两个数据库不共享本地事务。</desc>
+  <defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9Z" fill="#5873a9"/></marker>
+    <style>text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}.title{font-size:35px;font-weight:700;fill:#17233c}.sub{font-size:18px;fill:#60718b}.head{font-size:26px;font-weight:700;fill:#253855}.body{font-size:21px;fill:#52617b}.small{font-size:17px;fill:#60718b}.tag{font-size:18px;font-weight:600;fill:#4261a4}.link{fill:none;stroke:#5873a9;stroke-width:3;marker-end:url(#arrow)}</style>
+  </defs>
+  <rect width="1400" height="1130" rx="28" fill="#f4f7fd"/>
+  <text x="50" y="65" class="title">每边一个本地事务，中间接受重复交接</text>
+  <text x="50" y="104" class="sub">协作与数据视图 · 假设支付与账本已分库 · 大框是本地事务，不是一个跨库大事务</text>
+  <rect x="50" y="185" width="530" height="400" rx="22" fill="#fff" stroke="#bbcee9" stroke-width="2"/>
+  <rect x="820" y="185" width="530" height="400" rx="22" fill="#fff" stroke="#b3d9c5" stroke-width="2"/>
+  <text x="78" y="235" class="head">① 支付本地事务</text>
+  <text x="78" y="297" class="body">Payment：真实收款事实</text>
+  <text x="78" y="348" class="body">业务：accounting_pending</text>
+  <rect x="78" y="390" width="474" height="79" rx="14" fill="#e6efff"/>
+  <text x="99" y="422" class="tag">LedgerRequested Outbox</text>
+  <text x="99" y="450" class="small">与上述本地修改一起提交</text>
+  <text x="78" y="532" class="small">提交后由 Relay 可靠发布</text>
+  <text x="848" y="235" class="head">② 账本本地事务</text>
+  <text x="848" y="297" class="body">Consumer Inbox：消费幂等记录</text>
+  <text x="848" y="348" class="body">Journal / Postings：业务键唯一入账</text>
+  <rect x="848" y="390" width="474" height="79" rx="14" fill="#eaf7f0"/>
+  <text x="869" y="422" class="tag">LedgerPosted Outbox</text>
+  <text x="869" y="450" class="small">与凭证和本地消费记录一起提交</text>
+  <text x="848" y="532" class="small">已入账后，不因回复丢失再记一次</text>
+  <rect x="625" y="305" width="150" height="400" rx="20" fill="#e9e1f7" stroke="#d2bfe8" stroke-width="2"/>
+  <text x="665" y="360" class="head">MQ</text>
+  <text x="650" y="439" class="small">可靠交接</text>
+  <text x="650" y="480" class="small">可能重复</text>
+  <text x="650" y="521" class="small">可能延迟</text>
+  <text x="650" y="562" class="small">需控速率</text>
+  <path d="M580 390H625" class="link"/>
+  <path d="M775 390H820" class="link"/>
+  <text x="588" y="273" class="small">入账请求</text>
+  <path d="M1085 585V659H775" class="link"/>
+  <text x="880" y="640" class="tag">LedgerPosted：原业务入账确认</text>
+  <path d="M625 659H315V750" class="link"/>
+  <rect x="50" y="750" width="530" height="261" rx="22" fill="#fff" stroke="#bbcee9" stroke-width="2"/>
+  <text x="78" y="798" class="head">③ 支付本地事务</text>
+  <text x="78" y="851" class="body">幂等应用原业务的入账确认</text>
+  <text x="78" y="901" class="body">按完成契约推进最终业务状态</text>
+  <text x="78" y="951" class="body">写入商户结果通知 Outbox</text>
+  <rect x="820" y="750" width="530" height="261" rx="22" fill="#fff3e4" stroke="#e4c8a3"/>
+  <text x="848" y="798" class="head">回复丢失时，找回原结果</text>
+  <text x="848" y="851" class="body">按原业务入账键查询或安全重试</text>
+  <text x="848" y="901" class="body">得到原 Journal，继续完成支付</text>
+  <text x="848" y="951" class="body">不创建另一张等价扣款凭证</text>
+  <rect x="50" y="1051" width="1300" height="50" rx="15" fill="#263c6d"/>
+  <text x="76" y="1084" style="font-size:20px;fill:#fff">交接身份、业务幂等键与事件顺序共同保证恢复；Outbox 本身不提供端到端资金“恰好一次”。</text>
+</svg>

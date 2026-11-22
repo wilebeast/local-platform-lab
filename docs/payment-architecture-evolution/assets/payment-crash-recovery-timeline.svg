@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1060" viewBox="0 0 1400 1060" role="img" aria-labelledby="title desc">
+  <title id="title">渠道成功、本地未知与恢复时间线</title>
+  <desc id="desc">本地先保存AT1、OP1和交接意图。渠道执行扣款后，本地响应丢失并崩溃。恢复依据是持久化操作身份和可信渠道证据，最后幂等应用业务与账务，而不是重新扣款。</desc>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9Z" fill="#5873a9"/></marker>
+    <style>text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}.title{font-size:35px;font-weight:700;fill:#17233c}.sub{font-size:18px;fill:#60718b}.head{font-size:24px;font-weight:700;fill:#253855}.body{font-size:21px;fill:#4f607a}.small{font-size:17px;fill:#60718b}.time{font-size:20px;font-weight:700;fill:#4261a4}</style>
+  </defs>
+  <rect width="1400" height="1060" rx="28" fill="#f4f7fd"/>
+  <text x="50" y="65" class="title">渠道的成功，不会因为本地宕机而消失</text>
+  <text x="50" y="102" class="sub">第四阶段 · 故障分析时间线 · 本地认知与外部事实必须分别保存并核对</text>
+  <text x="190" y="167" class="head">本地持久化认知与工作</text>
+  <text x="895" y="167" class="head">渠道 A 的实际情况</text>
+  <path d="M102 230V907" stroke="#c0cde4" stroke-width="4" marker-end="url(#arrow)"/>
+  <g>
+    <circle cx="102" cy="250" r="21" fill="#e0eafe"/><text x="88" y="257" class="time">T1</text>
+    <rect x="165" y="205" width="675" height="90" rx="15" fill="#fff" stroke="#bdcee9"/><text x="190" y="242" class="body">AT1、OP1、Outbox 在本地事务中提交</text><text x="190" y="272" class="small">答应完成的工作已经留下来</text>
+    <rect x="875" y="205" width="475" height="90" rx="15" fill="#fff" stroke="#bdcee9"/><text x="900" y="257" class="body">尚未收到请求</text>
+    <circle cx="102" cy="370" r="21" fill="#e0eafe"/><text x="88" y="377" class="time">T2</text>
+    <rect x="165" y="325" width="675" height="90" rx="15" fill="#fff" stroke="#bdcee9"/><text x="190" y="362" class="body">按固定的渠道账户和请求身份开始发送</text><text x="190" y="392" class="small">本地发送进度不等于渠道到达证明</text>
+    <rect x="875" y="325" width="475" height="90" rx="15" fill="#fff" stroke="#bdcee9"/><text x="900" y="377" class="body">接收到原请求 OP1</text>
+    <circle cx="102" cy="490" r="21" fill="#f7d8dd"/><text x="88" y="497" class="time">T3</text>
+    <rect x="165" y="445" width="675" height="90" rx="15" fill="#fff1f2" stroke="#dca6b2"/><text x="190" y="482" class="body">没有收到最终响应：结果 unknown</text><text x="190" y="512" class="small">本地不能证明未扣款</text>
+    <rect x="875" y="445" width="475" height="90" rx="15" fill="#eaf7f0" stroke="#afd6c2"/><text x="900" y="482" class="body">已经完成一次扣款</text><text x="900" y="512" class="small">外部交易 PP1 已经存在</text>
+    <circle cx="102" cy="610" r="21" fill="#f7d8dd"/><text x="88" y="617" class="time">T4</text>
+    <rect x="165" y="565" width="675" height="90" rx="15" fill="#fff1f2" stroke="#dca6b2"/><text x="190" y="602" class="body">Pod 宕机，原进程的内存状态消失</text><text x="190" y="632" class="small">数据库里的意图和身份仍可供接手</text>
+    <rect x="875" y="565" width="475" height="90" rx="15" fill="#fff" stroke="#bdcee9"/><text x="900" y="617" class="body">成功事实仍然存在，回调可能重发</text>
+    <circle cx="102" cy="730" r="21" fill="#d6eee2"/><text x="88" y="737" class="time">T5</text>
+    <rect x="165" y="685" width="675" height="90" rx="15" fill="#eaf7f0" stroke="#afd6c2"/><text x="190" y="722" class="body">接手后确认 OP1，保存校验过的渠道证据</text><text x="190" y="752" class="small">查原请求，或应用可靠接收的 EV1</text>
+    <rect x="875" y="685" width="475" height="90" rx="15" fill="#eaf7f0" stroke="#afd6c2"/><text x="900" y="737" class="body">原交易和可信回调提供确认</text>
+    <circle cx="102" cy="850" r="21" fill="#d6eee2"/><text x="88" y="857" class="time">T6</text>
+    <rect x="165" y="805" width="675" height="90" rx="15" fill="#eaf7f0" stroke="#afd6c2"/><text x="190" y="842" class="body">幂等应用业务结果和账务，完成待办</text><text x="190" y="872" class="small">重复确认只对应原 Payment 与原入账效果</text>
+    <rect x="875" y="805" width="475" height="90" rx="15" fill="#fff" stroke="#bdcee9"/><text x="900" y="857" class="body">不需要新增一次扣款</text>
+  </g>
+  <rect x="50" y="954" width="1300" height="67" rx="16" fill="#263c6d"/>
+  <text x="76" y="995" style="font-size:21px;font-weight:600;fill:#fff">恢复的目标：找回原操作的事实，完成原工作；不是用一次新的资金操作掩盖未知结果。</text>
+</svg>
