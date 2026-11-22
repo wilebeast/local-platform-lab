@@ -1,0 +1,88 @@
+{
+  "book_id": "book-demo",
+  "currency": "USD",
+  "policy": "教学场景：10000收款、200已赚取手续费、4000部分退款不退手续费、30已发生且已支付的渠道费用；期初为零",
+  "accounts": [
+    {"id": "channel_receivable", "name": "渠道应收资产", "account_type": "asset", "normal_side": "debit", "book_id": "book-demo", "currency": "USD", "status": "active"},
+    {"id": "unallocated_receipts", "name": "未分配收款负债", "account_type": "liability", "normal_side": "credit", "book_id": "book-demo", "currency": "USD", "status": "active"},
+    {"id": "merchant_pending", "name": "商户待结算负债", "account_type": "liability", "normal_side": "credit", "book_id": "book-demo", "currency": "USD", "status": "active", "nonnegative": true},
+    {"id": "merchant_available", "name": "商户可用资金负债", "account_type": "liability", "normal_side": "credit", "book_id": "book-demo", "currency": "USD", "status": "active", "nonnegative": true},
+    {"id": "merchant_refund_held", "name": "商户退款冻结负债", "account_type": "liability", "normal_side": "credit", "book_id": "book-demo", "currency": "USD", "status": "active", "nonnegative": true},
+    {"id": "merchant_payout_held", "name": "商户付款冻结负债", "account_type": "liability", "normal_side": "credit", "book_id": "book-demo", "currency": "USD", "status": "active", "nonnegative": true},
+    {"id": "refund_payable", "name": "渠道退款应付款", "account_type": "liability", "normal_side": "credit", "book_id": "book-demo", "currency": "USD", "status": "active"},
+    {"id": "platform_cash", "name": "平台现金资产", "account_type": "asset", "normal_side": "debit", "book_id": "book-demo", "currency": "USD", "status": "active"},
+    {"id": "fee_revenue", "name": "平台手续费收入", "account_type": "revenue", "normal_side": "credit", "book_id": "book-demo", "currency": "USD", "status": "active"},
+    {"id": "channel_fee_expense", "name": "渠道费用", "account_type": "expense", "normal_side": "debit", "book_id": "book-demo", "currency": "USD", "status": "active"}
+  ],
+  "journals": [
+    {
+      "id": "J1", "book_id": "book-demo", "business_type": "payment", "business_id": "P1", "event_type": "receipt", "currency": "USD", "effective_at": "2026-11-22T10:00:00Z",
+      "postings": [
+        {"account_id": "channel_receivable", "side": "debit", "amount_minor": 10000},
+        {"account_id": "unallocated_receipts", "side": "credit", "amount_minor": 10000}
+      ]
+    },
+    {
+      "id": "J2", "book_id": "book-demo", "business_type": "payment", "business_id": "P1", "event_type": "allocation", "currency": "USD", "effective_at": "2026-11-22T10:00:01Z",
+      "postings": [
+        {"account_id": "unallocated_receipts", "side": "debit", "amount_minor": 10000},
+        {"account_id": "merchant_pending", "side": "credit", "amount_minor": 9800},
+        {"account_id": "fee_revenue", "side": "credit", "amount_minor": 200}
+      ]
+    },
+    {
+      "id": "J3", "book_id": "book-demo", "business_type": "provider_settlement", "business_id": "ST1", "event_type": "cash_received", "currency": "USD", "effective_at": "2026-11-22T11:00:00Z",
+      "postings": [
+        {"account_id": "platform_cash", "side": "debit", "amount_minor": 10000},
+        {"account_id": "channel_receivable", "side": "credit", "amount_minor": 10000}
+      ]
+    },
+    {
+      "id": "J4", "book_id": "book-demo", "business_type": "merchant_release", "business_id": "EL1", "event_type": "eligible", "currency": "USD", "effective_at": "2026-11-22T11:00:01Z",
+      "postings": [
+        {"account_id": "merchant_pending", "side": "debit", "amount_minor": 9800},
+        {"account_id": "merchant_available", "side": "credit", "amount_minor": 9800}
+      ]
+    },
+    {
+      "id": "J5", "book_id": "book-demo", "business_type": "refund", "business_id": "RF1", "event_type": "reserve", "currency": "USD", "effective_at": "2026-11-22T11:01:00Z",
+      "postings": [
+        {"account_id": "merchant_available", "side": "debit", "amount_minor": 4000},
+        {"account_id": "merchant_refund_held", "side": "credit", "amount_minor": 4000}
+      ]
+    },
+    {
+      "id": "J6", "book_id": "book-demo", "business_type": "refund", "business_id": "RF1", "event_type": "confirmed", "currency": "USD", "effective_at": "2026-11-22T11:02:00Z",
+      "postings": [
+        {"account_id": "merchant_refund_held", "side": "debit", "amount_minor": 4000},
+        {"account_id": "refund_payable", "side": "credit", "amount_minor": 4000}
+      ]
+    },
+    {
+      "id": "J7", "book_id": "book-demo", "business_type": "refund", "business_id": "RF1", "event_type": "cash_debited", "currency": "USD", "effective_at": "2026-11-22T11:05:00Z",
+      "postings": [
+        {"account_id": "refund_payable", "side": "debit", "amount_minor": 4000},
+        {"account_id": "platform_cash", "side": "credit", "amount_minor": 4000}
+      ]
+    },
+    {
+      "id": "J8", "book_id": "book-demo", "business_type": "channel_fee", "business_id": "CF1", "event_type": "incurred_and_paid", "currency": "USD", "effective_at": "2026-11-22T11:06:00Z",
+      "postings": [
+        {"account_id": "channel_fee_expense", "side": "debit", "amount_minor": 30},
+        {"account_id": "platform_cash", "side": "credit", "amount_minor": 30}
+      ]
+    }
+  ],
+  "expected_balances": {
+    "channel_receivable": 0,
+    "unallocated_receipts": 0,
+    "merchant_pending": 0,
+    "merchant_available": 5800,
+    "merchant_refund_held": 0,
+    "merchant_payout_held": 0,
+    "refund_payable": 0,
+    "platform_cash": 5970,
+    "fee_revenue": 200,
+    "channel_fee_expense": 30
+  }
+}

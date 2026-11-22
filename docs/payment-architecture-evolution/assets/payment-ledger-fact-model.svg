@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1050" viewBox="0 0 1400 1050" role="img" aria-labelledby="title desc">
+  <title id="title">账套、账户、凭证、分录与余额投影</title>
+  <desc id="desc">账套确定记账主体与核算范围。Journal包含Posting，每条Posting引用一个Account。已入账分录形成可重建的余额投影。业务单据关联凭证，但不替代资金记录。</desc>
+  <defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9Z" fill="#5873a9"/></marker>
+    <style>text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}.title{font-size:35px;font-weight:700;fill:#17233c}.sub{font-size:18px;fill:#60718b}.head{font-size:25px;font-weight:700;fill:#253855}.body{font-size:20px;fill:#52617b}.small{font-size:17px;fill:#60718b}.link{fill:none;stroke:#5873a9;stroke-width:3;marker-end:url(#arrow)}</style>
+  </defs>
+  <rect width="1400" height="1050" rx="28" fill="#f4f7fd"/>
+  <text x="50" y="65" class="title">业务记录、资金事实和余额，各自回答不同问题</text>
+  <text x="50" y="103" class="sub">第五阶段 · 概念与数据责任视图 · 目标逻辑模型，不规定微服务数量</text>
+  <rect x="50" y="145" width="1300" height="104" rx="20" fill="#e6efff" stroke="#bbcee9"/>
+  <text x="78" y="185" class="head">Book · 这是谁的账，采用哪个核算视角？</text>
+  <text x="78" y="223" class="body">本例：平台视角、一个账套；Journal 单币种，账户与分录必须属于正确账套</text>
+  <path d="M260 249V311" class="link"/><path d="M1140 249V311" class="link"/>
+  <rect x="50" y="311" width="420" height="250" rx="20" fill="#fff" stroke="#bbcee9" stroke-width="2"/>
+  <rect x="530" y="311" width="340" height="250" rx="20" fill="#fff3e4" stroke="#e4c8a3" stroke-width="2"/>
+  <rect x="930" y="311" width="420" height="250" rx="20" fill="#fff" stroke="#b3d9c5" stroke-width="2"/>
+  <text x="78" y="359" class="head">Account · 资金关系</text>
+  <text x="78" y="407" class="body">资产 / 负债 / 权益 / 收入 / 费用</text>
+  <text x="78" y="452" class="body">正常方向、主体、币种、用途</text>
+  <text x="78" y="497" class="body">多个子账户可组成同一资金池</text>
+  <text x="78" y="537" class="small">账户定义不等于随意可改的 balance</text>
+  <text x="558" y="359" class="head">Posting · 一条分录</text>
+  <text x="558" y="407" class="body">AccountID</text>
+  <text x="558" y="452" class="body">debit / credit</text>
+  <text x="558" y="497" class="body">amount_minor</text>
+  <text x="558" y="537" class="small">归属一张 Journal</text>
+  <text x="958" y="359" class="head">Journal · 完整凭证</text>
+  <text x="958" y="407" class="body">业务入账键、生效时间、币种</text>
+  <text x="958" y="452" class="body">至少两条分录，借贷相等</text>
+  <text x="958" y="497" class="body">posted 后保留不可变历史</text>
+  <text x="958" y="537" class="small">一个 Payment 可关联多种入账事件</text>
+  <path d="M530 437H470" class="link"/><text x="478" y="415" class="small">引用</text>
+  <path d="M930 437H870" class="link"/><text x="876" y="415" class="small">包含</text>
+  <path d="M700 561V641H450V690" class="link"/>
+  <text x="530" y="620" class="small">仅累计 posted 分录</text>
+  <rect x="50" y="690" width="800" height="217" rx="20" fill="#eaf7f0" stroke="#afd6c2"/>
+  <text x="78" y="737" class="head">Balance Projection · 可重建的余额投影</text>
+  <text x="78" y="786" class="body">累计借方 / 累计贷方 / 余额版本</text>
+  <text x="78" y="832" class="body">按 NormalSide 解释余额，与分录同事务更新</text>
+  <text x="78" y="874" class="small">支持高效查询和原子资金约束；可从已入账分录重建核对</text>
+  <rect x="930" y="690" width="420" height="217" rx="20" fill="#f2ebfc" stroke="#d6c5ec"/>
+  <text x="958" y="737" class="head">业务单据</text>
+  <text x="958" y="786" class="body">Payment / Refund / Payout</text>
+  <text x="958" y="832" class="body">拥有业务状态与操作资格</text>
+  <text x="958" y="874" class="small">通过经济事件关联账本，不代替账本</text>
+  <path d="M1140 690V561" class="link"/><text x="1157" y="633" class="small">关联凭证</text>
+  <rect x="50" y="957" width="1300" height="55" rx="15" fill="#263c6d"/>
+  <text x="76" y="992" style="font-size:20px;fill:#fff">账本解释资金怎样变化；业务解释为什么发生；余额查询不能脱离已入账分录及统一资金约束。</text>
+</svg>

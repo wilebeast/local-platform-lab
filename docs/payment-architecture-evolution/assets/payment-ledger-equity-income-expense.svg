@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1050" viewBox="0 0 1400 1050" role="img" aria-labelledby="title desc">
+  <title id="title">现金、商户负债与平台利润的区别</title>
+  <desc id="desc">本例J8后资产现金5970，负债商户可用5800。收入200减费用30等于本期利润170，期初权益零且无其他权益变动，所以含本期损益的期末权益为170。未结转时5970加30等于5800加0加200。</desc>
+  <style>text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}.title{font-size:35px;font-weight:700;fill:#17233c}.sub{font-size:18px;fill:#60718b}.head{font-size:25px;font-weight:700;fill:#253855}.body{font-size:21px;fill:#52617b}.num{font-size:55px;font-weight:700;fill:#263c6d}.small{font-size:17px;fill:#60718b}</style>
+  <rect width="1400" height="1050" rx="28" fill="#f4f7fd"/>
+  <text x="50" y="65" class="title">账户里有 5970，不代表平台赚了 5970</text>
+  <text x="50" y="104" class="sub">本例 J8 后 · USD 最小货币单位 · 期初权益为零，无出资、分红及其他权益变动；框面积不代表金额比例</text>
+  <rect x="50" y="165" width="580" height="420" rx="23" fill="#eaf7f0" stroke="#afd6c2" stroke-width="2"/>
+  <text x="78" y="219" class="head">平台资产</text>
+  <text x="78" y="289" class="body">本例此时全部表现为现金</text>
+  <text x="78" y="395" class="num">5970</text>
+  <text x="78" y="472" class="body">其中仍包含欠商户的资金</text>
+  <text x="78" y="535" class="small">现金余额与盈利是不同概念</text>
+  <text x="671" y="397" style="font-size:43px;font-weight:700;fill:#4261a4">=</text>
+  <rect x="750" y="165" width="600" height="195" rx="22" fill="#e6efff" stroke="#bbcee9"/>
+  <text x="778" y="212" class="head">负债：欠商户的可用资金</text>
+  <text x="778" y="290" class="num">5800</text>
+  <text x="1035" y="395" style="font-size:37px;font-weight:700;fill:#4261a4">+</text>
+  <rect x="750" y="425" width="600" height="160" rx="22" fill="#fff3e4" stroke="#e4c8a3"/>
+  <text x="778" y="470" class="head">含本期损益的权益</text>
+  <text x="778" y="548" class="num">170</text>
+  <rect x="50" y="635" width="1300" height="116" rx="20" fill="#fff" stroke="#d6e0ef"/>
+  <text x="78" y="680" class="head">本期利润 = 手续费收入 200 − 已发生渠道费用 30 = 170</text>
+  <text x="78" y="722" class="body">期末权益 = 期初权益 0 + 本期利润 170；本例夹具没有执行期末结转凭证。</text>
+  <rect x="50" y="797" width="1300" height="175" rx="20" fill="#263c6d"/>
+  <text x="78" y="843" style="font-size:24px;font-weight:700;fill:#fff">未结转时，同一关系可以展开</text>
+  <text x="78" y="890" style="font-size:24px;fill:#e0e8ff">资产 5970 + 本期费用 30 = 负债 5800 + 期初权益 0 + 本期收入 200</text>
+  <text x="78" y="937" style="font-size:18px;fill:#e0e8ff">不能在已包含本期损益的权益之外，再加一次收入、减一次费用。</text>
+</svg>

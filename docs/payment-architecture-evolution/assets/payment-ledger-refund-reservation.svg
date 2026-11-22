@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1040" viewBox="0 0 1400 1040" role="img" aria-labelledby="title desc">
+  <title id="title">退款预占、渠道确认与现金扣取的余额变化</title>
+  <desc id="desc">J4后现金10000商户可用9800。J5预占退款4000后可用5800冻结4000，结果未知期间保持。J6确认退款后冻结降为0、渠道退款应付4000，现金未变。J7实际扣款后现金6000、应付0，可用仍5800。</desc>
+  <style>text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}.title{font-size:35px;font-weight:700;fill:#17233c}.sub{font-size:18px;fill:#60718b}.head{font-size:23px;font-weight:700;fill:#253855}.body{font-size:21px;fill:#52617b}.num{font-size:25px;font-weight:700;fill:#263c6d}.small{font-size:17px;fill:#60718b}</style>
+  <rect width="1400" height="1040" rx="28" fill="#f4f7fd"/>
+  <text x="50" y="65" class="title">退款已预占，unknown 期间也不能再次结算</text>
+  <text x="50" y="104" class="sub">资金状态视图 · USD 最小货币单位 · 本例不退服务费，渠道先完成用户退款，再扣平台现金</text>
+  <rect x="50" y="158" width="1300" height="76" rx="16" fill="#e6efff"/>
+  <text x="78" y="205" class="head">时点 / 事件</text>
+  <text x="470" y="205" class="head" text-anchor="middle">现金资产</text>
+  <text x="685" y="205" class="head" text-anchor="middle">商户可用</text>
+  <text x="900" y="205" class="head" text-anchor="middle">退款冻结</text>
+  <text x="1175" y="205" class="head" text-anchor="middle">渠道退款应付</text>
+  <g>
+    <rect x="50" y="253" width="1300" height="85" rx="14" fill="#fff" stroke="#d6e0ef"/>
+    <text x="78" y="305" class="body">J4：满足资格，资金可用</text><text x="470" y="305" class="num" text-anchor="middle">10000</text><text x="685" y="305" class="num" text-anchor="middle">9800</text><text x="900" y="305" class="num" text-anchor="middle">0</text><text x="1175" y="305" class="num" text-anchor="middle">0</text>
+    <rect x="50" y="356" width="1300" height="85" rx="14" fill="#eaf7f0" stroke="#afd6c2"/>
+    <text x="78" y="408" class="body">J5：账本预占退款 4000</text><text x="470" y="408" class="num" text-anchor="middle">10000</text><text x="685" y="408" class="num" text-anchor="middle">5800</text><text x="900" y="408" class="num" text-anchor="middle">4000</text><text x="1175" y="408" class="num" text-anchor="middle">0</text>
+    <rect x="50" y="459" width="1300" height="85" rx="14" fill="#fff1f2" stroke="#dca6b2"/>
+    <text x="78" y="511" class="body">渠道 unknown：保留预占</text><text x="470" y="511" class="num" text-anchor="middle">10000</text><text x="685" y="511" class="num" text-anchor="middle">5800</text><text x="900" y="511" class="num" text-anchor="middle">4000</text><text x="1175" y="511" class="num" text-anchor="middle">0</text>
+    <rect x="50" y="562" width="1300" height="85" rx="14" fill="#fff" stroke="#d6e0ef"/>
+    <text x="78" y="614" class="body">J6：渠道确认已向用户退款</text><text x="470" y="614" class="num" text-anchor="middle">10000</text><text x="685" y="614" class="num" text-anchor="middle">5800</text><text x="900" y="614" class="num" text-anchor="middle">0</text><text x="1175" y="614" class="num" text-anchor="middle">4000</text>
+    <rect x="50" y="665" width="1300" height="85" rx="14" fill="#eaf7f0" stroke="#afd6c2"/>
+    <text x="78" y="717" class="body">J7：平台现金实际被扣取</text><text x="470" y="717" class="num" text-anchor="middle">6000</text><text x="685" y="717" class="num" text-anchor="middle">5800</text><text x="900" y="717" class="num" text-anchor="middle">0</text><text x="1175" y="717" class="num" text-anchor="middle">0</text>
+  </g>
+  <text x="78" y="807" class="small">本图截至 J7；原服务费收入 200 不变，J8 的渠道费用另记。预占确认后，才允许外部退款执行。</text>
+  <text x="78" y="845" class="body">已入账“可用转冻结”模型：直接读可用 5800，不再额外减一次同一笔 4000。</text>
+  <rect x="50" y="901" width="1300" height="96" rx="18" fill="#263c6d"/>
+  <text x="78" y="942" style="font-size:23px;font-weight:700;fill:#fff">确认和释放必须互斥；unknown、Worker 宕机或租约到期，都不是自动释放资金的理由。</text>
+  <text x="78" y="976" style="font-size:18px;fill:#e0e8ff">商户付款也须原子预占同一份可用预算；报表上“还有多少钱”不能直接充当付款许可。</text>
+</svg>

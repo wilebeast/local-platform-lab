@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1030" viewBox="0 0 1400 1030" role="img" aria-labelledby="title desc">
+  <title id="title">J2分配凭证及其分录</title>
+  <desc id="desc">J2借记未分配收款负债10000，贷记商户待结算负债9800和已赚取手续费收入200。借贷合计均10000。该凭证只改变资金归属，不表示现金到账。</desc>
+  <style>text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}.title{font-size:35px;font-weight:700;fill:#17233c}.sub{font-size:18px;fill:#60718b}.head{font-size:25px;font-weight:700;fill:#253855}.body{font-size:21px;fill:#52617b}.small{font-size:17px;fill:#60718b}.amount{font-size:33px;font-weight:700;fill:#263c6d}</style>
+  <rect width="1400" height="1030" rx="28" fill="#f4f7fd"/>
+  <text x="50" y="65" class="title">一张凭证，完整表达一次资金归属变化</text>
+  <text x="50" y="104" class="sub">J2 教学分录 · USD 最小货币单位 · 服务费按本例政策已赚取，J1 已确认未分配收款</text>
+  <rect x="50" y="150" width="1300" height="108" rx="20" fill="#e6efff" stroke="#bbcee9"/>
+  <text x="78" y="193" class="head">Journal J2：Payment P1 的 allocation 事件</text>
+  <text x="78" y="232" class="body">已确认收款 10000 → 商户应得 9800 + 平台已赚取服务费 200</text>
+  <rect x="50" y="310" width="615" height="330" rx="22" fill="#fff" stroke="#bbcee9" stroke-width="2"/>
+  <rect x="735" y="310" width="615" height="330" rx="22" fill="#fff" stroke="#b3d9c5" stroke-width="2"/>
+  <text x="78" y="360" class="head">借方 · Debit</text>
+  <text x="763" y="360" class="head">贷方 · Credit</text>
+  <text x="78" y="420" class="body">未分配收款负债</text><text x="478" y="420" class="amount">10000</text>
+  <text x="78" y="466" class="small">借记负债 → 未分配金额减少</text>
+  <text x="763" y="420" class="body">商户待结算负债</text><text x="1170" y="420" class="amount">9800</text>
+  <text x="763" y="466" class="small">贷记负债 → 对商户的应付增加</text>
+  <text x="763" y="525" class="body">平台手续费收入</text><text x="1170" y="525" class="amount">200</text>
+  <text x="763" y="570" class="small">贷记收入 → 已赚取服务费增加</text>
+  <line x1="78" y1="586" x2="635" y2="586" stroke="#d9e3f1"/>
+  <line x1="763" y1="586" x2="1320" y2="586" stroke="#d9e3f1"/>
+  <text x="78" y="619" class="body">借方合计 10000</text><text x="763" y="619" class="body">贷方合计 9800 + 200 = 10000</text>
+  <text x="681" y="482" style="font-size:38px;font-weight:700;fill:#4261a4">=</text>
+  <text x="50" y="705" class="head">入账后，这三个账户的余额</text>
+  <rect x="50" y="739" width="400" height="141" rx="18" fill="#eaf7f0" stroke="#afd6c2"/>
+  <rect x="500" y="739" width="400" height="141" rx="18" fill="#eaf7f0" stroke="#afd6c2"/>
+  <rect x="950" y="739" width="400" height="141" rx="18" fill="#fff3e4" stroke="#e4c8a3"/>
+  <text x="78" y="786" class="body">未分配收款负债</text><text x="78" y="840" class="amount">0</text>
+  <text x="528" y="786" class="body">商户待结算负债</text><text x="528" y="840" class="amount">9800</text>
+  <text x="978" y="786" class="body">平台手续费收入</text><text x="978" y="840" class="amount">200</text>
+  <rect x="50" y="932" width="1300" height="59" rx="15" fill="#263c6d"/>
+  <text x="76" y="970" style="font-size:20px;fill:#fff">这张凭证没有现金账户：分配收入与应付款，不等于渠道已经把钱结入平台银行账户。</text>
+</svg>
